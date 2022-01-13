@@ -15,7 +15,7 @@ OpenJDK8
 
 
 
-### lib
+### 라이브러리
 
 - Server-side
 
