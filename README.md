@@ -1,4 +1,4 @@
-# metory-dapp
+# metory-site
 
 METORY - The real-world feasibility of a blockchain-based dynamic consent platform 
 
