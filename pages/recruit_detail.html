@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+    <link rel="stylesheet" href="../assets/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/css/app.css">
+    <link rel="stylesheet" href="../assets/css/modern.css">
+    <link rel="stylesheet" href="../assets/css/custom.css">
+    <link rel="stylesheet" type="text/css" href="../assets/lib/DataTables/datatables.min.css" />
+    <script src="../assets/lib/jquery/jquery.min.js" type="text/javascript"></script>
+
+    <title>METORY (연구자용)</title>
+    <script type="text/javascript">
+
+        var studies;
+        var SID;
+        // var CREATEROLE;
+
+        $(document).ready(function () {
+            $('#navbar').load('navbar.html');
+            $('#footer').load('footer.html');
+            SID = drug_id = getParameterByName('SID');
+            //  CREATEROLE = sessionStorage.getItem("CREATEROLE");
+
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    $('.main').css('padding-top', $('.navbar').outerHeight());
+
+                    var data_pre = xhttp.responseText.trim();
+                    var data_eval = eval(data_pre);
+                    studies = data_eval;
+                    if (data_eval[0].TITLE) document.getElementById("TITLE").appendChild(document.createTextNode(data_eval[0].TITLE));
+                    if (data_eval[0].PRTNO) {
+                        document.getElementById("SUBTITLE").appendChild(document.createTextNode(data_eval[0].PRTNO));
+                        document.getElementById("prtno_bread").innerText = data_eval[0].PRTNO
+                    }
+                    if(data_eval[0].SACTIVE==0){
+                        var STATSPAN = document.createElement("span");
+                    STATSPAN.setAttribute("class", "badge badge-secondary ml-3");
+                    STATSPAN.appendChild(document.createTextNode("연구종료"));
+                    document.getElementById("SUBTITLE").appendChild(STATSPAN);
+                       
+                    }
+                    console.log("data_eval[0].SACTIVE="+data_eval[0].SACTIVE);
+
+                    if (data_eval[0].SAPPL) document.getElementById("APPLCANT").appendChild(document.createTextNode(data_eval[0].SAPPL));
+
+                    switch (data_eval[0].SSEX) {
+                        case 1:
+                            document.getElementById("SSEX").appendChild(document.createTextNode("남"));
+                            break;
+                        case 2:
+                            document.getElementById("SSEX").appendChild(document.createTextNode("여"));
+                            break;
+                        case 3:
+                            document.getElementById("SSEX").appendChild(document.createTextNode("상관없음"));
+                            break;
+                    }
+                    if (data_eval[0].SNUM) document.getElementById("SNUM").appendChild(document.createTextNode(data_eval[0].SNUM));
+                    if (data_eval[0].STARGET) document.getElementById("STARGET").appendChild(document.createTextNode(data_eval[0].STARGET));
+                    if (data_eval[0].SDATE) document.getElementById("SDATE").appendChild(document.createTextNode(data_eval[0].SDATE));
+
+                    //  console.log(" (data_eval[0].SFILE  "+ data_eval[0].SFILE);
+                    if (data_eval[0].SFILE != "")
+                        // console.log(data_eval[0].SFILE+"-----"+data_eval[0].SFILE.split("site").length);
+                        document.getElementById("SFILE").setAttribute("src", data_eval[0].CONTEXTPATH + data_eval[0].SFILE);
+                    // else document.getElementById("SFILE").setAttribute("src", "http://203.254.143.66:8080/"+data_eval[0].SFILE.split("site")[1]);
+
+
+                    for (var i = 0; i < data_eval[1].length; i++) {
+                        var createTR = document.createElement("tr");
+
+
+                        var titleTD = document.createElement("td");
+                        titleTD.setAttribute("class", "pb-0 tb-0");
+                        titleTD.setAttribute("style", "text-align: left;  font-weight: bold;");
+                        titleTD.appendChild(document.createTextNode(data_eval[1][i].TITLE));
+                        createTR.appendChild(titleTD);
+
+                        document.getElementById("ad_table").appendChild(createTR);
+
+                        var contentTR = document.createElement("tr");
+                        var contentTD = document.createElement("td");
+                        //contentTD.setAttribute("colspan", "5");
+                        console.log((data_eval[1][i].CONTENT).split('<br/>'))
+                        var content_arr = (data_eval[1][i].CONTENT).split('<br/>');
+                        for (var j = 0; j < content_arr.length; j++) {
+
+                            if (content_arr[j] == null || content_arr[j].length == 0) continue;
+                            contentTD.appendChild(document.createTextNode(content_arr[j]));
+                            contentTD.appendChild(document.createElement("br"))
+                        }
+                        contentTR.appendChild(contentTD);
+                        document.getElementById("ad_table").appendChild(contentTR);
+                    }
+                }
+            }
+            xhttp.open("GET", "./recruit.jsp?action=detail_load&SID=" + SID, true);
+            xhttp.send();
+        })
+
+        function APPLY() {
+            location.href = "apply.html?SID=" + SID;
+        }
+
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search);
+            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+
+        function CANCLE() {
+            window.history.back();
+        }
+        function changeStudyDepth(depth) {
+            // console.log(consent_tab_page_number);
+            switch (depth) {
+                case 1:  //연구페이지   
+                    location.href = "./study/study.html";
+                    break;
+
+                case 2:  //대상자관리 
+                    localStorage.setItem("study_SID", SID);
+                    location.href = "./applicants/applicants.html";
+                    break;
+
+                default: location.reload();
+                    break;
+            }
+        }
+    </script>
+</head>
+
+<body style>
+    <div id="navbar"></div>
+    <div class="container mt-3">
+        <div class="d-flex justify-content-between  ">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb p-0 m-0 " style="background-color:transparent;">
+                        <li class="breadcrumb-item"><a href="javascript:changeStudyDepth(1);">연구</a></li>
+                        <li class="breadcrumb-item "><a href="javascript:changeStudyDepth(2);"><span
+                                    id="prtno_bread"></span></a></li>
+                        <li class="breadcrumb-item active " aria-current="page">모집공고</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body w-100">
+                <h1 id="TITLE"></h1>
+                <h5 id="SUBTITLE"></h5>
+                <table class="table table-bordered mt-4">
+                    <tbody id="study_table">
+                        <tr>
+                            <td
+                                style="width: 150px; text-align: center; background-color: rgb(245, 245, 245); font-weight: bold;">
+                                대상자</td>
+                            <td id="APPLCANT"></td>
+
+                        </tr>
+                        <tr>
+                            <td
+                                style="width: 100px; text-align: center; background-color: rgb(245, 245, 245); font-weight: bold;">
+                                성별</td>
+                            <td id="SSEX"></td>
+
+                        </tr>
+                        <tr>
+                            <td
+                                style="width: 150px; text-align: center; background-color: rgb(245, 245, 245); font-weight: bold;">
+                                모집인원</td>
+                            <td id="SNUM"></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; background-color: rgb(245, 245, 245); font-weight: bold;">질환
+                            </td>
+                            <td id="STARGET"></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; background-color: rgb(245, 245, 245); font-weight: bold;">
+                                임상연구 일정</td>
+                            <td id="SDATE"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table class="table table-borderless mt-4 ">
+                    <tbody id="ad_table">
+
+                    </tbody>
+                </table>
+                <div class="mb-4 mt-2" style="text-align: center;">
+                    <img class="img-fluid" id="SFILE">
+                </div>
+                <div class="mb-4" style="text-align: center;">
+                    <a class="btn btn-outline-secondary" href="#" onclick="CANCLE()"
+                        style="border-radius: 0px; font-weight: bold;">뒤로가기</a>
+                    <!-- <a class="btn btn-outline-primary" href="#" onclick="APPLY()" id="APPLYBTN" style="border-radius: 0px; font-weight: bold;">지원하기</a> -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="footer" class="container mt-5 pt-5"></div>
+    <script src="../assets/js/app.js"></script>
+    <script src="../assets/lib/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../assets/lib/DataTables/datatables.min.js"></script>
+</body>
+
+</html>

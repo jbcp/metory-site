@@ -1,0 +1,213 @@
+
+<script type="text/javascript">
+  //  $(document).on("keyup", ".phoneNumber", function() { $(this).val( $(this).val().replace(/[^0-9]/g, "").replace(/(^02|^0[0-9]{2}|[0-9]{4})([0-9]+)?([0-9]{4})$/,"$1-$2-$3").replace("--", "-") ); });
+       $(document).on("keyup", ".cellNumber", function() { $(this).val( $(this).val().replace(/[^0-9]/g,"").replace(/(^01[0-9]{1}|[0-9]{4}|[0-9]{3})([0-9]+)?([0-9]{4})$/,"$1-$2-$3").replace("--", "-") ); });
+       $(document).on("keyup", ".phoneNumber", function() { $(this).val( $(this).val().replace(/[^0-9]/g,"").replace(/(^02|^0[0-9]{2}|[0-9]{4}|[0-9]{3})([0-9]+)?([0-9]{4})$/,"$1-$2-$3").replace("--", "-") ); });
+    $(document).ready(function(){
+        for(var j = 0; j < roles.length; j++){
+            var option = document.createElement("option");
+            option.setAttribute("value", roles[j].ROLEID);
+            option.appendChild(document.createTextNode(roles[j].ROLETITLE));
+            document.getElementById("ROLEID").appendChild(option);
+        }
+
+        // $('.number_input').keypress(function (event) { 
+        //     if (event.which && (event.which <= 47 || event.which >= 58) && event.which != 8) { 
+        //         event.preventDefault(); 
+        //     } 
+        // });
+    })
+
+    // function prev(){
+    //     window.history.back();
+        
+    // }
+
+    function save(){
+
+        if(validate()){
+          var INVPWD=escape(encodeURIComponent(sha256(String("metory123!!"))));
+            var ROLEID = $("#ROLEID option:selected").val();
+            var DOCTOR =(document.getElementById("DOCTOR").checked)? 1:0;       
+            var ACTIVE = (document.getElementById("ACTIVE").checked)? 1:2;       //초기값..미체크인 경우는 승인전이라고 보고 2 을 넣는다.  2-승인대기, 1=active(가입, 승인), 0=inactive(퇴사)    
+            var params = "?action=add_inv"
+                        +"&INVNAME="+document.getElementById("INVNAME").value.trim()
+                        +"&INVDEPARTMENT="+document.getElementById("INVDEPARTMENT").value.trim()
+                        +"&INVPOSITION="+document.getElementById("INVPOSITION").value.trim()
+                        +"&INVOFFICE="+document.getElementById("INVOFFICE").value.trim()
+                        +"&INVMAIL="+document.getElementById("INVMAIL").value.trim()
+                        +"&INVCELLPHONE="+document.getElementById("INVCELLPHONE").value.trim()
+                        +"&INVPHONE="+document.getElementById("INVPHONE").value.trim()
+                        +"&ROLEID="+ROLEID
+                        +"&ACTIVE="+ACTIVE
+                        +"&INVPWD="+INVPWD
+                        +"&DOCTOR="+DOCTOR;
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function(){
+                if(this.readyState == this.DONE && this.status == 200){
+                    var INVNAME = xhttp.responseText.trim();
+                    if(INVNAME != "") location.href="./admin.html";
+
+                }
+            }
+            xhttp.open("POST", "./member.jsp"+params, true);
+            xhttp.send();
+        }  
+    }
+    function validateEmail(email) 
+    {
+        const re = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
+
+     // var re = /\S+@\S+\.\S+/;
+        //var re = /\S+@\S+/;
+        console.log(re.test(email));
+        return re.test(email);
+    }
+    function validate(){
+        var result = true;
+
+        var email=document.getElementById("INVMAIL").value.trim();
+        var name=document.getElementById("INVNAME").value.trim();
+        if (email!= "" &&  validateEmail(email)  ) {
+           // document.getElementById("MAIL_FORM").setAttribute("class", "was-validated");
+          //  document.getElementById("INVMAIL").setAttribute("class", "form-control is-valid");
+        }
+        else {
+           
+          document.getElementById("MAIL_FORM").setAttribute("class", "was-validated");
+           document.getElementById("INVMAIL").setAttribute("class", "form-control is-valid");
+            while (document.getElementById("MAIL_FEEDBACK").hasChildNodes()) document.getElementById("MAIL_FEEDBACK").removeChild(document.getElementById("MAIL_FEEDBACK").firstChild);
+            document.getElementById("MAIL_FEEDBACK").appendChild(document.createTextNode("형식에 맞춰 이메일을 입력해주세요."));
+            result = false;
+            console.log({result:result})
+        }
+        console.log({result:result})
+            if (name == "") {
+                document.getElementById("NAME_FORM").setAttribute("class", "was-validated");
+                document.getElementById("INVNAME").setAttribute("class", "form-control is-valid");              
+
+                while (document.getElementById("NAME_FEEDBACK").hasChildNodes()) document.getElementById("NAME_FEEDBACK").removeChild(document.getElementById("NAME_FEEDBACK").firstChild);
+                document.getElementById("NAME_FEEDBACK").appendChild(document.createTextNode("이름을 입력해주세요."));
+
+           
+
+                result = false;
+            }
+            else {
+                document.getElementById("NAME_FORM").setAttribute("class", "was-validated");
+                document.getElementById("INVNAME").setAttribute("class", "form-control is-valid");
+            }
+
+       
+        // if(document.getElementById("INVNAME").value.trim() == ""){
+        //     alert("모든 정보를 입력해주세요.");
+        //     result = false;
+        // } 
+        // if(document.getElementById("INVMAIL").value.trim() == "") {
+        //     alert("모든 정보를 입력해주세요.");
+        //     result = false;
+        // } 
+        // else{
+        //    console.log("check")
+           if(result){
+                var xhttps = new XMLHttpRequest();
+            xhttps.onreadystatechange = function(){
+                if(this.readyState == this.DONE && this.status == 200){
+                    var count = xhttps.responseText.trim();
+                    if(Number(count) > 0){
+                        result = false;
+                        alert("이미 존재하는 이메일입니다.");
+                    }
+                }
+            }
+            xhttps.open("POST", "./auth.jsp?id="+document.getElementById("INVMAIL").value.trim(), false);
+            xhttps.send();
+         }
+
+       // alert(result)
+        return result;
+    }
+
+</script>
+<div>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb p-0 m-0" style="background-color:transparent;">
+            <li class="breadcrumb-item primary-color "><a href="javascript:load_mem();"> 사용자 명단</a></li>
+            <li class="breadcrumb-item  active" aria-current="page">사용자 추가</li>
+        
+        </ol>
+    </nav>
+</div>
+<div class="card col-sm-10 col-md-8 col-lg-6 mx-auto">
+    <div class="card-body">
+        <h1 class="h3 mb-3 mt-3 text-center font-weight-bold">사용자 추가하기</h1>
+        <div class="form-group" id="MAIL_FORM">
+            <label>이메일<span style="color: red;">*</span></label>
+            <input class="form-control form-control-lg" type="email" id="INVMAIL"  maxlength="100" placeholder="exmaple@email.com" required>
+            <div class="invalid-feedback" id="MAIL_FEEDBACK"></div>
+        </div>
+        <div class="form-group" id="NAME_FORM">
+            <label>이름<span style="color: red;">*</span></label>
+            <input class="form-control form-control-lg" type="text" id="INVNAME" maxlength="10" placeholder="이름을 입력하세요." required>
+             <div class="invalid-feedback" id="NAME_FEEDBACK"></div>
+                             
+        </div>
+
+        <div class="form-group">
+            <label>소속병원</label>
+            <input class="form-control form-control-lg" type="text" id="INVDEPARTMENT" maxlength="100" >
+        </div>
+        <div class="form-group">
+            <label>부서 또는 팀</label>
+            <input class="form-control form-control-lg" type="text" id="INVOFFICE"  maxlength="100">
+        </div>
+        <div class="form-group">
+            <label>직책</label>
+            <input class="form-control form-control-lg" type="text" id="INVPOSITION"  maxlength="100">
+        </div>
+        <div class="form-check">           
+            <input type="checkbox" class="form-check-input"  id="DOCTOR" >
+            <label class="form-check-label" for="DOCTOR">PI/Sub-I 여부체크 </label>
+            <h5 class="myinfo">※ PI 또는 Sub-I일 경우 체크를 해주세요.</h5>                
+        </div>   
+        <br>
+
+        <div class="form-group">
+            <label>유선 번호</label>
+            <input class="phoneNumber form-control form-control-lg " type="text" id="INVPHONE"  maxlength="15" placeholder="번호만 입력하세요." >
+        </div>
+        <div class="form-group">
+            <label>휴대폰 번호</label>
+            <input class="cellNumber form-control form-control-lg " type="text" id="INVCELLPHONE" maxlength="15" placeholder="번호만 입력하세요.">
+        </div>
+        <div class="form-group">
+            <label>플랫폼 기능권한 선택</label>
+            
+            <div class="form-group">
+                <select class="form-control" id="ROLEID">
+                </select>
+                <h5 class="myinfo mt-1 " style="margin-left: 1.2rem ">※ 플랫폼 기능권한은 관리자권한 담당자가 명칭과 기능권한을 관리합니다. <br> 변경이 필요할 시 관리자에게 문의해주세요. </h5>
+            </div>
+           
+        </div>  
+
+        <br>
+        <div class="form-check">           
+            <input type="checkbox" class="form-check-input mr-4" name="ACTIVE" value="1" id="ACTIVE" checked>
+            <label class="form-check-label mr-3" for="join">계정 활성화</label><br>
+            <h5 class="myinfo">※ 퇴사시 체크를 해제해주세요.</h5>                
+        </div>   
+         
+    
+        
+        <div class="text-center mt-3">
+           
+            <button class="btn btn-primary mt-1" onclick="save()" style="width:100px; "> 저장</button>
+            <!-- <button class="btn btn-default mr-2 mt-1" onclick="prev()" style=" width:100px; ">취소</button>  -->
+            <button class="btn btn-default mr-2 mt-1" onclick="load_mem()" style=" width:100px; ">취소</button>
+        </div>
+
+    </div>
+</div>
+
+<script type="text/javascript" language="javascript" src="../../assets/js/sha256.min.js"></script>

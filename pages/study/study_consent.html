@@ -1,0 +1,1036 @@
+<script type="text/javascript">
+    var sign_content_count = 0;
+    var consent_file_url = "";
+    var consent_fileName = "";
+    var file_hash = "";
+    var published = 0;
+    var isConsentFile=false;
+    $(document).ready(function () {
+        document.getElementById("group_name2").innerHTML = "(" + sessionStorage.CSGRPTITLE + ")";
+        if (sessionStorage.CONSENTNUM) document.getElementById("consent_num").innerHTML = "(" + sessionStorage.CONSENTNUM + ")";
+        else document.getElementById("consent_num").innerHTML = "(new)";
+
+        $(".consent-custom-file-input").on("change", function () {
+            if ($(this).val() != "") {
+                var ext = $(this).val().split(".").pop().toLowerCase();
+                if ($.inArray(ext, ["pdf"]) == -1) {
+                    alert("pdf 파일만 업로드 할 수 있습니다.");
+                    $(this).val("");
+                    return;
+                }
+                // else if(ext.length>2){
+                //     alert("파일이름에서 .pdf 앞에 . 을 제거하여 주십시오.");
+                // }
+                else {
+                    consent_fileName = $(this).val().split("\\").pop();
+                    $(this).siblings(".consent-custom-file-label").addClass("selected").html(consent_fileName);
+                }
+            }
+        });
+
+        $('.inputs').css('border-radius', '0rem');
+        $('.short').css("width", "250px");
+
+        history.pushState(null, null, location.href);
+        window.onpopstate = function (event) {
+            $.ajax({
+                type: 'post',
+                url: "./study_consent_list.html",
+                dataType: 'html',
+                success: function (data) {
+                    $(".consent").html(data);
+                }
+            })
+        };
+
+
+        if (consent_action == "modify") {
+            $('#finishBTN').empty();
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttp.responseText.trim();
+                    var data_eval = eval(data_pre);
+                    // console.log(data_eval);
+                    if (data_eval[0].INV_SIGN_COPTION == 0) document.getElementById("inv_sign_coption").checked = false;
+                    if (data_eval[0].CONTACT_COPTION == 0) {
+                        document.getElementById("uncontact_coption").checked = true;
+                    }
+                    document.getElementById("consent_version").value = data_eval[0].CVERSION;
+                    published = data_eval[0].ISPUBLISH;
+                    var removeBTN = document.createElement("button");
+                    document.getElementById("buttonDIV").appendChild(removeBTN);
+                    removeBTN.setAttribute("class", "btn btn-outline-danger mr-2");
+                    removeBTN.setAttribute("style", "border-radius:0rem");
+                    removeBTN.setAttribute("onclick", "REMOVE_BTN_CLICKED()");
+                    removeBTN.appendChild(document.createTextNode("동의서 삭제"));
+
+                    var modifyBTN = document.createElement("button");
+                    document.getElementById("buttonDIV").appendChild(modifyBTN);
+                    modifyBTN.setAttribute("class", "btn btn-outline-danger");
+                    modifyBTN.setAttribute("style", "border-radius:0rem");
+                    modifyBTN.setAttribute("onclick", "UPDATE_BTN_CLICKED()");
+                    modifyBTN.appendChild(document.createTextNode("저장하기"))
+
+                    switch (data_eval[0].ISPUBLISH) {
+                        case 0:
+                            $("#cpublish_BTN1").attr("class", "btn btn-outline-primary active");
+                            $("#cpublish_BTN2").attr("class", "btn btn-outline-primary");
+                            $("#cpublish1").prop("checked", true);
+                            document.getElementById("sms_btn").disabled = true;
+                            break;
+                        case 1: //게시됨
+                            $("#cpublish_BTN1").attr("class", "btn btn-outline-primary disabled");
+                            $("#cpublish_BTN2").attr("class", "btn btn-primary disabled");
+                            $("#cpublish2").prop("checked", true);
+                            $('#consentfile').attr("disabled", true);
+
+                            $('#consent_version').attr("disabled", true);
+                            $('#inv_sign_coption').attr("disabled", true);
+                            $('#sign_content_tbody input').attr("disabled", true);
+                            $('#sign_content_tbody textarea').attr("disabled", true);
+                            $("#extra_content_button").attr("class", "btn btn-outline-secondary disabled w-100");
+
+                            document.getElementById("consent_upload_form").hidden = true;
+                            $("input[name=contact_coption]").prop("disabled", true); // disable 
+
+                            $("#consent_content_table .btn").prop("disabled", true);
+                            $("#sign_content_tbody .btn").prop("disabled", true);
+                            $("#buttonDIV .btn").prop("disabled", true);
+                            var p = document.createElement("h5");
+                            p.innerText = "※ 현 동의서는 게시되어 수정할 수 없습니다.";
+                            p.setAttribute("class", "myinfo mywarning mt-2")
+                            document.getElementById("buttonDIV").appendChild(p);
+                            document.getElementById("sms_btn").disabled = false;
+
+
+
+                            break;
+                    }
+
+                    var fileBTN = document.createElement("a");
+                    fileBTN.setAttribute("class", "btn btn-outline-primary");
+                    if (data_eval[0].CFILE != "") {
+                        fileBTN.setAttribute("href", contextpath + data_eval[0].CFILE);
+                        fileBTN.setAttribute("download", data_eval[0].CFILENAME);
+                        fileBTN.appendChild(document.createTextNode(data_eval[0].CFILENAME));
+                        document.getElementById("CFILEDIV").appendChild(fileBTN);
+                        isConsentFile=true;
+                    }
+
+                }
+            }
+            xhttp.open("GET", "./study.jsp?action=LOAD_STUDY_CONSENT&CONSENTID=" + selected_consent_id, true);
+            xhttp.send();
+
+            var xhttps = new XMLHttpRequest();
+            xhttps.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttps.responseText.trim();
+                    var data_eval = eval(data_pre);
+                    console.log(data_eval);
+                    var sign_form_count = 1;
+                    if (data_eval.length > 0) {
+                        for (var i = 0; i < data_eval.length; i++) {
+                            add_sign_content();
+                            document.getElementById("signform_title_" + sign_form_count).value = data_eval[i].TITLE;
+                            document.getElementById("signform_content_" + sign_form_count).value = (data_eval[i].CONTENT).split('<br/>').join('\r\n');
+                            sign_form_count++;
+                        }
+                    }
+                }
+            }
+            xhttps.open("POST", "./study.jsp?action=LOAD_STUDY_CONSENT_SIGNFORM&CONSENTID=" + selected_consent_id, true);
+            xhttps.send();
+        }
+        else {//action=create
+            var createBTN = document.createElement("button");
+            document.getElementById("buttonDIV").appendChild(createBTN);
+            createBTN.setAttribute("class", "btn btn-outline-danger");
+
+            createBTN.setAttribute("onclick", "CREATE_CONSENT_BTN_CLICKED()");
+            createBTN.appendChild(document.createTextNode("생성하기"))
+            add_sign_content();
+        }
+
+        $('#multi_sms_list_Modal').on('hidden.bs.modal', function () {
+                
+         changeConsentTab(2);
+
+        });
+
+        // $('#multi_sms_list_Modal').on('shown.bs.modal', function () {
+
+
+            
+ 
+        // });
+
+    })//end of document ready
+
+    function REMOVECFILE() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                document.getElementById("CFILEDIV").innerHTML = "";
+            }
+        }
+        xhttp.open("GET", "./study.jsp?action=DELETE_CFILE&CONSENTID=" + selected_consent_id, false);
+        xhttp.send();
+
+    }
+
+    function REMOVE_BTN_CLICKED() {
+        $('#CHECK_REMOVE_MODAL').modal('show');
+
+    }
+
+    function REMOVE_CONSENT() {
+        $('#CHECK_REMOVE_MODAL').modal('hide');
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                $.ajax({
+                    type: 'post',
+                    url: "study_consent_list.html",
+                    dataType: 'html',
+                    success: function (data) {
+                        $(".consent").html(data);
+                    }
+                })
+            }
+        }
+        xhttp.open("POST", "./study.jsp", true);
+        xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhttp.send("action=DELETE_CONSENT&CONSENTID=" + selected_consent_id);
+    }
+
+    function getParameterByName(name) {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(location.search);
+        return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+
+    function CREATE_CONSENT_BTN_CLICKED() {//동의서 버전 새로 생성하기 위해  " 저장하기 "버튼 선택 된 경우
+        console.log(SID);
+
+        if (consent_fileName != "") consent_upload_file();
+        var ISPUBLISH = $('input[name=cpublishOptions]:checked').val();
+
+        if (ISPUBLISH == "1") {
+            if (validate()) {
+                $('#CHECK_SAVE_MODAL').modal('show');
+            }
+            else {
+               return;
+            }
+        }
+        else {
+            SAVE_CONSENT();
+        }
+
+    }
+    function validate() {
+        if(!isConsentFile) {
+            alert ("동의서 파일을 업로드해주세요.");
+            return false;
+        }
+
+        var rowCount = document.getElementById("sign_content_tbody").getElementsByTagName('tr').length;
+        console.log("row=" + rowCount);
+        if (rowCount > 1) {
+            var first_row_content_td = document.getElementById("sign_content_tbody").getElementsByTagName('td')[1];
+            //  first_row_content_td.setAttribute("style","background-color:yellow;");
+            var str = first_row_content_td.getElementsByTagName('textarea')[0].value.trim();
+            if (str.length == 0) {
+                alert("최소 1개의 동의서명 양식을 기입해주세요.");
+                return false;
+            }
+        }
+        else  {
+                alert("최소 1개의 동의서명 양식을 기입해주세요.");
+                return false;
+        }
+        return true;
+       
+    }
+    function SAVE_CONSENT() {//동의서 버전 새로 생성
+        console.log("action=create_consent");
+        var CVERSION = document.getElementById("consent_version").value.trim();
+        var ISPUBLISH = $('input[name=cpublishOptions]:checked').val();
+        var INV_SIGN_COPTION = (document.getElementById("inv_sign_coption").checked) ? 1 : 0;
+        var CONTACT_COPTION = $('input[name=contact_coption]:checked').val();
+
+        var params = "action=CREATE_CONSENT" +
+            "&SID=" + SID + 
+            "&CVERSION=" +   encodeURIComponent(CVERSION)  +
+            "&CFILE=" + encodeURIComponent(consent_file_url) +
+            "&CFILENAME=" +  encodeURIComponent(consent_fileName)   +
+            "&ISPUBLISH=" + ISPUBLISH +
+            "&CSGRPID=" + selected_consent_group +
+            "&CONTACT_COPTION=" + CONTACT_COPTION +
+            "&INV_SIGN_COPTION=" + INV_SIGN_COPTION +
+            "&CFILE_HASH=" +  encodeURIComponent(file_hash)  ;
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var CONSENTID = xhttp.responseText.trim();
+                selected_consent_id=CONSENTID;
+                publish_sign_form(CONSENTID);
+
+            }
+        }
+        xhttp.open("GET", "./study.jsp?" + params, true);
+        xhttp.send();
+
+    }
+
+    function UPDATE_BTN_CLICKED() {//동의서 버전 수정 후   "저장하기 "버튼 선택 된 경우  
+   
+    if(study_active==0) {
+            alert("종료된 연구는 동의서를 게시하거나 수정할 수 없습니다.");
+                return;
+        }
+        if (consent_fileName != "") consent_upload_file();
+        var ISPUBLISH = $('input[name=cpublishOptions]:checked').val();
+
+        if (ISPUBLISH == "1") {
+            if (validate()) {
+                $('#CHECK_UPDATE_MODAL').modal('show');
+            }
+            else return ;
+
+        }
+        else {
+            UPDATE_CONSENT();
+        }
+    }
+    function UPDATE_CONSENT() {//action=modify
+
+        console.log("action=update_consent    \t consendid=" + selected_consent_id);
+        if (consent_fileName != "") consent_upload_file()
+
+        var CVERSION = document.getElementById("consent_version").value.trim();
+        var ISPUBLISH = $('input[name=cpublishOptions]:checked').val();
+        var INV_SIGN_COPTION = (document.getElementById("inv_sign_coption").checked) ? 1 : 0;
+        var CONTACT_COPTION = $('input[name=contact_coption]:checked').val();
+
+        var params = "action=UPDATE_CONSENT" +
+            "&SID=" + SID +
+            "&CONSENTID=" + selected_consent_id +          
+            "&CVERSION=" +   encodeURIComponent(CVERSION)  +
+            "&CFILE=" + encodeURIComponent(consent_file_url) +
+            "&CFILENAME=" +  encodeURIComponent(consent_fileName)   +
+            "&ISPUBLISH=" + ISPUBLISH +
+           
+            "&CONTACT_COPTION=" + CONTACT_COPTION +
+            "&INV_SIGN_COPTION=" + INV_SIGN_COPTION +
+            "&CFILE_HASH=" +  encodeURIComponent(file_hash)  ;
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var CONSENTID = xhttp.responseText.trim();
+                publish_sign_form(selected_consent_id);
+            }
+        }
+        xhttp.open("GET", "./study.jsp?" + params, true); //UPDATE_CONSENT
+        xhttp.send();
+    }
+
+    function publish_sign_form(CONSENTID) {
+        var default_length = 3;
+        var start_index = 1;
+        var ISPUBLISH_STR = $('input[name=cpublishOptions]:checked').val();
+        if (document.getElementById("sign_content_tbody").childNodes.length > default_length) {
+            var sign_forms = new Array();
+            for (var i = start_index; i < document.getElementById("sign_content_tbody").childNodes.length - 2; i++) {
+                var sign_form = new Object();
+                sign_form.title = document.getElementById("sign_content_tbody").childNodes[i].childNodes[0].childNodes[0].value.trim();
+                sign_form.content = document.getElementById("sign_content_tbody").childNodes[i].childNodes[1].childNodes[0].childNodes[0].value.trim();
+                sign_form.content = sign_form.content.replace(/(?:\r\n|\r|\n)/g, '<br/>');
+                if (sign_form.content != "") sign_forms.push(sign_form);
+            }
+            var sign_forms_decode = escape(encodeURIComponent(JSON.stringify(sign_forms)));
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    // $.ajax({
+                    //     type: 'post',
+                    //     url: "study_consent_list.html",
+                    //     dataType: 'html',
+                    //     success: function (data) {
+                    //         $(".consent").html(data);
+                    //     }
+                    // })
+                   // changeConsentTab(2);
+
+                    // if(ISPUBLISH){
+                    //     SMS_BTN_CLICKED() ;
+                    // }
+                    //  changeConsentTab(1);
+
+                    // history.back();
+                    // location.reload();
+
+                }
+            }
+            xhttp.open("POST", "./study.jsp", true);
+            xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhttp.send("action=UPDATE_SIGN_FORM&CONSENTID=" + CONSENTID + "&contents=" + sign_forms_decode);
+        }
+        else if (document.getElementById("sign_content_tbody").childNodes.length == default_length) {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+               
+                   // history.back();
+                   // location.reload();
+                    // $.ajax({
+                    //     type: 'post',
+                    //     url: "study_consent_list.html",
+                    //     dataType: 'html',
+                    //     success: function (data) {
+                    //         $(".consent").html(data);
+                    //     }
+                    // })
+                }
+            }
+            xhttp.open("POST", "./study.jsp", true);
+            xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhttp.send("action=DELETE_SIGN_FORM&CONSENTID=" + CONSENTID);
+        }
+
+
+        if(ISPUBLISH_STR=="1"){
+           
+            SMS_BTN_CLICKED(CONSENTID) ;
+        }
+        else changeConsentTab(2);
+
+    }
+
+    function consent_upload_file() {
+        console.log("consent_upload_form");
+        
+        var consent_input_file = document.getElementById("consent_upload_form");
+
+        var formData2 = new FormData(consent_input_file);
+       // var fileNameUtf8 = URLEncoder.encode(fileName, "UTF-8"); 
+        //outputStream.writeBytes("Content-Disposition: form-data; name=\"file0\";filename=\"" + fileNameUtf8 + "\"" + lineEnd);
+
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                data = JSON.parse(xhr.responseText.trim());
+                consent_file_url =data.FILENAME.replace(/\\/gi, "/");
+                // consent_file_url = xhr.responseText.replace(/\\/gi, "/");
+                console.log("consnet_file_url=" + consent_file_url);
+               // file_hash = escape(encodeURIComponent(data.FILEHASH));
+                file_hash = data.FILEHASH;
+                console.log(data.FILEHASH);
+                isConsentFile=true;
+            }
+        }
+        xhr.open("POST", contextpath + "/pages/fileup.jsp?type=c", false);
+        xhr.send(formData2);
+    }
+
+    //     function add_row() {
+    //         const $tableID = $('#table');
+    //         const $BTN = $('#export-btn');
+    //         const $EXPORT = $('#export');
+
+    //         const newTr = `
+    // <tr class="hide">
+    //   <td class="pt-3-half" contenteditable="true">Example</td>
+    //   <td class="pt-3-half" contenteditable="true">Example</td>
+    //   <td class="pt-3-half" contenteditable="true">Example</td>
+    //   <td class="pt-3-half" contenteditable="true">Example</td>
+    //   <td class="pt-3-half" contenteditable="true">Example</td>
+    //   <td class="pt-3-half">
+    //     <span class="table-up"><a href="#!" class="indigo-text"><i class="fas fa-long-arrow-alt-up" aria-hidden="true"></i></a></span>
+    //     <span class="table-down"><a href="#!" class="indigo-text"><i class="fas fa-long-arrow-alt-down" aria-hidden="true"></i></a></span>
+    //   </td>
+    //   <td>
+    //     <span class="table-remove"><button type="button" class="btn btn-danger btn-rounded btn-sm my-0 waves-effect waves-light">Remove</button></span>
+    //   </td>
+    // </tr>`;
+
+    //         $('.table-add').on('click', 'i', () => {
+
+    //             const $clone = $tableID.find('tbody tr').last().clone(true).removeClass('hide table-line');
+
+    //             if ($tableID.find('tbody tr').length === 0) {
+
+    //                 $('tbody').append(newTr);
+    //             }
+
+    //             $tableID.find('table').append($clone);
+    //         });
+
+    //         $tableID.on('click', '.table-remove', function () {
+
+    //             $(this).parents('tr').detach();
+    //         });
+
+    //         $tableID.on('click', '.table-up', function () {
+
+    //             const $row = $(this).parents('tr');
+
+    //             if ($row.index() === 0) {
+    //                 return;
+    //             }
+
+    //             $row.prev().before($row.get(0));
+    //         });
+
+    //         $tableID.on('click', '.table-down', function () {
+
+    //             const $row = $(this).parents('tr');
+    //             $row.next().after($row.get(0));
+    //         });
+
+    //         // A few jQuery helpers for exporting only
+    //         jQuery.fn.pop = [].pop;
+    //         jQuery.fn.shift = [].shift;
+
+    //         $BTN.on('click', () => {
+
+    //             const $rows = $tableID.find('tr:not(:hidden)');
+    //             const headers = [];
+    //             const data = [];
+
+    //             // Get the headers (add special header logic here)
+    //             $($rows.shift()).find('th:not(:empty)').each(function () {
+
+    //                 headers.push($(this).text().toLowerCase());
+    //             });
+
+    //             // Turn all existing rows into a loopable array
+    //             $rows.each(function () {
+    //                 const $td = $(this).find('td');
+    //                 const h = {};
+
+    //                 // Use the headers from earlier to name our hash keys
+    //                 headers.forEach((header, i) => {
+
+    //                     h[header] = $td.eq(i).text();
+    //                 });
+
+    //                 data.push(h);
+    //             });
+
+    //             // Output the result
+    //             $EXPORT.text(JSON.stringify(data));
+    //         });
+    //     }
+  
+    function SMS_BTN_CLICKED() {
+             
+       
+       // console.log("SMS_BTN_CLICKED_CLICKED2"+consentid);
+
+        //  document.getElementById("on_request_list_Modal").getElementsByTagNameNS.getElementsByTagName("c");
+        var all = document.getElementById("multi_sms_list_Modal").querySelectorAll('input[type=checkbox]')[0];
+        all.checked = false;
+        $("#multi_sms_tbody tr").remove();
+
+        // $("#on_request_list_Modal checkbox").attr("checked", false);
+       
+        document.getElementById("message").innerText = "동의서가 변경되었습니다. \n업데이트된 동의서에 대한 동의과정을 수행해주세요."; //reset modal
+
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                var data_eval = eval(data_pre);
+                console.log("data_eval.length == 0" + data_eval.length);
+                if (data_eval.length == 0) {
+                  
+                    // var createTR = document.createElement("tr");
+                    // var createTD = document.createElement("td");
+                    // createTD.setAttribute("colspan", 4);
+                    // createTD.innerText = "참여중인 대상자가 없습니다.";
+                    // createTR.appendChild(createTD);
+                    // document.getElementById("multi_sms_tbody").appendChild(createTR);
+                 //  document.getElementById("sms_btn").setAttribute("onclick", alert("참여중인 대상자가 없습니다."));
+                    document.getElementById("sms_btn").disabled=false;
+                    alert("참여중인 대상자가 없습니다.")
+                    changeConsentTab(2);
+
+                }
+                else {
+                   // console.log("-----------------------");
+                    $('#multi_sms_list_Modal').modal('show');
+                  //  document.getElementById("sms_btn").setAttribute("onclick","SMS_BTN_CLICKED()");
+                    for (var i = 0; i < data_eval.length; i++) {
+                        //번호 
+
+                        var createTR = document.createElement("tr");
+                        //createTR.setAttribute("id", "consent_" + consent_detail.length);
+
+                        var numTD = document.createElement("td");
+                        // numTD.setAttribute("style", "text-align: center;");
+
+                        numTD.appendChild(document.createTextNode((i + 1)));
+                        createTR.appendChild(numTD);
+                        
+
+                        // document.getElementById("extra_content_"+extra_content_count).value = (data_eval[i].CONTENT).split('<br/>').join('\r\n');
+
+                        //이름   
+                        var nameTD = document.createElement("td");
+                        //   contentTD.setAttribute("id", "consent_ver_" + consent_detail[i].CDIDNUM);
+                        nameTD.appendChild(document.createTextNode(data_eval[i].APPLNAME));
+                        nameTD.setAttribute("id", "name_" + data_eval[i].SAID);
+                        createTR.appendChild(nameTD);
+                        //핸드폰 번호   
+                        var cellphoneTD = document.createElement("td");
+                        cellphoneTD.setAttribute("id", "cellphone_" + data_eval[i].SAID);
+                        cellphoneTD.appendChild(document.createTextNode(data_eval[i].APPLPHONENUM));
+                        createTR.appendChild(cellphoneTD);
+                        //시작 체크박스   
+                        var selectionTD = document.createElement("td");
+                        //  selectionTD.setAttribute("style", "text-align: center;");
+                        // selectionTD.setAttribute("class", "checkbox_" + data_eval[i].APPLID);
+                        var checkbox = document.createElement("INPUT");
+                        checkbox.setAttribute("type", "checkbox");
+                        checkbox.setAttribute("value", "smsto_" + data_eval[i].SAID);
+                        checkbox.setAttribute("name", "multi_sms_chx");
+                        // checkbox.checked=true;
+                        // checkbox.setAttribute("name", "on_request_chebox");
+
+                        selectionTD.appendChild(checkbox);
+                        //  selectionTD.setAttribute("id", "CONSENTCHECKBOX_TD_" + consent_detail[i].CDIDNUM);
+
+                        createTR.appendChild(selectionTD);
+
+                        document.getElementById("multi_sms_tbody").appendChild(createTR);
+                       
+
+                    }
+                }
+              //  changeConsentTab(2);
+
+
+
+            }
+        }
+        xhttp.open("GET", "./study.jsp?action=GET_SAACTIVE_LIST&SID=" + SID + "&CONSENTID=" + selected_consent_id, false);
+        xhttp.send();
+   
+
+
+    }    
+  
+    function writeMultiSmsLog(RECEIPTNUM, phonenum, message,receivers,saids){
+            
+            var params = "action=save_multi_sms_log&RECEIPTNUM=" + RECEIPTNUM +
+               "&SID="+SID+
+                "&phonenum=" + escape(encodeURIComponent(phonenum))+
+               "&message=" + escape(encodeURIComponent(message))+
+               "&receivers=" + escape(encodeURIComponent(receivers))+
+              "&CONSENTID=" + selected_consent_id+
+              "&saids="+saids
+               ;
+               console.log(params);
+            var xhttps = new XMLHttpRequest();
+            xhttps.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttps.responseText.trim();
+                   
+                   // if (data_pre == "SUCCESS"){
+                      //  alert("발송되었습니다. 발송번호:" + data.RECEIPTNUM);
+                      //  console.log("sms_log 저장됨");
+                   // }
+                   // else alert("오류가 발생하였습니다. 관리자에게 문의하세요. 에러코드:" + data.ERRORCODE + "  " + data.MSG);
+                    //  if( document.getElementById("sms_type").value=="inv_sign")view_consent();
+
+                    // location.reload();
+                }
+            }
+            xhttps.open("POST", "./study.jsp", true);
+            xhttps.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhttps.send(params);
+
+        }
+    function send_multi_sms() {
+        console.log("send multi" + selected_consent_id);
+
+        $('#multi_sms_list_Modal').modal('hide');
+        var all_checkboxs = document.getElementsByName("multi_sms_chx");
+
+        var phonenum = "";
+        var receivers="";
+        var saids="";
+        for (var i = 0; i < all_checkboxs.length; i++) {
+            if (all_checkboxs[i].checked == true) {
+                console.log(i + "--" + all_checkboxs[i].value);
+                var said = all_checkboxs[i].value.split("_")[1];
+                saids=(saids.length==0)? said: saids+"," +said;
+                phonenum = (phonenum.length == 0) ? document.getElementById("cellphone_" + said).innerText : phonenum + "," + document.getElementById("cellphone_" + said).innerText;
+
+                receivers = (receivers.length == 0) ? document.getElementById("name_" + said).innerText  : receivers + "," +document.getElementById("name_" + said).innerText ;
+                
+            }
+
+        }
+        var message = document.getElementById("message").value.trim();
+       
+      
+        // var phonenum = document.getElementById("phonenum").value.trim();
+       
+        // console.log(phonenum);
+        // console.log(message)
+        // if (message == null || message == "" || phonenum == null || phonenum == "") {
+        //     console.log("not validateing of message or phone number");
+        //     alert("전화번호 또는 메시지를 입력하여 주십시오.");
+        //     return;
+        // }
+
+        var params = "phonenum=" + phonenum +
+            "&message=" + escape(encodeURIComponent(message));
+
+        var xhttps = new XMLHttpRequest();
+        xhttps.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttps.responseText.trim();
+                var data = JSON.parse(data_pre);
+                if (data.RESULT == "SUCCESS"){
+                    alert("발송되었습니다. 발송번호:" + data.RECEIPTNUM);
+                    writeMultiSmsLog(data.RECEIPTNUM,phonenum, message,receivers, saids );
+                   
+                }
+                else alert("오류가 발생하였습니다. \n관리자에게 문의하세요. 에러코드:" + data.ERRORCODE + "  " + data.MSG);
+                //  if( document.getElementById("sms_type").value=="inv_sign")view_consent();
+                
+                changeConsentTab(2);
+                // location.reload();
+            }
+        }
+        xhttps.open("POST", "../sendMsg/sendXMS_Multi.jsp", true);
+        xhttps.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhttps.send(params);
+
+
+
+    }
+    function add_sign_content() {
+        sign_content_count = sign_content_count + 1;
+
+        var createTR = document.createElement("tr");
+        createTR.setAttribute("id", "signcontent_" + sign_content_count);
+        document.getElementById("sign_content_tbody").insertBefore(createTR, document.getElementById("sign_content_tbody").childNodes[document.getElementById("sign_content_tbody").childNodes.length - 2]);
+
+        var createtitleTD = document.createElement("td");
+        createtitleTD.setAttribute("style", "width:150px")
+        var titleInput = document.createElement("input");
+        titleInput.setAttribute("class", "form-control");
+        titleInput.setAttribute("type", "text");
+        titleInput.setAttribute("style", "text-align:right;");
+        titleInput.setAttribute("maxlength", "150");
+        titleInput.setAttribute("id", "signform_title_" + sign_content_count);
+        titleInput.setAttribute("placeholder", "소제목 예: 서명");
+        createtitleTD.appendChild(titleInput);
+
+        var createcontentTD = document.createElement("td");
+        var contentform = document.createElement("form");
+        contentform.setAttribute("class", "form-inline");
+        contentform.setAttribute("style", "width:100%");
+
+        var contentInput = document.createElement("textarea");
+        contentInput.setAttribute("class", "form-control");
+        contentInput.setAttribute("type", "text");
+        contentInput.setAttribute("rows", "5");
+        if (sign_content_count == 1) contentInput.setAttribute("placeholder", "예: 본 연구의 동의설명서 내용을 충분히 이해하고 자발적으로 연구에 참여합니다.");
+        else contentInput.setAttribute("placeholder", "사용방법: 오른쪽 아래를 잡아당겨 크기를 조절하실 수 있습니다.");
+        // contentInput.setAttribute("onkeydown", "resize(this)");
+        // contentInput.setAttribute("onkeyup", "resize(this)");
+        contentInput.setAttribute("style", "width:calc(100% - 60px);");
+        contentInput.setAttribute("maxlength", "1500")
+        contentInput.setAttribute("id", "signform_content_" + sign_content_count);
+        contentform.appendChild(contentInput);
+
+        var deleteButton = document.createElement("button");
+        deleteButton.setAttribute("class", "btn btn-sm btn-outline-primary ml-1");
+        deleteButton.setAttribute("style", "width:50px; font-weight:bold");
+        deleteButton.setAttribute("href", "#");
+        deleteButton.setAttribute("onclick", "delete_content(this);");
+        deleteButton.appendChild(document.createTextNode("삭제"));
+        contentform.appendChild(deleteButton);
+        createcontentTD.appendChild(contentform);
+
+        createTR.appendChild(createtitleTD);
+        createTR.appendChild(createcontentTD);
+    }
+
+    function multi_sms_toggle(source) {
+        var checkboxes = document.getElementsByName('multi_sms_chx');
+        //document.getElementById("request_all").setAttibute("checked","");
+        for (var i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].checked = source.checked;
+
+        }
+    }
+</script>
+
+<div class="d-flex justify-content-between">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb p-0 m-0" style="background-color:transparent;">
+            <li class="breadcrumb-item primary-color "><a href="javascript:changeConsentTab(1);"> 동의그룹리스트</a></li>
+            <li class="breadcrumb-item primary-color"><a href="javascript:changeConsentTab(2);">문서관리<span
+                        id="group_name2"></span></a></li>
+            <li class="breadcrumb-item  active" aria-current="page">동의서<span id="consent_num"></span></li>
+        </ol>
+
+    </nav>
+    <div style="text-align: right;" id="buttonDIV">
+        <!-- <button class="btn btn-outline-danger" style="border-radius: 0rem;" id="finishBTN" onclick="publish_consent()">생성하기</button> -->
+    </div>
+</div>
+
+<table class="table table-borderless">
+    <tbody id="consent_content_table">
+        <tr>
+            <td style="width: 150px; font-weight: bold;">게시여부</td>
+            <td class="d-flex flex-inline">
+                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                    <label class="btn btn-outline-primary active" id="cpublish_BTN1" style="border-radius: 0rem;">
+                        <input type="radio" name="cpublishOptions" id="cpublish1" value="0" autocomplete="off" checked>
+                        게시안함
+                    </label>
+                    <label class="btn btn-outline-primary" id="cpublish_BTN2" style="border-radius: 0rem;">
+                        <input type="radio" name="cpublishOptions" id="cpublish2" value="1" autocomplete="off"> 게시함
+                    </label>
+                </div>
+                <div class="ml-3" id="sms_div">
+
+                    <button class="btn btn-primary" id="sms_btn" onclick="SMS_BTN_CLICKED()" disabled><i
+                            class="far fa-envelope"></i></button>
+                </div>
+
+
+
+            </td>
+
+        </tr>
+
+        <tr>
+            <td style="width: 150px; font-weight: bold;">동의 문서 버전</td>
+            <td><input class="form-control form-control-lg inputs short" type="text" maxlength="200"
+                    placeholder="문서 버전을 입력해주세요." style="border-radius: 0px;" id="consent_version"></td>
+        </tr>
+        <tr>
+            <td style="width: 150px; font-weight: bold;">동의서파일</td>
+            <td>
+                <div class="input-group mb-3">
+                    <form class="custom-file" method="POST" enctype="multipart/form-data" id="consent_upload_form">
+                        <input type="file" class="custom-file-input consent-custom-file-input" name="fileName2"
+                            id="consentfile">
+                        <label class="custom-file-label consent-custom-file-label" for="consentfile"
+                            aria-describedby="consentfileAddon" style="border-radius: 0px;">Choose file</label>
+                    </form>
+                </div>
+                <!-- <h5 style="font-size: smaller; font-weight: bold;color: red;">※ 최소 1개의 서명 양식을 기입해주세요.</h5> -->
+
+                <div id="CFILEDIV"></div>
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 160px; font-weight: bold;">동의서 서명방법</td>
+            <td>
+                <div class="form-check-inline">
+
+                    <input type="radio" name="contact_coption" id="contact_coption" value="1" autocomplete="off"
+                        checked> 대면
+                    <input type="radio" class="ml-5" name="contact_coption" id="uncontact_coption" value="0"
+                        autocomplete="off"> 비대면
+
+                </div>
+                <h5 class="myinfo">※ 동의서서명을 대면으로 진행할지 또는 비대면으로할지 선택해주시면 됩니다. <br> 비대면으로 선택하면 대상자가 플랫폼 사이트에서 서명할 수 있습니다.
+                </h5>
+
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 150px; font-weight: bold;">연구자서명 필요여부</td>
+            <td>
+
+                <div class="form-check form-check-inline">
+                    <input type="checkbox" class="form-check-input" name="inv_sign_coption" id="inv_sign_coption"
+                        value="1" checked>
+                    <label class="form-check-label" for="inv_sign_coption">연구자 필요여부</label>
+
+                </div>
+                <h5 class="myinfo">※ 연구자서명이 필요없을 경우 체크를 해제해주세요.</h5>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<div id="table" class="table-editable">
+    <!-- <table class="table table-bordered table-responsive-md table-striped text-center" style="vertical-align:middle"> 
+
+    <thead>
+        <tr>
+            <td width="60px">페이지번호</td>
+            <td width="150px">제목</td>
+            <td>내용</td>
+            <td width="60px">소요시간</td>
+            <td width="30px">삭제</td>
+        </tr>
+    </thead>
+    <tbody id="consent_table">
+        <tr>
+            <td > <input  type="text" class="form-control"  maxlength="2"></td>
+            <td  > <input   type="text" class="form-control"  maxlength="300"></td>
+            <td >
+                <input type="textarea"  type="text" class="form-control " rows="5" maxlength="1500">
+               
+               </td>
+            <td ><input  type="text" class="form-control"  maxlength="5"></td>
+            <td>
+                <span class="table-remove"><button type="button"
+                    class="btn btn-outline-secondary btn-rounded btn-sm my-0">삭제</button></span>
+        
+                                         
+            </td>
+        </tr>                       
+    </tbody>
+</table> -->
+    <hr>
+    <h4>동의 서명 양식 </h4>
+    <h5 class="myinfo mywarning">※ 최소 1개의 서명 양식을 기입해주세요.</h5>
+    <table class="table table-borderless w-90 ml-3 " style="vertical-align:middle">
+        <tbody id="sign_content_tbody">
+            <tr>
+                <td colspan="2">
+                    <button class="btn btn-outline-secondary w-100 " onclick="add_sign_content()"
+                        id="extra_content_button">동의 서명 내용 추가</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ///////////////////////////modal////////////////// -->
+    <div class="modal" tabindex="-1" role="dialog" id="CHECK_SAVE_MODAL">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content ">
+                <div class="modal-header">
+                    <h5 class="modal-title">동의서를 게시하시겠습니까?</h5>
+                    <button  class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>동의서를 게시하시겠습니까?</p>
+                    <p>동의서가 게시되면 이후에는 수정이 불가하며 동의서를 삭제할 수 없습니다.</p>
+                </div>
+                <div class="modal-footer">
+
+                    <button  class="btn btn-primary" data-dismiss="modal" id="SAVE_publish_btn"
+                        onclick="SAVE_CONSENT()">게시</button>
+                    <button  class="btn btn-default" data-dismiss="modal">취소</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" tabindex="-1" role="dialog" id="CHECK_UPDATE_MODAL">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">동의서를 게시하시겠습니까?</h5>
+                    <button  class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>동의서를 게시하시겠습니까?</p>
+                    <p>동의서가 게시되면 이후에는 수정이 불가하며 동의서를 삭제할 수 없습니다.</p>
+                </div>
+                <div class="modal-footer">
+
+                    <button  class="btn btn-primary" data-dismiss="modal" id="UPDATE_publish_btn"
+                        onclick="UPDATE_CONSENT()">게시</button>
+                    <button  class="btn btn-default" data-dismiss="modal">취소</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal" tabindex="-1" role="dialog" id="CHECK_REMOVE_MODAL">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">동의서를 삭제하시겠습니까?</h5>
+                    <button  class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>동의서를 삭제하시겠습니까?</p>
+                    <p>동의서가 삭제되면 복구할 수 없습니다.</p>
+                </div>
+                <div class="modal-footer">
+
+                    <button  class="btn btn-primary" onclick="REMOVE_CONSENT()">삭제</button>
+                    <button class="btn btn-default" data-dismiss="modal">취소</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="modal fade bd-example-modal" id="multi_sms_list_Modal" tabindex="-1" role="dialog"
+        aria-hidden="true">
+        <div class="modal-dialog modal modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">참여중인 대상자 리스트</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body m-2 p-2" style="max-height:500px; overflow:auto;">
+                    <table class="table table-bordered" style="text-align:center;">
+                        <thead>
+                            <tr>
+                                <th>번호</th>
+                                <th>수신자</th>
+                                <th>핸드폰 번호</th>
+                                <th>
+                                    선택 <input class="ml-2" type="checkbox" id="multi_sms_all"
+                                        onChange="multi_sms_toggle(this)">
+                                    All</input>
+                                </th>
+                            </tr>
+
+                        </thead>
+                        <tbody id="multi_sms_tbody">
+
+                        </tbody>
+                    </table>
+                    <div>
+                        <label class="form-check form-check-inline mt-3">메시지</label>
+                        <textarea class="form-control" type="text" id="message" rows="9" cols="50"></textarea>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button  style="width:100px" class="btn btn-primary" onclick="send_multi_sms()" 
+                        >문자발송</button>
+
+                    <button  class="btn btn-default ml-3" style="width:100px;"
+                        data-dismiss="modal">취소</button>
+                </div>
+            </div>
+        </div>
+    </div>

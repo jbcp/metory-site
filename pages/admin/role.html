@@ -1,0 +1,366 @@
+<script type="text/javascript">
+    var ROLEID;
+
+    $(document).ready(function () {
+        var xhttps = new XMLHttpRequest();
+        xhttps.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+
+                var data_pre = xhttps.responseText.trim();
+                var data_eval = eval(data_pre);
+                roles = data_eval;
+                console.log(roles);
+
+                for (var i = 0; i < data_eval.length; i++) {
+                    var createTR = document.createElement("tr");
+                    document.getElementById("role_table").appendChild(createTR);
+
+                    var ROLEIDTD = document.createElement("td");
+                    ROLEIDTD.appendChild(document.createTextNode(i + 1));
+                    createTR.appendChild(ROLEIDTD);
+
+                    var ROLETITLETD = document.createElement("td");
+                    ROLETITLETD.appendChild(document.createTextNode(data_eval[i].ROLETITLE));
+                    createTR.appendChild(ROLETITLETD);
+
+                    // var READTD = document.createElement("td");
+                    // var READCHECKDIV = document.createElement("div");
+                    // READCHECKDIV.setAttribute("class", "custom-control custom-checkbox");
+                    // var READCHECKINPUT = document.createElement("input");
+                    // READCHECKINPUT.setAttribute("type", "checkbox");
+                    // READCHECKINPUT.setAttribute("class", "custom-control-input");
+                    // READCHECKINPUT.setAttribute("disabled", "");
+                    // READCHECKINPUT.setAttribute("id", "READCHECKINPUT_"+data_eval[i].ROLEID);
+                    // var READCHECKLABEL = document.createElement("label");
+                    // READCHECKLABEL.setAttribute("class", "custom-control-label");
+                    // READCHECKLABEL.setAttribute("for", "READCHECKINPUT_"+data_eval[i].ROLEID); 
+                    // READCHECKDIV.appendChild(READCHECKINPUT);
+                    // READCHECKDIV.appendChild(READCHECKLABEL);
+                    // READTD.appendChild(READCHECKDIV);
+                    // createTR.appendChild(READTD);
+                    // if(data_eval[i].READ == 1) $("#READCHECKINPUT_"+data_eval[i].ROLEID).prop("checked", true);
+                    // else $("#READCHECKINPUT_"+data_eval[i].ROLEID).prop("checked", false);
+
+                    var CREATETD = document.createElement("td");
+                    var CREATECHECKDIV = document.createElement("div");
+                    CREATECHECKDIV.setAttribute("class", "custom-control custom-checkbox");
+                    var CREATECHECKINPUT = document.createElement("input");
+                    CREATECHECKINPUT.setAttribute("type", "checkbox");
+                    CREATECHECKINPUT.setAttribute("class", "custom-control-input");
+                    CREATECHECKINPUT.setAttribute("disabled", "");
+                    CREATECHECKINPUT.setAttribute("id", "CREATECHECKINPUT_" + data_eval[i].ROLEID);
+                    var CREATECHECKLABEL = document.createElement("label");
+                    CREATECHECKLABEL.setAttribute("class", "custom-control-label");
+                    CREATECHECKLABEL.setAttribute("for", "CREATECHECKINPUT_" + data_eval[i].ROLEID);
+                    CREATECHECKDIV.appendChild(CREATECHECKINPUT);
+                    CREATECHECKDIV.appendChild(CREATECHECKLABEL);
+                    CREATETD.appendChild(CREATECHECKDIV);
+                    createTR.appendChild(CREATETD);
+                    if (data_eval[i].CREATE == 1) $("#CREATECHECKINPUT_" + data_eval[i].ROLEID).prop("checked", true);
+                    else $("#CREATECHECKINPUT_" + data_eval[i].ROLEID).prop("checked", false);
+
+                    var MOIDFYTD = document.createElement("td");
+                    var MODIFYCHECKDIV = document.createElement("div");
+                    MODIFYCHECKDIV.setAttribute("class", "custom-control custom-checkbox");
+                    var MOIDFYCHECKINPUT = document.createElement("input");
+                    MOIDFYCHECKINPUT.setAttribute("type", "checkbox");
+                    MOIDFYCHECKINPUT.setAttribute("class", "custom-control-input");
+                    MOIDFYCHECKINPUT.setAttribute("disabled", "");
+                    MOIDFYCHECKINPUT.setAttribute("id", "MOIDFYCHECKINPUT_" + data_eval[i].ROLEID);
+                    var MODIFYCHECKLABEL = document.createElement("label");
+                    MODIFYCHECKLABEL.setAttribute("class", "custom-control-label");
+                    MODIFYCHECKLABEL.setAttribute("for", "MOIDFYCHECKINPUT_" + data_eval[i].ROLEID);
+                    MODIFYCHECKDIV.appendChild(MOIDFYCHECKINPUT);
+                    MODIFYCHECKDIV.appendChild(MODIFYCHECKLABEL);
+                    MOIDFYTD.appendChild(MODIFYCHECKDIV);
+                    createTR.appendChild(MOIDFYTD);
+                    if (data_eval[i].MODIFY == 1) $("#MOIDFYCHECKINPUT_" + data_eval[i].ROLEID).prop("checked", true);
+                    else $("#MOIDFYCHECKINPUT_" + data_eval[i].ROLEID).prop("checked", false);
+
+                    var RESERVETD = document.createElement("td");
+                    var RESERVECHECKDIV = document.createElement("div");
+                    RESERVECHECKDIV.setAttribute("class", "custom-control custom-checkbox");
+                    var RESERVECHECKINPUT = document.createElement("input");
+                    RESERVECHECKINPUT.setAttribute("type", "checkbox");
+                    RESERVECHECKINPUT.setAttribute("class", "custom-control-input");
+                    RESERVECHECKINPUT.setAttribute("disabled", "");
+                    RESERVECHECKINPUT.setAttribute("id", "RESERVECHECKINPUT_" + data_eval[i].ROLEID);
+                    var RESERVECHECKLABEL = document.createElement("label");
+                    RESERVECHECKLABEL.setAttribute("class", "custom-control-label");
+                    RESERVECHECKLABEL.setAttribute("for", "RESERVECHECKINPUT_" + data_eval[i].ROLEID);
+                    RESERVECHECKDIV.appendChild(RESERVECHECKINPUT);
+                    RESERVECHECKDIV.appendChild(RESERVECHECKLABEL);
+                    RESERVETD.appendChild(RESERVECHECKDIV);
+                    createTR.appendChild(RESERVETD);
+                    if (data_eval[i].RESERVE == 1) $("#RESERVECHECKINPUT_" + data_eval[i].ROLEID).prop("checked", true);
+                    else $("#RESERVECHECKINPUT_" + data_eval[i].ROLEID).prop("checked", false);
+
+                    var IDENTITYTD = document.createElement("td");
+                    var IDENTITYCHECKDIV = document.createElement("div");
+                    IDENTITYCHECKDIV.setAttribute("class", "custom-control custom-checkbox");
+                    var IDENTITYCHECKINPUT = document.createElement("input");
+                    IDENTITYCHECKINPUT.setAttribute("type", "checkbox");
+                    IDENTITYCHECKINPUT.setAttribute("class", "custom-control-input");
+                    IDENTITYCHECKINPUT.setAttribute("disabled", "");
+                    IDENTITYCHECKINPUT.setAttribute("id", "IDENTITYCHECKINPUT_" + data_eval[i].ROLEID);
+                    var IDENTITYCHECKLABEL = document.createElement("label");
+                    IDENTITYCHECKLABEL.setAttribute("class", "custom-control-label");
+                    IDENTITYCHECKLABEL.setAttribute("for", "IDENTITYCHECKINPUT_" + data_eval[i].ROLEID);
+                    IDENTITYCHECKDIV.appendChild(IDENTITYCHECKINPUT);
+                    IDENTITYCHECKDIV.appendChild(IDENTITYCHECKLABEL);
+                    IDENTITYTD.appendChild(IDENTITYCHECKDIV);
+                    createTR.appendChild(IDENTITYTD);
+                    if (data_eval[i].IDENTITY == 1) $("#IDENTITYCHECKINPUT_" + data_eval[i].ROLEID).prop("checked", true);
+                    else $("#IDENTITYCHECKINPUT_" + data_eval[i].ROLEID).prop("checked", false);
+
+                    var CONSENTTD = document.createElement("td");
+                    var CONSENTCHECKDIV = document.createElement("div");
+                    CONSENTCHECKDIV.setAttribute("class", "custom-control custom-checkbox");
+                    var CONSENTCHECKINPUT = document.createElement("input");
+                    CONSENTCHECKINPUT.setAttribute("type", "checkbox");
+                    CONSENTCHECKINPUT.setAttribute("class", "custom-control-input");
+                    CONSENTCHECKINPUT.setAttribute("disabled", "");
+                    CONSENTCHECKINPUT.setAttribute("id", "CONSENTCHECKINPUT_" + data_eval[i].ROLEID);
+                    var CONSENTCHECKLABEL = document.createElement("label");
+                    CONSENTCHECKLABEL.setAttribute("class", "custom-control-label");
+                    CONSENTCHECKLABEL.setAttribute("for", "CONSENTCHECKINPUT_" + data_eval[i].ROLEID);
+                    CONSENTCHECKDIV.appendChild(CONSENTCHECKINPUT);
+                    CONSENTCHECKDIV.appendChild(CONSENTCHECKLABEL);
+                    CONSENTTD.appendChild(CONSENTCHECKDIV);
+                    createTR.appendChild(CONSENTTD);
+                    if (data_eval[i].CONSENT == 1) $("#CONSENTCHECKINPUT_" + data_eval[i].ROLEID).prop("checked", true);
+                    else $("#CONSENTCHECKINPUT_" + data_eval[i].ROLEID).prop("checked", false);
+
+                    var SIGNTD = document.createElement("td");
+                    var SIGNCHECKDIV = document.createElement("div");
+                    SIGNCHECKDIV.setAttribute("class", "custom-control custom-checkbox");
+                    var SIGNCHECKINPUT = document.createElement("input");
+                    SIGNCHECKINPUT.setAttribute("type", "checkbox");
+                    SIGNCHECKINPUT.setAttribute("class", "custom-control-input");
+                    SIGNCHECKINPUT.setAttribute("disabled", "");
+                    SIGNCHECKINPUT.setAttribute("id", "SIGNCHECKINPUT_" + data_eval[i].ROLEID);
+                    var SIGNCHECKLABEL = document.createElement("label");
+                    SIGNCHECKLABEL.setAttribute("class", "custom-control-label");
+                    SIGNCHECKLABEL.setAttribute("for", "SIGNCHECKINPUT_" + data_eval[i].ROLEID);
+                    SIGNCHECKDIV.appendChild(SIGNCHECKINPUT);
+                    SIGNCHECKDIV.appendChild(SIGNCHECKLABEL);
+                    SIGNTD.appendChild(SIGNCHECKDIV);
+                    createTR.appendChild(SIGNTD);
+                    if (data_eval[i].SIGN == 1) $("#SIGNCHECKINPUT_" + data_eval[i].ROLEID).prop("checked", true);
+                    else $("#SIGNCHECKINPUT_" + data_eval[i].ROLEID).prop("checked", false);
+
+                    var ADMINTD = document.createElement("td");
+                    var ADMINCHECKDIV = document.createElement("div");
+                    ADMINCHECKDIV.setAttribute("class", "custom-control custom-checkbox");
+                    var ADMINCHECKINPUT = document.createElement("input");
+                    ADMINCHECKINPUT.setAttribute("type", "checkbox");
+                    ADMINCHECKINPUT.setAttribute("class", "custom-control-input");
+                    ADMINCHECKINPUT.setAttribute("disabled", "");
+                    ADMINCHECKINPUT.setAttribute("id", "ADMINCHECKINPUT_" + data_eval[i].ROLEID);
+                    var ADMINCHECKLABEL = document.createElement("label");
+                    ADMINCHECKLABEL.setAttribute("class", "custom-control-label");
+                    ADMINCHECKLABEL.setAttribute("for", "ADMINCHECKINPUT_" + data_eval[i].ROLEID);
+                    ADMINCHECKDIV.appendChild(ADMINCHECKINPUT);
+                    ADMINCHECKDIV.appendChild(ADMINCHECKLABEL);
+                    ADMINTD.appendChild(ADMINCHECKDIV);
+                    createTR.appendChild(ADMINTD);
+                    if (data_eval[i].ADMIN == 1) $("#ADMINCHECKINPUT_" + data_eval[i].ROLEID).prop("checked", true);
+                    else $("#ADMINCHECKINPUT_" + data_eval[i].ROLEID).prop("checked", false);
+
+                    var STUDYADMINTD = document.createElement("td");
+                    var STUDYADMINCHECKDIV = document.createElement("div");
+                    STUDYADMINCHECKDIV.setAttribute("class", "custom-control custom-checkbox");
+                    var STUDYADMINCHECKINPUT = document.createElement("input");
+                    STUDYADMINCHECKINPUT.setAttribute("type", "checkbox");
+                    STUDYADMINCHECKINPUT.setAttribute("class", "custom-control-input");
+                    STUDYADMINCHECKINPUT.setAttribute("disabled", "");
+                    STUDYADMINCHECKINPUT.setAttribute("id", "STUDYADMINCHECKINPUT" + data_eval[i].ROLEID);
+                    var STUDYADMINCHECKLABEL = document.createElement("label");
+                    STUDYADMINCHECKLABEL.setAttribute("class", "custom-control-label");
+                    STUDYADMINCHECKLABEL.setAttribute("for", "STUDYADMINCHECKINPUT" + data_eval[i].ROLEID);
+                    STUDYADMINCHECKDIV.appendChild(STUDYADMINCHECKINPUT);
+                    STUDYADMINCHECKDIV.appendChild(STUDYADMINCHECKLABEL);
+                    STUDYADMINTD.appendChild(STUDYADMINCHECKDIV);
+                    createTR.appendChild(STUDYADMINTD);
+                    if (data_eval[i].STUDYADMIN == 1) $("#STUDYADMINCHECKINPUT" + data_eval[i].ROLEID).prop("checked", true);
+                    else $("#STUDYADMINCHECKINPUT" + data_eval[i].ROLEID).prop("checked", false);
+
+
+                    var BCADMINTD = document.createElement("td");
+                    var BCADMINCHECKDIV = document.createElement("div");
+                    BCADMINCHECKDIV.setAttribute("class", "custom-control custom-checkbox");
+                    var BCADMINCHECKINPUT = document.createElement("input");
+                    BCADMINCHECKINPUT.setAttribute("type", "checkbox");
+                    BCADMINCHECKINPUT.setAttribute("class", "custom-control-input");
+                    BCADMINCHECKINPUT.setAttribute("disabled", "");
+                    BCADMINCHECKINPUT.setAttribute("id", "BCADMINCHECKINPUT_" + data_eval[i].ROLEID);
+                    var BCADMINCHECKLABEL = document.createElement("label");
+                    BCADMINCHECKLABEL.setAttribute("class", "custom-control-label");
+                    BCADMINCHECKLABEL.setAttribute("for", "BCADMINCHECKINPUT_" + data_eval[i].ROLEID);
+                    BCADMINCHECKDIV.appendChild(BCADMINCHECKINPUT);
+                    BCADMINCHECKDIV.appendChild(BCADMINCHECKLABEL);
+                    BCADMINTD.appendChild(BCADMINCHECKDIV);
+                    createTR.appendChild(BCADMINTD);
+                    if (data_eval[i].BCADMIN == 1) $("#BCADMINCHECKINPUT_" + data_eval[i].ROLEID).prop("checked", true);
+                    else $("#BCADMINCHECKINPUT_" + data_eval[i].ROLEID).prop("checked", false);
+
+                    //수정/삭제
+                    var MODIFYBTNTD = document.createElement("td");
+                    var MODIFYBTN = document.createElement("a");
+                    MODIFYBTNTD.setAttribute("class", "d-flex justify-content-between ");
+                    MODIFYBTN.setAttribute("class", "btn btn-outline-primary btn-sm ");
+                    MODIFYBTN.setAttribute("href", "#");
+                    MODIFYBTN.setAttribute("id", "MODIFYROLEBTN_" + data_eval[i].ROLEID);
+                    MODIFYBTN.setAttribute("onclick", "MODIFY_ROLE(id)");
+                    MODIFYBTN.setAttribute("style", "font-weight: bold;");
+                    MODIFYBTN.appendChild(document.createTextNode("수정"));
+                    MODIFYBTNTD.appendChild(MODIFYBTN);
+
+                    //  var DELBTNTD = document.createElement("td");
+                    var DELETEBTN = document.createElement("button");
+                    DELETEBTN.setAttribute("class", "btn btn-outline-secondary btn-sm");
+                    DELETEBTN.setAttribute("href", "#");
+                    DELETEBTN.setAttribute("id", "DELETEROLEBTN_" + data_eval[i].ROLEID);
+                    DELETEBTN.setAttribute("style", " font-weight: bold;");
+                    DELETEBTN.appendChild(document.createTextNode("삭제"));
+
+                    MODIFYBTNTD.appendChild(DELETEBTN);
+                    //createTR.appendChild(DELBTNTD);
+                    createTR.appendChild(MODIFYBTNTD);
+                    console.log(data_eval[i].ROLETITLE);
+                    if (data_eval[i].ROLECODE == 1) {
+                        DELETEBTN.disabled = true;
+                    }
+                    else DELETEBTN.setAttribute("onclick", "DELETE_ROLE(id)");
+
+                }
+
+
+                // $('#roles_table').dataTable({
+                //     columnDefs: [
+                //         {
+                //             targets: [2,3,4,5,6,7,8,9,10,11,12,13],
+                //             orderable: false
+                //         }
+                //     ]
+                // });
+            }
+        }
+        xhttps.open("GET", "./member.jsp?action=load_role", false);
+        xhttps.send();
+    })
+
+    function ADD_ROLE() {
+        //  localStorage.setItem("ADD_TYPE", "ROLE");
+        // location.href="create.html";
+        //  function load_role(){
+        $.ajax({
+            type: 'post',
+            url: "create_role.html",
+            dataType: 'html',
+            success: function (data) {
+                $("#role_content").html(data);
+            }
+        })
+        // } 
+    }
+
+    function MODIFY_ROLE(id) {
+        var ROLEID = id.split("_")[1];
+       // localStorage.setItem("MODIFY_TYPE", "ROLE");
+        localStorage.setItem("MODIFY_ROLEID", ROLEID);
+        //location.href = "modify.html";
+       // var ROLEID = localStorage.getItem("MODIFY_ROLEID");
+                    $.ajax({
+                        type: 'get',
+                       // url : "modify_role.html?ROLEID="+ROLEID,
+                        url : "modify_role.html",
+                        dataType: 'html',
+                        success: function(data){
+                            console.log("suceess");
+                            $("#role_content").html(data);
+                        }
+                    })
+
+
+    }
+
+    function DELETE_ROLE(id) {
+        var ROLEID = id.split("_")[1];
+        var delete_confirm = confirm("해당 그룹을 삭제하시겠습니까?");
+        if (delete_confirm == true) {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    if (xhttp.responseText.trim() != "0") {
+                        alert("그룹에 소속된 사용자가 있어 그룹을 삭제할 수 없습니다.");
+                    }
+                    else {
+                        load_role();
+                    }
+                }
+            }
+            xhttp.open("GET", "./member.jsp?action=delete_role&ROLEID=" + ROLEID);
+            xhttp.send();
+        }
+    }
+
+
+</script>
+<div id="role_content">
+    <div class="mb-4" >
+        <h5 class="myinfo " style="text-align: left;"> ※ 역할 별 그룹을 생성하고(예: CRC, PI등), 각 그룹에 따라 플랫폼에 개발된 기능권한을 관리하는
+            페이지입니다. </h5>
+    </div>
+    <div class="d-flex justify-content-between ">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb p-0 m-0" style="background-color:transparent;">
+
+                    <li class="breadcrumb-item active " aria-current="page">그룹별 사용권한</li>
+                    <li class="breadcrumb-item  primary-color "></li>
+                </ol>
+            </nav>
+        </div>
+        <button class="btn btn-danger" onclick="ADD_ROLE()" style="font-weight: bold; ">그룹 추가하기</button>
+
+    </div>
+    <div class="table-responsive">
+
+        <table class="table w-100 bg-white" id="roles_table"
+            style="text-align: center;table-layout:fixed; min-width: 850px ">
+
+            <thead>
+                <tr style="text-align: center; font-weight: bold;">
+                    <th width="60px">번호</th>
+                    <th width="100px">그룹명</th>
+                    <!-- <th>기본보기<i class="far fa-question-circle ml-2" data-toggle="tooltip" data-placement="bottom" title="자원자 정보를 제외한 정보들을 보는 권한"></i></th> -->
+                    <!-- <th width="60px" ><span class="mytooltip" data-toggle="tooltip"  title="연구를 생성할 수 있는 권한"  >연구생성</span></th> -->
+                    <th width="70px"><span class="mytooltip" data-toggle="tooltip" data-placement="top"
+                            title="연구를 생성할 수 있는 권한">연구<br>생성</span></th>
+                    <th width="70px"><span class="mytooltip" data-toggle="tooltip" data-placement="top"
+                            title="연구 모집공고를 게시하고 연구정보를 수정할 수 있는 권한">연구<br>수정</span></th>
+                    <th width="80px"><span class="mytooltip" data-toggle="tooltip" data-placement="top"
+                            title="자원자의 예약을 관리할 수 있는 권한">자원자<br>예약</span></th>
+                    <th width="90px"><span class="mytooltip" data-toggle="tooltip" data-placement="top"
+                            title="자원자 방문 시 본인확인을 할 수 있는 권한">자원자<br>본인확인</span></th>
+                    <th width="90px"><span class="mytooltip" data-toggle="tooltip" data-placement="top"
+                            title="자원자의 동의설명을 시작하고 종료할 수 있는 권한">자원자<br>동의설명</span></th>
+                    <th width="80px"><span class="mytooltip" data-toggle="tooltip" data-placement="top"
+                            title="동의서에 서명할 수 있는 권한">자원자<br>동의서명</span></th>
+                    <th width="100px"><span class="mytooltip" data-toggle="tooltip" data-placement="top"
+                            title="직원을 관리하고 직원이 데이터에 접근할 수 있는 제어하는 권한">사용자<br>관리</span></th>
+                    <th width="80px"><span class="mytooltip" data-toggle="tooltip" data-placement="top"
+                            title="기관의 모든 연구를 보고 수정할 수 있는 권한">연구관리</span></th>
+                    <th width="90px"><span class="mytooltip" data-toggle="tooltip" data-placement="top"
+                            title="블록체인에 접속하여 연구 데이터를 관리할 수 있는 권한">블록체인</span></th>
+                    <th width="110px">수정/삭제</th>
+
+                </tr>
+            </thead>`
+            <tbody id="role_table" style="text-align: center;"></tbody>
+        </table>
+        <p class="myinfo mywarning ml-3 mt-2">※ 기능권한 수정 후 관련된 그룹에 속한 사용자는 재로그인이 필요합니다.</p>
+
+    </div>
+</div>

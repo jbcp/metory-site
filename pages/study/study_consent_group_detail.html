@@ -1,0 +1,278 @@
+<script type="text/javascript">
+    $(document).ready(function(){
+        var SID = getParameterByName('SID');
+        var consent_action;
+        var selected_consent_id;
+        
+        var consent_group_type_array = ["", "Informed Consent", "ETC"];
+       // document.getElementById("group_name").innerHTML=localStrage.getItem("CSGRPTITLE");
+         document.getElementById("group_name").innerHTML="("+sessionStorage.CSGRPTITLE+")";
+
+        console.log("study_consent_group_detail.html");
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                var data_eval = eval(data_pre);
+                consents = data_eval;
+                //console.log(data_pre)
+                $('#consent_list').empty();
+                if(data_eval.length==0)  {
+                    var newDiv=document.createElement("div");
+                    newDiv.setAttribute("style", "text-align:center");
+                    newDiv.appendChild(document.createTextNode("동의문서가 없습니다."));
+                
+                    document.getElementById("consent").appendChild(newDiv);
+                }
+                for(var i = 0; i < data_eval.length; i++){
+                    var createTR = document.createElement("tr");
+                    document.getElementById("consent_list").appendChild(createTR);
+
+                    // var activeTD = document.createElement("td");
+                    // if(data_eval[i].CONSENTID==nowConsentID) {
+                        
+                    //     var span=document.createElement("span");
+                    //     span.innerText="ACTIVE";
+                    //     span.setAttribute("class", "badge badge-success mr-2");
+                    //     activeTD.appendChild(span);
+                    // }                   
+                    // createTR.appendChild(activeTD);
+                    
+                    //번호
+                    var numTD = document.createElement("td");
+                    var num=i+1;
+                    numTD.appendChild(document.createTextNode(num));
+                    createTR.appendChild(numTD);
+                    //ACTIVE
+                    if(data_eval[i].CONSENTID==data_eval[i].LAST_CONSENTID) {
+                        numTD.appendChild(document.createElement("br"));
+                        var span=document.createElement("span");
+                        span.innerText="ACTIVE";
+                        span.setAttribute("class", "badge badge-success ");
+                        numTD.appendChild(span);
+                    }    
+                    //동의 문서 버전
+                    var versionTD = document.createElement("td");
+                    versionTD.appendChild(document.createTextNode(data_eval[i].CVERSION));
+                    createTR.appendChild(versionTD);
+                    //동의 파일
+                    var fileTD = document.createElement("td");
+                    var fileA = document.createElement("a");
+                    fileA.setAttribute("class", "btn btn-ouline-primary w-100");
+                    fileA.setAttribute("download", data_eval[i].CFILENAME);
+                    fileA.setAttribute("href", contextpath+data_eval[0].CFILE);
+                    fileA.appendChild(document.createTextNode(data_eval[i].CFILENAME));
+                    fileTD.appendChild(fileA);
+                    createTR.appendChild(fileTD);
+
+                    var fileHashTD = document.createElement("td");                  
+                    fileHashTD.appendChild(document.createTextNode(data_eval[i].CFILE_HASH));
+                    createTR.appendChild(fileHashTD);
+
+
+                    var publishedTD = document.createElement("td");
+                    switch(data_eval[i].ISPUBLISH){
+                        case 0:
+                            // var publishBTN = document.createElement("button");
+                            // publishBTN.setAttribute("class", "btn btn-sm btn-outline-danger");
+                            // publishBTN.setAttribute("style", "border-radius:0rem");
+                            // publishBTN.appendChild(document.createTextNode("게시하기"));
+                            // publishedTD.appendChild(publishBTN);
+                            publishedTD.appendChild(document.createTextNode("N"));
+
+                        break;
+                        case 1:
+                            publishedTD.appendChild(document.createTextNode("Y"));
+                        break;
+                    }
+                    createTR.appendChild(publishedTD);
+
+                    var createTD = document.createElement("td"); 
+
+                    if (data_eval[i].CPUBLISHDTC) {
+                        createTD.appendChild(document.createTextNode(data_eval[i].CPUBLISHDTC));
+                    }
+                    else createTD.appendChild(document.createTextNode("-"));
+                    createTR.appendChild(createTD);
+
+                    var modifyTD = document.createElement("td");
+                    var modifyBTN = document.createElement("button");
+                    modifyBTN.setAttribute("class", "btn btn-sm btn-outline-primary");
+                    modifyBTN.setAttribute("id", "MODIFY_BTN_"+data_eval[i].CONSENTID+"_"+num);
+                    modifyBTN.setAttribute("onclick", "MODIFY_BTN_CLICKED(id)");
+                    modifyBTN.appendChild(document.createTextNode("수정"));
+                    modifyTD.appendChild(modifyBTN);
+            
+                    // var econsentBTN = document.createElement("button");
+                    // econsentBTN.setAttribute("class", "btn btn-sm btn-outline-primary ml-2");
+                    // econsentBTN.setAttribute("id", "ECONSENT_BTN_"+data_eval[i].CONSENTID);
+                    // econsentBTN.setAttribute("onclick", "ECONSENT(id)");
+                    // econsentBTN.appendChild(document.createTextNode("동의서"));
+                    // modifyTD.appendChild(econsentBTN);
+
+                    createTR.appendChild(modifyTD);
+                    if(data_eval[i].ISPUBLISH==1) {
+                        modifyBTN.innerText="보기";
+                    //     modifyBTN.childNodes[0].innerText="보기";
+                    //     // econsentBTN.disabled = true;
+                    //     modifyBTN.setAttribute("style", "cursor:default;");
+                    //     // econsentBTN.setAttribute("style", "cursor:default;");
+                  } 
+
+                }
+            }
+        }
+        xhttp.open("GET", "./study.jsp?action=LOAD_STUDY_CONSENT_LIST&SID="+SID+"&CSGRPID="+CSGRPID, true);
+        xhttp.send();
+        
+        //뒤로 가기를 누르면 study_consent_list.html 을 부른다.
+        history.pushState(null, null, location.href);
+        window.onpopstate = function(event) {
+            $.ajax({
+                type: 'post',
+                url : "./study_consent_list.html",
+                dataType: 'html',
+                success: function(data){
+                    $(".consent").html(data);
+                }
+            })
+        };
+
+    })
+
+    function getParameterByName(name) {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(location.search);
+           // console.log(location.search);
+        return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+
+    function CREATE_CONSENT_BTN_CLICKED(id){
+        if(study_active==0) {
+            alert("종료된 연구는 동의문서를 추가 수 없습니다.");
+                return;
+        }
+        consent_action = "create";
+        selected_consent_group = CSGRPID;
+        //console.log(contextpath+"");
+        $.ajax({
+            type: 'post',
+            url : "./study_consent.html",
+            dataType: 'html',
+            success: function(data){
+                $(".consent").html(data);
+            }
+        })
+    }
+
+    // function CREATE_CONSENT_GROUP(){
+    //     $('#create_consent_group').modal('show');
+    // }
+
+    // function CREATE_GROUP(){
+    //     var group_title = document.getElementById("group_title").value;
+    //     var group_type = $('#consent_group_type option:selected').val();
+ 
+    //     var xhttp = new XMLHttpRequest();
+    //     xhttp.onreadystatechange = function () {
+    //         if (this.readyState == this.DONE && this.status == 200) {
+    //             $('#create_consent_group').modal('hide');
+    //             location.reload()
+    //         }
+    //     }
+    //     xhttp.open("GET", "./study.jsp?action=CREATE_CONSENT_GROUP&SID="+SID+"&CSGRPTITLE="+group_title+"&CSGRPTYPE="+group_type, true);
+    //     xhttp.send();
+
+    // }
+
+    function MODIFY_BTN_CLICKED(id){
+        var CONSENTID = id.split("_")[2];
+        consent_action = "modify";
+        sessionStorage.CONSENTNUM=id.split("_")[3];
+        selected_consent_id = CONSENTID;
+        $.ajax({
+            type: 'post',
+            url : "./study_consent.html?CONSENTID="+CONSENTID,
+            dataType: 'html',
+            success: function(data){
+                $(".consent").html(data);
+            }
+        })
+    }
+
+    // function SHOW_GROUP_LIST(id){
+    //     var groupid = id.split("_")[3];
+        
+    // }
+  
+</script>
+<div class="d-flex justify-content-between">
+    <div>
+        <nav aria-label="breadcrumb" >
+            <ol class="breadcrumb p-0 m-0" style="background-color:transparent;">       
+                <li class="breadcrumb-item primary-color "><a href="javascript:changeConsentTab(1);"> 동의그룹리스트</a></li>
+                <li class="breadcrumb-item  active" aria-current="page">문서관리<span id="group_name"></span></li>
+            
+            </ol>
+        </nav>
+    </div>
+<!-- <div style="text-align: right;"> -->
+    <button class="btn btn-outline-danger"  onclick="CREATE_CONSENT_BTN_CLICKED()">동의서 추가</button>
+<!-- </div> -->
+</div>
+    <div class="table-responsive">
+
+<table class="table table-hover mt-4"  style="vertical-align:middle; table-layout:fixed; min-width: 800px;">
+    <tbody id="consent_list_table">
+        <thead>
+            <tr style="text-align: center; font-weight: bold;">
+              
+                <th width="90px" >번호</th>
+                <th width="130px">동의 문서 버전</th>
+                <th width="130px">동의 파일</th>
+                <th width="110px">동의서 해시</th>
+                <th  width="80px">게시여부</th>
+                <th width="120px">게시일</th>
+                <th  width="120px">보기/수정</th>
+            </tr>
+        </thead>
+        <tbody id="consent_list" style="text-align: center;"></tbody>
+    </tbody>
+</table>
+</div>
+<!-- <div class="modal" tabindex="-1" role="dialog" id="create_consent_group">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">동의 그룹 생성</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <table class="table table-borderless">
+                <tbody id="consent_content_table">
+                    <tr>
+                        <td style="width: 150px; font-weight: bold;">동의 그룹명</td>
+                        <td><input class="form-control form-control-lg inputs" type="text" maxlength="200" placeholder="동의서 그룹 이름을 입력해주세요." style="border-radius: 0px;" id="group_title"></td>
+                    </tr>
+                    <tr>
+                        <td style="width: 150px; font-weight: bold;">동의 그룹 유형</td>
+                        <td>
+                            <select class="form-control form-control-lg" style="border-radius: 0px;" id="consent_group_type">
+                                <option value="1" selected>Informed Consent</option>
+                                <option value="2">기타</option>
+                            </select>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
+            <button type="button" class="btn btn-primary" onclick="CREATE_GROUP()">생성</button>
+        </div>
+      </div>
+    </div>
+  </div> -->

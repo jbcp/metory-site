@@ -1,0 +1,1964 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+    <link rel="stylesheet" href="../../assets/lib/bootstrap/css/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="assets/css/app.css"> -->
+    <link rel="stylesheet" href="../../assets/css/modern.css">
+    <link rel="stylesheet" href="../../assets/css/custom.css">
+    <link rel="stylesheet" type="text/css" href="../../assets/lib/DataTables/datatables.min.css" />
+    <script src="../../assets/lib/jquery/jquery.min.js" type="text/javascript"></script>
+
+    <title>METORY (연구자용)</title>
+    <script type="text/javascript">
+
+        var SAID;
+        var SID;
+        var SCREENING_ID = 0;
+        // var CONSENTID;
+        var ANSWER_GROUP_JARR = [];
+        var sub_question_group_seq = 0;
+        var isAnswered = false;
+        var answer_group_no = 0;
+        var applname = "";
+        var applsex = 0;
+        
+        $(document).ready(function () {
+            SAID = getParameterByName('SAID');
+            SID = getParameterByName('SID');
+            // SCREENING_ID = getParameterByName('SCREENING_ID');
+            SCREENING_ID = 1;
+            if (getParameterByName('SUBMIT_SURVEY') == "1") isAnswered = true;
+
+            // CONSENTID = getParameterByName('CONSENTID');
+            $('.title_head').css({
+                "width": "140px",
+                "text-align": "center",
+                "font-weight": "bold",
+                "background-color": "rgb(250, 250, 250)"
+            })
+            $('#navbar').load('../navbar.html').ready(function () {
+                $('.main').css('padding-top', $('.navbar').outerHeight());
+
+            })
+            var xhttpss = new XMLHttpRequest();
+            xhttpss.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data = xhttpss.responseText.trim();
+                    var data_eval = eval(data);
+
+
+                    var survey_header = document.getElementById('survey_header');
+                    for (var i = 0; i < data_eval.length; i++) {
+                        var p = document.createElement('p');
+                        p.innerText = data_eval[i].SH_VALUE;
+                        p.setAttribute('class', "survey_" + data_eval[i].SH_TITLE);
+                        survey_header.appendChild(p);
+                    }
+
+                }
+            }
+            xhttpss.open("GET", "./screening.jsp?action=load_survey_head&SCREENING_ID=" + SCREENING_ID, true);
+            xhttpss.send();
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data = xhttp.responseText.trim();
+                    var data_eval = eval(data);
+                    ANSWER_GROUP_JARR = data_eval;
+                    setSurvey();
+                }
+            }
+            xhttp.open("GET", "./screening.jsp?action=load_all_answer_group_items&SCREENING_ID=" + SCREENING_ID, true);
+            xhttp.send();
+
+
+
+            var xhttps = new XMLHttpRequest();
+            xhttps.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttps.responseText.trim();
+                    var data_eval = eval(data_pre);
+                    applname = data_eval[0].APPLNAME;
+                    applsex = data_eval[0].APPLSEX;
+
+
+
+                    getSugjectInfo(data_eval[0].APPLBRTHDTC, getPhoneFormat(data_eval[0].APPLPHONENUM));
+                    // document.getElementById("appl_name").appendChild(document.createTextNode(data_eval[0].APPLNAME));
+                    // document.getElementById("SEX_TITLE").appendChild(document.createTextNode(data_eval[0].APPLSEX == 1 ? '남' : '여'));
+                    // document.getElementById("BDAY_TITLE").appendChild(document.createTextNode(data_eval[0].APPLBRTHDTC));
+                    // document.getElementById("PHONE_TITLE").appendChild(document.createTextNode(getPhoneFormat(data_eval[0].APPLPHONENUM)));
+
+                }
+            }
+            xhttps.open("GET", "./screening.jsp?action=load_appl_info&SAID=" + SAID, true);
+            xhttps.send();
+
+
+        });//end document on ready
+
+        function setSurvey() {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttp.responseText.trim();
+                    var data_eval = eval(data_pre);
+
+
+                    for (var i = 0; i < data_eval.length; i++) {
+                        if (data_eval[i].QUESTION_SEQ == 1) {
+                            addCard(data_eval[i]);
+                        }
+                        addQuestion("card_" + data_eval[i].SECTION_SEQ, data_eval[i]);
+                    }
+
+                }
+            }
+            xhttp.open("GET", "./screening.jsp?action=load_question_and_response&SAID=" + SAID + "&SCREENING_ID=" + SCREENING_ID, true);
+            xhttp.send();
+
+            var tbody_id = "myinfo_tbody";
+            var cardTitle = "기본 정보";
+        }
+        function addQuestion(container_id, data) {
+            var screening_answer_id = (data.SCREENING_ANSWER_ID) ? data.SCREENING_ANSWER_ID : 0;
+            var question_group_id = (data.QUESTION_GROUP_ID) ? data.QUESTION_GROUP_ID : 0;
+            var answer_class = "answer";
+            var answerType = data.ANSWER_TYPE_CONCEPT_ID;
+            var answer = data.ANSWER;
+            var sqid = data.SCREENING_QUESTION_ID;
+            var answer_item_group_id = data.ANSWER_ITEM_GROUP_ID;
+            var question = data.QUESTION_CONTENT;
+            if (question == null) { console.log("question is null" + container_id) }
+            else if (question.indexOf('여성인 경우') != -1) {
+                if (applsex == 1) {
+                    // console.log("여성");
+                    return;
+                }
+                else question = data.QUESTION_CONTENT.slice(8, data.QUESTION_CONTENT.length).trim();
+            }
+            else if (question.indexOf('남성인 경우') != -1) {
+                if (applsex == 2) {
+                    // console.log("남성");
+                    return;
+                }
+                else question = data.QUESTION_CONTENT.slice(8, data.QUESTION_CONTENT.length).trim();
+            }
+
+
+            var container = document.getElementById(container_id);
+            //question_container         
+            var question_container = document.createElement("div");
+            question_container.setAttribute("class", "question");
+            question_container.appendChild(document.createTextNode(question));
+            container.appendChild(question_container);
+
+            //audit
+            var auditICON = document.createElement("i");
+            auditICON.setAttribute("class", "ml-2 fas fa-search-plus");
+            auditICON.setAttribute("style", "color:#1f4e79;font-size:large; cursor:pointer;");
+            question_container.appendChild(auditICON);
+            auditICON.setAttribute("onclick", "open_audit_modal(this)");
+            auditICON.setAttribute("id", "btn_said_" + screening_answer_id);
+
+            //answer_container
+            var answer_item_container = document.createElement("div");
+            answer_item_container.setAttribute("class", answer_class + "  ml-2");
+            answer_item_container.setAttribute("data-type", data.ANSWER_TYPE_CONCEPT_ID);
+            var answercontainer_id = "sqid_" + sqid;
+
+            answer_item_container.setAttribute("id", answercontainer_id);
+            answer_item_container.setAttribute("data-surveyaid", screening_answer_id); // if(myGroupAnswer) group_answer_id
+            answer_item_container.setAttribute("data-surveyqid", sqid); //if(myGroupAnswer) sub_question_id
+            container.appendChild(answer_item_container);
+
+            //answer_container detail
+            switch (answerType) {
+                case 1001: // radiobutton
+                    setRadioButton(answercontainer_id, answer_item_group_id, answer);
+                    break;
+                case 1002:  //text ( string or integer )
+                    var input = document.createElement('input');
+                    input.setAttribute("class", " col-4");
+                    input.setAttribute("type", "text");
+                    if (answer) input.value = answer;
+                    answer_item_container.appendChild(input);
+
+                    break;
+                case 1005: // textarea
+                    var textarea = document.createElement("TEXTAREA");
+                    textarea.setAttribute("class", "  col-6");
+                    if (answer) textarea.value = answer;
+                    else textarea.value = "없음";
+                    answer_item_container.appendChild(textarea);
+                    break;
+                case 1006: // checkbox
+                    //setCheckBox(answer_item_container,answer_item_group_id, answer);  
+                    break;
+                case 1004: // 달력       
+                    var dateInput = document.createElement('input');
+                    dateInput.setAttribute("type", "date");
+                    dateInput.setAttribute("max", "9999-12-31");
+                  //  dateInput.setAttribute("class", "col-4");
+                    if (answer) dateInput.value = answer;
+                    answer_item_container.appendChild(dateInput);
+                    break;
+                case 1008: //해당없음/날짜(qid1)
+                    answer_item_container.setAttribute("id", "case1008");
+                    var div = document.createElement('div');
+                    div.setAttribute('class', 'mt-2 ml-2 w-100');
+                    var checkbox = document.createElement('input');
+                    checkbox.type = "checkbox";
+
+                    checkbox.setAttribute("class", "ml-0 ");
+                    checkbox.id = "case1008_0";
+                    checkbox.value = "해당없음";
+                    div.appendChild(checkbox);
+
+
+                    var label = document.createElement('label')
+                    label.htmlFor = "case1008_0";
+                    label.appendChild(document.createTextNode("해당없음"));
+                    label.setAttribute("class", "ml-1 mr-3 ");
+                    div.appendChild(label);
+                    answer_item_container.appendChild(div);
+
+                    var dateInput = document.createElement('input');
+                    dateInput.setAttribute("type", "date");
+                    dateInput.setAttribute("max", "9999-12-31");
+                    dateInput.setAttribute("id", "case1008_2");
+                    dateInput.setAttribute("class", "ml-2 ");
+                    answer_item_container.appendChild(dateInput);
+
+                    if (!answer) { }
+                    else if (answer == '해당없음') {
+                        checkbox.checked = true;
+                    } else {
+                        checkbox.checked = false;
+                        dateInput.value = answer;
+                    }
+
+                    $("#case1008_0").change(function () {
+                        if (this.checked) {
+
+                            //checkbox.hidden = true;
+                            // label.hidden = true;
+                            dateInput.hidden = true;
+                        }
+                        else {
+                            //checkbox.hidden = false;
+                            // label.hidden = false;
+                            dateInput.hidden = false;
+                        }
+                    });
+
+
+                    break;
+
+                case 1010://해당없음/날짜/지속중(qid2)
+                    answer_item_container.setAttribute("id", "case1010");
+                    var div = document.createElement('div');
+                    div.setAttribute('class', 'mt-2 w-100 ');
+                    // div.setAttribute('class', 'mt-2 mb-1 mt-0 ml-1 mr-3');           
+                    var checkbox = document.createElement('input');
+                    checkbox.type = "checkbox";
+                    checkbox.setAttribute("class", "ml-2 ");
+                    checkbox.id = "case1010_0";
+                    checkbox.value = "해당없음";
+
+                    // if (answer == checkbox.value) checkbox.checked = true;
+                    // else checkbox.checked = false;
+
+                    var label = document.createElement('label');
+                    label.htmlFor = "case1010_0";
+                    label.setAttribute('class', 'ml-1 mr-3  ');
+                    label.appendChild(document.createTextNode("해당없음"));
+                    div.appendChild(checkbox);
+                    div.appendChild(label);
+                    answer_item_container.appendChild(div);
+
+                    ///////////////////
+                    var line_div = document.createElement('div');
+                    answer_item_container.appendChild(line_div);
+                   var div1 = document.createElement('div');
+                    div1.setAttribute('class', ' form-check-inline');
+
+                    var dateInput = document.createElement('input');
+                    dateInput.setAttribute("type", "date");
+                    dateInput.setAttribute("max", "9999-12-31");
+                    dateInput.setAttribute("class", " form-check-input ml-2 mr-3");
+                    dateInput.setAttribute("id", "case1010_2");
+                    div1.appendChild(dateInput);
+                    line_div.appendChild(div1);
+
+                    var div2 = document.createElement('div');
+                    div2.setAttribute('class', ' form-check-inline');
+                    var checkbox1 = document.createElement('input');
+                    checkbox1.setAttribute("class", "ml-2 form-check-input");
+                    checkbox1.id = "case1010_1";
+                    checkbox1.value = "지속중";
+                    checkbox1.type = "checkbox";
+                    // if (answer == checkbox.value) checkbox.checked = true;
+                    // else checkbox.checked = false;
+                    var label1 = document.createElement('label');
+                    label1.htmlFor = "case1010_1";
+                    label1.appendChild(document.createTextNode("지속중"));
+                    label1.setAttribute("class", " ml-1  form-check-label");
+                    div2.appendChild(checkbox1);
+                    div2.appendChild(label1);
+                    line_div.appendChild(div2);
+
+                    // console.log("------------"+answer)
+                    //setRadioButton(answercontainer_id, sqid, answer_item_group_id, myAnswerClass, answer, screening_answer_id);
+                    if (answer) {
+                        if (answer == "해당없음") checkbox.checked = true;
+                        else if (answer == '지속중') checkbox1.checked = true;
+                        else dateInput.value = answer;
+                    }
+
+                    $("#case1010_0").change(function () {
+                        if (this.checked) {
+
+                            document.getElementById("case1010_1").hidden = true;
+                            label1.hidden = true;
+                            document.getElementById("case1010_2").hidden = true;
+                        }
+                        else {
+                            document.getElementById("case1010_1").hidden = false;
+                            label1.hidden = false;
+                            document.getElementById("case1010_2").hidden = false;
+                        }
+                    });
+                    $("#case1010_1").change(function () {
+                        if (this.checked) {
+
+                            //checkbox.hidden = true;
+                            // label.hidden = true;
+                            dateInput.disabled = true;
+                        }
+                        else {
+                            //checkbox.hidden = false;
+                            // label.hidden = false;
+                            dateInput.disabled = false;
+                        }
+                    });
+
+                    break;
+                // default: cardbody.appendChild(document.createTextNode(question));
+            }
+            if (answerType != 1007) container.appendChild(document.createElement('hr'));
+
+            ////// questions group
+            if (question_group_id > 0) {
+
+
+                var insert_group_div = document.createElement("div");
+                insert_group_div.setAttribute("id", "group_" + question_group_id);
+                insert_group_div.setAttribute("class", "question_group");
+                container.appendChild(insert_group_div);
+
+                var group_auditIcon_div = document.createElement("div");
+                group_auditIcon_div.setAttribute("class", "d-flex flex-row-reverse");
+                var group_auditIcon = document.createElement("i");
+                group_auditIcon.setAttribute("class", "fas   fa-search-plus ml-2  ");
+                group_auditIcon.setAttribute("style", "color: #1f4e79; font-size:large; cursor:pointer;");
+                group_auditIcon.setAttribute("id", "group_audit_" + question_group_id);
+                group_auditIcon.setAttribute("onclick", "open_subgroup_audit_modal(this)");
+                group_auditIcon_div.appendChild(group_auditIcon);
+                insert_group_div.appendChild(group_auditIcon_div);
+
+                var group_container_id = "group_" + question_group_id;
+
+
+                var btn = document.createElement("button");
+                btn.setAttribute("class", "btn btn-primary mt-3 ");
+                btn.appendChild(document.createTextNode("추가"));
+
+
+                btn.setAttribute("onclick", "insert_question_group( '" + group_container_id + "','" + sqid + "')");
+                // btn.setAttribute("onclick", "insert_question_group( '" + group_container_id + "','" + sqid + "')");
+                container.appendChild(btn);
+
+
+                if (isAnswered) {
+                    load_group_answer(group_container_id);
+                }
+
+                if (!document.getElementById("group_1").hasChildNodes()) btn.hidden = true;
+                else if ( document.getElementById("sqid_7_2").checked==true){
+                    document.getElementById("group_1").hidden = true;
+                    btn.hidden = true;
+
+                }else btn.hidden = false;
+
+
+                $('input[name="sqid_7"]').on('click', function (e) {
+                    console.log(e.type);
+                    if ($(this).val() == '예') {
+
+                        document.getElementById("group_1").hidden = false;
+                       // if (!document.getElementById("group_1").hasChildNodes()) insert_question_group(group_container_id, sqid);
+                       if (document.getElementById("group_1").childNodes.length<=1) insert_question_group(group_container_id, sqid); //그룹오딧 버튼으로인해 노드가 1이 생김.
+                        btn.hidden = false;
+
+                    } else {
+                        document.getElementById("group_1").hidden = true;
+                        btn.hidden = true;
+                    }
+                });
+
+            }
+        }
+        //subgroup 전체 audit    
+        function open_subgroup_audit_modal(elem) {
+            var question_group_id = elem.id.split("_")[2];//"group_audit_" + question_group_id);
+
+            $('#subgroup_audit_modal').modal('show');
+            // $('#audit_modal_tbody').clear();
+            $("#subgroup_audit_modal_tbody").empty();
+
+
+            var tbody = document.getElementById("subgroup_audit_modal_tbody");
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data = xhttp.responseText.trim();
+                    var data_eval = eval(data);
+
+
+                    for (var i = 0; i < data_eval.length; i++) {
+                        var createTr = document.createElement("tr");
+                        //로그구분
+                        var logtypeTD = document.createElement("td");
+                        logtypeTD.appendChild(document.createTextNode(data_eval[i].HOW));
+                        createTr.appendChild(logtypeTD);
+
+
+                        //문제
+                        var questionTD = document.createElement("td");
+                        questionTD.setAttribute("style", "text-align:left");
+                        if (data_eval[i].QUESTION) questionTD.appendChild(document.createTextNode(data_eval[i].QUESTION));
+                        else questionTD.appendChild(document.createTextNode("-"));
+
+                        createTr.appendChild(questionTD);
+
+                        //데이터값
+                        var dataTD = document.createElement("td");
+
+                        if (data_eval[i].ANSWER_SOURCE_VALUE) {
+                            dataTD.appendChild(document.createTextNode(data_eval[i].ANSWER_SOURCE_VALUE));
+                        } else dataTD.appendChild(document.createTextNode("-"));
+
+                        createTr.appendChild(dataTD);
+
+                        //Who
+                        var whoTD = document.createElement("td");
+                        whoTD.appendChild(document.createTextNode(data_eval[i].WHO));
+                        createTr.appendChild(whoTD);
+
+                        //WhoID+이름
+                        var whoNAMETD = document.createElement("td");
+                        whoNAMETD.appendChild(document.createTextNode(data_eval[i].WHO_NAME + "(" + data_eval[i].WHO_MAIL + ")"));
+                        createTr.appendChild(whoNAMETD);
+
+                        //로그 시간
+                        var logdtcTD = document.createElement("td");
+                        logdtcTD.appendChild(document.createTextNode(data_eval[i].LOGDTC));
+                        createTr.appendChild(logdtcTD);
+
+                        tbody.appendChild(createTr);
+                    }
+
+                }
+            }
+            xhttp.open("GET", "./screening.jsp?action=get_subgroup_audit&QUESTION_GROUP_ID=" + question_group_id + "&SAID=" + SAID + "&SCREENING_ID=" + SCREENING_ID, true);
+            xhttp.send();
+        }
+
+        function open_audit_modal(elem) {
+            var screening_answer_id = elem.id.split("_")[2];
+            console.log(elem.parentNode.id + "id  " + screening_answer_id);
+            console.log({ screening_answer_id: screening_answer_id });
+            $('#audit_modal').modal('show');
+            // $('#audit_modal_tbody').clear();
+            $("#audit_modal_tbody").empty();
+            var question = elem.parentNode.innerText;
+            // var question =  document.getElementById(id).parentElement.parentElement.getElementsByClassName("question")[0].innerText;
+            if (question.length > 30) question = question.slice(0, 29) + "...";
+            document.getElementById("question_modal").innerText = "  -  " + question;
+
+            var tbody = document.getElementById('audit_modal_tbody');
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data = xhttp.responseText.trim();
+                    var data_eval = eval(data);
+
+
+                    for (var i = 0; i < data_eval.length; i++) {
+                        var createTr = document.createElement("tr");
+                        //로그구분
+                        var logtypeTD = document.createElement("td");
+                        logtypeTD.appendChild(document.createTextNode(data_eval[i].HOW));
+                        createTr.appendChild(logtypeTD);
+
+                        //데이터값
+                        var dataTD = document.createElement("td");
+
+                        if (data_eval[i].ANSWER_SOURCE_VALUE) dataTD.appendChild(document.createTextNode(data_eval[i].ANSWER_SOURCE_VALUE));
+                        else dataTD.appendChild(document.createTextNode("-"));
+
+                        createTr.appendChild(dataTD);
+
+                        //Who
+                        var whoTD = document.createElement("td");
+                        whoTD.appendChild(document.createTextNode(data_eval[i].WHO));
+                        createTr.appendChild(whoTD);
+
+                        //WhoID+이름
+                        var whoNAMETD = document.createElement("td");
+                        whoNAMETD.appendChild(document.createTextNode(data_eval[i].WHO_NAME + "(" + data_eval[i].WHO_MAIL + ")"));
+                        createTr.appendChild(whoNAMETD);
+
+                        //로그 시간
+                        var logdtcTD = document.createElement("td");
+                        logdtcTD.appendChild(document.createTextNode(data_eval[i].LOGDTC));
+                        createTr.appendChild(logdtcTD);
+
+                        tbody.appendChild(createTr);
+                    }
+
+                }
+            }
+            xhttp.open("GET", "./screening.jsp?action=getAudit&SCREENING_ANSWER_ID=" + screening_answer_id, true);
+            xhttp.send();
+
+
+        }
+        function setGroup_Audit_btn(container, classAlign, id) {
+            // var btn = document.createElement('button');
+            //         // btn.setAttribute("data-toggle", "modal");
+            //         // btn.setAttribute("data-target", "audit_modal");
+            //         btn.setAttribute("onclick", "open_group_audit_modal(id)");
+            //         btn.setAttribute("class","btn btn-primary btn-sm ml-2 "+classAlign );
+            //         btn.setAttribute("id","btn_groupsaid_"+id );
+            //         btn.appendChild(document.createTextNode("Audit"));
+            //         container.appendChild(btn);
+
+            var checkICON = document.createElement("i");
+            checkICON.setAttribute("class", "fas   fa-search-plus ml-2 " + classAlign);
+            checkICON.setAttribute("style", "color: #1f4e79; font-size:large; cursor:pointer;");
+            checkICON.setAttribute("id", "btn_groupsaid_" + id);
+            checkICON.setAttribute("onclick", "open_group_audit_modal(id)");
+
+            container.appendChild(checkICON);
+
+        }     // textareadiv.setAttribute("class", "align-self-start col-8")
+
+        function open_group_audit_modal(id) {
+            var group_answer_id = id.split("_")[2];
+            console.log("id  " + id);
+            console.log({ group_answer_id: group_answer_id });
+            $('#audit_modal').modal('show');
+            // $('#audit_modal_tbody').clear();
+            $("#audit_modal_tbody").empty();
+            var question = $("#" + id).parent().prev().text();
+            // var question =  document.getElementById(id).parentElement.parentElement.getElementsByClassName("question")[0].innerText;
+            if (question.length > 30) question = question.slice(0, 29) + "...";
+            document.getElementById("question_modal").innerText = "  -  " + question;
+
+
+
+
+            var tbody = document.getElementById('audit_modal_tbody');
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data = xhttp.responseText.trim();
+
+                    var data_eval = eval(data);
+
+
+                    for (var i = 0; i < data_eval.length; i++) {
+                        var createTr = document.createElement("tr");
+                        //로그구분
+                        var logtypeTD = document.createElement("td");
+                        logtypeTD.appendChild(document.createTextNode(data_eval[i].HOW));
+                        createTr.appendChild(logtypeTD);
+
+                        //데이터값
+                        var dataTD = document.createElement("td");
+                        if (data_eval[i].ANSWER_SOURCE_VALUE) dataTD.appendChild(document.createTextNode(data_eval[i].ANSWER_SOURCE_VALUE));
+                        else dataTD.appendChild(document.createTextNode("-"));
+                        createTr.appendChild(dataTD);
+
+                        //Who
+                        var whoTD = document.createElement("td");
+                        whoTD.appendChild(document.createTextNode(data_eval[i].WHO));
+                        createTr.appendChild(whoTD);
+
+                        //WhoID+이름
+                        var whoNAMETD = document.createElement("td");
+                        whoNAMETD.appendChild(document.createTextNode(data_eval[i].WHO_NAME + "(" + data_eval[i].WHO_MAIL + ")"));
+                        createTr.appendChild(whoNAMETD);
+
+                        //로그 시간
+                        var logdtcTD = document.createElement("td");
+                        logdtcTD.appendChild(document.createTextNode(data_eval[i].LOGDTC));
+                        createTr.appendChild(logdtcTD);
+
+                        tbody.appendChild(createTr);
+                    }
+
+                }
+            }
+            xhttp.open("GET", "./screening.jsp?action=getGroupAudit&GROUP_ANSWER_ID=" + group_answer_id, true);
+            xhttp.send();
+
+
+        }
+
+        function setAudit_btn(container, classAlign, id) {
+            var checkICON = document.createElement("i");
+
+
+            checkICON.setAttribute("class", "fas   fa-search-plus ml-2 " + classAlign);
+
+
+            checkICON.setAttribute("style", "color: #1f4e79; font-size:large; cursor:pointer;");
+
+            checkICON.setAttribute("id", "btn_said_" + id);
+            checkICON.setAttribute("onclick", "open_audit_modal(this)");
+
+            container.appendChild(checkICON);
+            // var btn = document.createElement('button');
+
+            //         btn.setAttribute("onclick", "open_audit_modal(id)");
+            //         btn.setAttribute("class","btn btn-primary btn-sm ml-2 "+classAlign );
+            //         btn.setAttribute("id","btn_said_"+id );
+            //         btn.appendChild(document.createTextNode("Audit"));
+            //         container.appendChild(btn);
+        }
+
+        function isValidDate(date) {
+            return date && Object.prototype.toString.call(date) === "[object Date]" && !isNaN(date);
+        }
+
+        function insert_question_group(group_container_id, sqid) {
+
+            // console.log(sqid + "+++++++ group_container_id=" + group_container_id);
+            var question_group_id = group_container_id.split("_")[1];//"group_"+question_group_id
+            var group_container = document.getElementById(group_container_id);
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data = xhttp.responseText.trim();
+                    var data_eval = eval(data);
+                    // console.log( data_eval.length+"   sub_question_group_seq" + sub_question_group_seq);
+
+                    for (var i = 0; i < data_eval.length; i++) {
+                        var group_div = document.createElement("div");
+                        group_container.appendChild(group_div);
+
+                        if (i == 0) {
+                            var repeat_group_num = (sub_question_group_seq / data_eval.length) + 1;
+                            group_div.setAttribute("id", "groupdiv_" + repeat_group_num);
+                            group_div.setAttribute("data-type", "c");
+
+                            var group_title = document.createElement("span");
+                            group_title.setAttribute("class", "question question_group_title mt-3");
+                            group_title.setAttribute("style", "font-size:large; font-weight:bold");
+                            group_title.appendChild(document.createTextNode(data_eval[i].QUESTION_GROUP_NAME + " " + repeat_group_num));
+                            group_div.appendChild(group_title);
+
+                            var trashICON = document.createElement("i");
+                            trashICON.setAttribute("class", "ml-2 fas fa-trash-alt");
+                            trashICON.setAttribute("style", "color:#1f4e79;font-size:large; cursor:pointer;");
+                            trashICON.setAttribute("onclick", "deleteGroup(this)");
+                            trashICON.setAttribute("id", "grouptrash_" + repeat_group_num);
+                            group_div.appendChild(trashICON);
+
+                        }
+
+
+                        addGroupQuestion("groupdiv_" + repeat_group_num, data_eval[i], repeat_group_num, data_eval.length);
+                        sub_question_group_seq++;
+
+                    }
+                    //   var hr = document.createElement("hr");
+                    //    group_container.appendChild(hr);
+
+                    //   set_All_Input_Disabled(isAnswered);
+
+                }
+            }
+            xhttp.open("GET", "./screening.jsp?action=load_group_questionare&QUESTION_GROUP_ID=" + question_group_id + "&SAID=" + SAID, true);
+            xhttp.send();
+
+
+        }
+        function deleteGroup(elm) {
+            var groupid = "groupdiv_" + elm.id.split("_")[1];
+            document.getElementById(groupid).hidden = true;
+            if (document.getElementById(groupid).dataset.type == 'c') document.getElementById(groupid).setAttribute("data-type", "x");
+            else if (document.getElementById(groupid).dataset.type == 'r') document.getElementById(groupid).setAttribute("data-type", "d");
+        }
+
+        //        //.QUESTION_CONTENT, data_eval[i].SUB_QUESTION_ID, data_eval[i].ANSWER_TYPE_CONCEPT_ID, data_eval[i].ANSWER_ITEM_GROUP_ID, null, "myGroupAnswer");        
+        function addGroupQuestion(container_id, data, repeat_group_no, total_sub_question_of_group) {//container_id, question_seq, question, sqid, answerType, answer_item_group_id, question_group_id, myAnswerClass, answer, screening_answer_id) {
+            var group_answer_id = (data.GROUP_ANSWER_ID) ? data.GROUP_ANSWER_ID : 0;
+            var question_group_id = (data.QUESTION_GROUP_ID) ? data.QUESTION_GROUP_ID : 0;
+            var answer_class = "group_answer";
+            var answerType = data.ANSWER_TYPE_CONCEPT_ID;
+            var answer = data.ANSWER;
+            var sub_qid = data.SUB_QUESTION_ID;
+            var answer_item_group_id = data.ANSWER_ITEM_GROUP_ID;
+            var question = data.QUESTION_CONTENT;
+            //console.log("group_answer_id="+group_answer_id+"  answerType="+answerType+"  question"+question);
+            if (question == null) { console.log("question is null" + container_id) }
+            else if (question.indexOf('여성인 경우') != -1) {
+                if (applsex == 1) {
+                    // console.log("여성");
+                    return;
+                }
+                else question = data.QUESTION_CONTENT.slice(8, data.QUESTION_CONTENT.length).trim();
+            }
+            else if (question.indexOf('남성인 경우') != -1) {
+                if (applsex == 2) {
+                    // console.log("남성");
+                    return;
+                }
+                else question = data.QUESTION_CONTENT.slice(8, data.QUESTION_CONTENT.length).trim();
+            }
+
+
+            var container = document.getElementById(container_id);
+            //question_container         
+            var question_container = document.createElement("div");
+            question_container.setAttribute("class", "question");
+            question_container.appendChild(document.createTextNode(question));
+            container.appendChild(question_container);
+
+            //group audit 
+            var auditICON = document.createElement("i");
+            auditICON.setAttribute("class", "fas   fa-search-plus ml-2  align-self-start");
+            auditICON.setAttribute("style", "color: #1f4e79; font-size:large; cursor:pointer;");
+            auditICON.setAttribute("id", "btn_groupanswerid_" + group_answer_id);
+            auditICON.setAttribute("onclick", "open_group_audit_modal(id)");
+            question_container.appendChild(auditICON);
+
+            //answer_container
+            var answer_item_container = document.createElement("div");
+            answer_item_container.setAttribute("class", answer_class + " ml-2");
+            answer_item_container.setAttribute("data-type", data.ANSWER_TYPE_CONCEPT_ID);
+
+
+            answer_item_container.setAttribute("data-groupqid", question_group_id); //if(myGroupAnswer) group_question_id 
+            var answercontainer_id = "groupanswer_" + repeat_group_no + "_" + sub_qid;
+
+            answer_item_container.setAttribute("id", answercontainer_id);
+            answer_item_container.setAttribute("data-surveyaid", group_answer_id); // if(myGroupAnswer) group_answer_id
+            answer_item_container.setAttribute("data-surveyqid", sub_qid); //if(myGroupAnswer) sub_question_id
+            container.appendChild(answer_item_container);
+
+            //answer_container detail
+            switch (answerType) {
+                case 1001: // radiobutton
+                    setRadioButton(answercontainer_id, answer_item_group_id, answer);
+                    break;
+                case 1002:  //text ( string or integer )
+                    var input = document.createElement('input');
+                    input.setAttribute("class", "col-4");
+                    input.setAttribute("type", "text");
+                    if (answer) input.value = answer;
+                    answer_item_container.appendChild(input);
+
+                    break;
+                case 1005: // textarea
+                    var textarea = document.createElement("TEXTAREA");
+                    textarea.setAttribute("class", "col-6");
+                    if (answer) textarea.value = answer;
+                    else textarea.value = "없음";
+                    answer_item_container.appendChild(textarea);
+                    break;
+                case 1006: // checkbox
+                    //setCheckBox(answer_item_container,answer_item_group_id, answer);                
+                    break;
+                case 1004: // 달력        
+                    var dateInput = document.createElement('input');
+                    dateInput.setAttribute("type", "date");
+                    dateInput.setAttribute("max", "9999-12-31");
+                   // dateInput.setAttribute("class", "col-4");
+                    if (answer) dateInput.value = answer;
+                    answer_item_container.appendChild(dateInput);
+                    break;
+
+
+                case 1009: //복용중(sub_qid:5)/날짜
+                    // setCheckBox(answercontainer_id, sqid, answer_item_group_id,myAnswerClass, answer, screening_answer_id);  
+                    var line_div = document.createElement('div');
+                    answer_item_container.appendChild(line_div);
+                    var div1 = document.createElement('div');
+                    div1.setAttribute('class', ' form-check-inline');
+
+                    var dateInput = document.createElement('input');
+                    dateInput.setAttribute("type", "date");
+                    dateInput.setAttribute("max", "9999-12-31");
+                    dateInput.setAttribute("class", " form-check-input  mr-3");
+                    dateInput.setAttribute("id", answercontainer_id + "_2");                   
+                    
+                    div1.appendChild(dateInput);
+                    line_div.appendChild(div1);
+
+
+                    var div2 = document.createElement('div');
+                    div2.setAttribute('class', ' form-check-inline');
+                    var checkbox = document.createElement('input');
+                    checkbox.type = "checkbox";
+
+                    checkbox.setAttribute("class", "ml-2 form-check-input");
+                    checkbox.id = answercontainer_id + "_1";
+                    checkbox.value = "복용중";
+                    var label = document.createElement('label')
+                    label.htmlFor = answercontainer_id + "_1";
+                    label.appendChild(document.createTextNode("복용중"));
+                    label.setAttribute("class", "mt-2 ml-1 form-check-inline-label");
+                    div2.appendChild(checkbox);
+                    div2.appendChild(label);
+                    line_div.appendChild(div2);
+
+
+                    if (!answer) {
+                    }
+                    else if (answer == checkbox.value) checkbox.checked = true;
+                    else {
+                        checkbox.checked = false;
+                        dateInput.value = answer;
+                    }
+
+
+                    $("#" + checkbox.id).change(function () {
+                        if (this.checked) {
+
+                            //checkbox.hidden = true;
+                            // label.hidden = true;
+                            dateInput.disabled = true;
+                        }
+                        else {
+                            //checkbox.hidden = false;
+                            // label.hidden = false;
+                            dateInput.disabled = false;
+                        }
+                    });
+                    break;
+
+
+            }
+            if (answerType != 1007) container.appendChild(document.createElement('hr'));
+
+
+
+        }
+
+        function load_group_answer(group_container_id) {
+            //console.log(sqid + "+++++++ group_container_id=" + group_container_id);
+            var question_group_id = group_container_id.split("_")[1];//"group_"+question_group_id
+            var group_container = document.getElementById(group_container_id);
+
+            var xhttp = new XMLHttpRequest();
+
+
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data = xhttp.responseText.trim();
+                    var data_eval = eval(data);
+
+
+                    var answer_group_no = 0;
+                    if (data_eval.length > 0) answer_group_no = data_eval[0].TOTAL_SUB_QUESTION_OF_GROUP;
+
+                    var repeated_group_no = 0;
+                    for (var i = 0; i < data_eval.length; i++) {
+
+                        if (i % data_eval[i].TOTAL_SUB_QUESTION_OF_GROUP == 0) {
+                            //var hr = document.createElement("hr");
+                            // group_container.appendChild(hr);
+                            var group_div = document.createElement("div");
+                            group_container.appendChild(group_div);
+                            repeated_group_no = i / answer_group_no + 1;
+                            group_div.setAttribute("id", "groupdiv_" + repeated_group_no);
+                            group_div.setAttribute("data-type", "r");
+                            var group_title = document.createElement("span");
+                            group_title.setAttribute("class", "question question_group_title mt-2");
+                            group_title.setAttribute("style", " font-size:large ;font-weight:bold");
+
+                            group_title.appendChild(document.createTextNode(data_eval[i].QUESTION_GROUP_NAME + " " + repeated_group_no));
+                            group_div.appendChild(group_title);
+                            var trashICON = document.createElement("i");
+                            trashICON.setAttribute("class", "ml-2 fas fa-trash-alt");
+                            trashICON.setAttribute("style", "color:#1f4e79;font-size:large; cursor:pointer;");
+                            trashICON.setAttribute("onclick", "deleteGroup(this)");
+                            trashICON.setAttribute("id", "grouptrash_" + repeated_group_no);
+                            group_div.appendChild(trashICON);
+
+                        }
+
+
+                        // function addQuestion(container_id, question_seq, question, sqid, answerType, answer_item_group_id, question_group_id, myAnswerClass, answer, screening_answer_id) {
+
+                        addGroupQuestion("groupdiv_" + repeated_group_no, data_eval[i], repeated_group_no, answer_group_no);
+
+                        sub_question_group_seq++;
+
+
+
+                    }
+                    //var hr = document.createElement("hr");
+                    //group_container.appendChild(hr);
+
+
+
+                }
+            }
+            xhttp.open("GET", "./screening.jsp?action=load_group_questionare_and_answer&QUESTION_GROUP_ID=" + question_group_id + "&SAID=" + SAID, true);
+            xhttp.send();
+
+
+        }
+
+        /* function insert_question_group(group_container_id, sqid) {
+ 
+             var question_group_id = group_container_id.split("_")[1];//"group_"+question_group_id
+             var group_container = document.getElementById(group_container_id);
+             var xhttp = new XMLHttpRequest();
+             xhttp.onreadystatechange = function () {
+                 if (this.readyState == this.DONE && this.status == 200) {
+                     var data = xhttp.responseText.trim();
+                     var data_eval = eval(data);
+ 
+ 
+                     for (var i = 0; i < data_eval.length; i++) {
+                         if (i == 0) {
+                             var group_title = document.createElement("span");
+                             group_title.setAttribute("class", "question question_group_title mt-3");
+                             group_title.setAttribute("style", "font-size:large; font-weight:bold");
+                             var group_num = (sub_question_group_seq / data_eval.length) + 1;
+                             group_title.appendChild(document.createTextNode(data_eval[i].QUESTION_GROUP_NAME + " " + group_num));
+                             group_container.appendChild(group_title);
+ 
+                             // var deleteICON = document.createElement("i");
+                             // deleteICON.setAttribute("class", "far fa-minus-square ml-2 " );
+                             // deleteICON.setAttribute("style", "color: #28a745; font-size:large; cursor:pointer;");
+                             // deleteICON.setAttribute("id", "btn_grouptitle_sqid_"+sqid);
+                             // deleteICON.setAttribute("onclick", "open_group_audit_modal(id)");
+                             // group_container.appendChild(deleteICON);
+ 
+                         }
+                         if (data_eval[i].ANSWER_TYPE_CONCEPT_ID == 1003) { //select
+                             setSelect(group_container_id, data_eval[i].QUESTION_CONTENT, data_eval[i].SUB_QUESTION_ID, data_eval[i].ANSWER_ITEM_GROUP_ID, "myGroupAnswer");
+ 
+                         }
+                         else {
+ 
+                             addQuestion(group_container_id, null, data_eval[i].QUESTION_CONTENT, data_eval[i].SUB_QUESTION_ID, data_eval[i].ANSWER_TYPE_CONCEPT_ID, data_eval[i].ANSWER_ITEM_GROUP_ID, null, "myGroupAnswer");
+                             sub_question_group_seq++;
+                         }
+ 
+                     }
+                     var hr = document.createElement("hr");
+                     group_container.appendChild(hr);
+ 
+                 }
+             }
+             xhttp.open("GET", "./screening.jsp?action=load_group_questionare&QUESTION_GROUP_ID=" + question_group_id + "&SAID=" + SAID, true);
+             xhttp.send();
+ 
+ 
+         }
+         function load_group_answer(group_container_id) {
+ 
+             var question_group_id = group_container_id.split("_")[1];//"group_"+question_group_id
+             var group_container = document.getElementById(group_container_id);
+ 
+             var xhttp = new XMLHttpRequest();
+             xhttp.onreadystatechange = function () {
+                 if (this.readyState == this.DONE && this.status == 200) {
+                     var data = xhttp.responseText.trim();
+                     var data_eval = eval(data);
+ 
+                     if (data_eval.length > 0) answer_group_no = data_eval[0].ANSWER_GROUP_NO;
+                     else answer_group_no = 0;
+                     for (var i = 0; i < data_eval.length; i++) {
+ 
+ 
+                         if (i % data_eval[i].ANSWER_GROUP_NO == 0) {
+                             var hr = document.createElement("hr");
+                             group_container.appendChild(hr);
+ 
+ 
+                             var group_title = document.createElement("span");
+                             group_title.setAttribute("class", "question question_group_title mt-2");
+                             group_title.setAttribute("style", " font-size:large ;font-weight:bold");
+                             group_title.appendChild(document.createTextNode(data_eval[i].QUESTION_GROUP_NAME + " " + (i / answer_group_no + 1)));
+                             group_container.appendChild(group_title);
+ 
+ 
+                             // var deleteICON = document.createElement("i");
+                             // deleteICON.setAttribute("class", "far fa-minus-square ml-2 " );
+                             // deleteICON.setAttribute("style", "color: #28a745; font-size:large; cursor:pointer;");
+                             // deleteICON.setAttribute("id", "btn_grouptitle_sqid_"+(i / answer_group_no + 1));
+                             // deleteICON.setAttribute("onclick", "delete_group(id)");
+                             // group_container.appendChild(deleteICON);
+ 
+                         }
+ 
+                         //     var group_title = document.createElement("h5");
+                         //     group_title.setAttribute("class", "question question_group_title");
+                         //     var group_num = (sub_question_group_seq / data_eval.length) + 1;
+                         //     group_title.appendChild(document.createTextNode(data_eval[i].QUESTION_GROUP_NAME + " " + group_num));
+                         //     group_container.appendChild(group_title);
+ 
+                         // }
+                         if (data_eval[i].ANSWER_TYPE_CONCEPT_ID == 1003) { //select
+                             setSelect(group_container_id, data_eval[i].QUESTION_CONTENT, group_container_id, data_eval[i].ANSWER_ITEM_GROUP_ID, "myGroupAnswer", data_eval[i].ANSWER, data_eval[i].GROUP_ANSWER_ID);
+ 
+                         }
+                         else {
+                             // function addQuestion(container_id, question_seq, question, sqid, answerType, answer_item_group_id, question_group_id, myAnswerClass, answer, screening_answer_id) {
+ 
+                             addQuestion(group_container_id, data[i].QUESTION_SEQ, data_eval[i].QUESTION_CONTENT, data_eval[i].SUB_QUESTION_ID, data_eval[i].ANSWER_TYPE_CONCEPT_ID, data_eval[i].ANSWER_ITEM_GROUP_ID, data_eval[i].QUESTION_GROUP_ID, "myGroupAnswer", data_eval[i].ANSWER, data_eval[i].GROUP_ANSWER_ID);
+                             sub_question_group_seq++;
+                         }
+ 
+                     }
+                     var hr = document.createElement("hr");
+                     group_container.appendChild(hr);
+ 
+                 }
+             }
+             xhttp.open("GET", "./screening.jsp?action=load_group_questionare_and_answer&QUESTION_GROUP_ID=" + question_group_id + "&SAID=" + SAID, true);
+             xhttp.send();
+ 
+ 
+         }
+ */
+        function setRadioButton(container_id, ANSWER_ITEM_GROUP_ID, answer) {
+
+            for (var i = 0; i < ANSWER_GROUP_JARR.length; i++) {
+                if (ANSWER_GROUP_JARR[i].ANSWER_ITEM_GROUP_ID == ANSWER_ITEM_GROUP_ID) {
+
+                    var div = document.createElement('div');
+                    div.setAttribute('class', 'ml-2    form-check-inline');
+                    var radio = document.createElement('input');
+                    radio.type = "radio";
+                    // checkbox.setAttribute("class", "m-0");
+                    radio.name = container_id;
+                    radio.id = container_id + "_" + (i + 1);
+                    radio.value = ANSWER_GROUP_JARR[i].ANSWER_ITEM_TEXT;
+                    // radio.id = sqid + "_"+ screening_answer_id+"_"+ (i + 1);
+                    radio.setAttribute("class", " form-check-input ");
+                    //radio.setAttribute("data-surveyaid", screening_answer_id);
+                    // radio.setAttribute("data-surveyqid", sqid);
+
+                    var label = document.createElement('label')
+                    label.htmlFor = container_id + "_" + (i + 1);
+                    label.appendChild(document.createTextNode(ANSWER_GROUP_JARR[i].ANSWER_ITEM_TEXT));
+                    label.setAttribute("class", " mt-1 ml-1 mr-3 form-check-label")
+                    if (answer) if (ANSWER_GROUP_JARR[i].ANSWER_ITEM_TEXT == answer) radio.checked = true;
+                    div.appendChild(radio);
+
+                    div.appendChild(label);
+                    document.getElementById(container_id).appendChild(div);
+
+                }
+            }
+
+            //document.getElementById(container_id).appendChild(div);
+
+        }
+
+
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search);
+            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+
+        function getSugjectInfo(birthday, phone_formatted) {
+
+            var newCard = document.createElement("div");
+            newCard.setAttribute("class", "card mb-3");
+            var newCardheader = document.createElement("h4");
+            newCardheader.setAttribute("class", "card-header ");
+            newCardheader.setAttribute("style", "border-color:#3a90db");
+            newCardheader.appendChild(document.createTextNode("응답자 정보"));
+            newCard.appendChild(newCardheader);
+
+            var newCardbody = document.createElement("div");
+            newCardbody.setAttribute("class", "card-body");
+            var name_h5 = document.createElement("h5");
+            // newCardbody.setAttribute("style", "font-weight:bold");
+            //text.appendChild(document.createTextNode("이름"));
+            name_h5.innerHTML = "이름: " + applname;
+            newCardbody.appendChild(name_h5);
+
+            var birth_h5 = document.createElement("h5");
+            // newCardbody.setAttribute("style", "font-weight:bold");
+            //text.appendChild(document.createTextNode("이름"));
+            birth_h5.innerHTML = "생년월일: " + birthday;
+            newCardbody.appendChild(birth_h5);
+
+            var gender_h5 = document.createElement("h5");
+            // newCardbody.setAttribute("style", "font-weight:bold");
+            //text.appendChild(document.createTextNode("이름"));
+            gender_h5.innerHTML = "성별: " + ((applsex == 1) ? "남자" : "여자");
+            newCardbody.appendChild(gender_h5);
+
+
+            // var phone_h5 = document.createElement("h5");
+            // // newCardbody.setAttribute("style", "font-weight:bold");
+            // //text.appendChild(document.createTextNode("이름"));
+            // phone_h5.innerHTML = "전화번호: " + phone_formatted;
+            // newCardbody.appendChild(phone_h5);
+            // var newP = document.createElement("p");
+            // newP.appendChild(document.createTextNode(applname));
+            // newCardbody.appendChild(newP);           
+            newCard.appendChild(newCardbody);
+
+
+            document.getElementById('subject_info').appendChild(newCard);
+
+
+        }
+        function addCard(data) {
+            var newCard = document.createElement("div");
+            newCard.setAttribute("class", "card mb-3");
+            var newCardheader = document.createElement("h4");
+            newCardheader.setAttribute("class", "card-header ");
+            newCardheader.setAttribute("style", "border-color:#3a90db");
+            newCardheader.appendChild(document.createTextNode(data.SECTION_NAME));
+            newCard.appendChild(newCardheader);
+
+            var newCardbody = document.createElement("div");
+            newCardbody.setAttribute("class", "card-body");
+            newCardbody.setAttribute("id", "card_" + data.SECTION_SEQ);
+            newCard.appendChild(newCardbody);
+            var card_info = data.SECTION_INFO;
+            if (card_info != null && typeof (card_info) != 'undefined' && card_info.length > 0) {
+                var newCardinfo = document.createElement("p");
+                newCardinfo.setAttribute("class", "card-text my-card-info");
+                newCardinfo.appendChild(document.createTextNode(card_info));
+                newCardbody.appendChild(newCardinfo);
+            }
+            //         var table=document.createElement("table");
+            //         table.setAttribute("class", "table w-100 table-hover table-bordered");
+            //    //  table.setAttribute("style", "table-layout:fixed; min-width:800px");
+            //         var tbody=document.createElement("tbody");
+            //         tbody.setAttribute("id", card_body_id);
+            //         table.appendChild(tbody);
+            //         newCard.appendChild(table);
+
+            document.getElementById('survey_result').appendChild(newCard);
+
+        }
+        function validate() {
+            var all_date_elements = $("input[type='date']");
+            var validate = true;
+            for (var i = 0; i < all_date_elements.length; i++) {
+                var date_element = all_date_elements[i];
+                var datevalue = new Date(date_element.value);
+                var d_base_date = new Date();
+                d_base_date.setFullYear(d_base_date.getFullYear() - 100);//100년전
+                var today = new Date();
+
+
+                // console.log("date  " + date_element.value + "  " + validate);
+                if (date_element.value == "") continue;
+                else if (datevalue < d_base_date || datevalue > today) {
+                 //   console.log("invalid");
+                    validate = false;
+                    date_element.focus();
+
+                    date_element.classList.add("form-control");
+                    date_element.classList.add("is-invalid");
+                    // date_element.setAttribute("class", "form-control is-invalid ");
+                    break;
+
+                }
+                else date_element.classList.remove("is-invalid");
+            }
+
+            return validate;
+        }
+        var survey_line = [];
+        function createPDF(last_updatedtc,subjectIp) {
+  
+
+            var cards = document.getElementById("survey_result").getElementsByClassName("card"); //survey_header 추가
+
+           for (var i = 0; i < cards.length; i++) {
+     
+                var card_title = cards[i].getElementsByClassName("card-header")[0].innerText;
+                survey_line.push("T.\t" + card_title);
+               
+                //survey_header 추가
+                parsing(cards[i].getElementsByClassName("card-body")[0]);
+                
+                
+            }
+            console.log(survey_line.join("\n"));
+           generateFile(last_updatedtc,subjectIp);
+
+        }
+        function parsing(parent){
+          //  console.log(parent);
+            var children = parent.childNodes; 
+            for (var j = 0; j < children.length; j++) {
+                    if (children[j].classList.contains("question_group_title"))
+                        survey_line.push("G.\t" + children[j].innerText);
+                    else if (children[j].classList.contains("question"))
+                        survey_line.push("Q.\t" + children[j].innerText);
+                    else if (children[j].classList.contains("answer") || children[j].classList.contains("group_answer")) {
+                        var answer_div = children[j];
+                        var data_type = answer_div.getAttribute('data-type');
+                        // survey_line.push("answer\t"+data_type);
+                        switch (data_type) {
+                            case "1007":  //답 없는 문제.                             
+                                break;
+                            case "1004": //날짜
+                                var answer=( answer_div.childNodes[0].value)?  answer_div.childNodes[0].value:"없음";
+                                survey_line.push("A.\t(" + answer+")");
+                                break;
+                            case "1001": //라디오버튼
+                                var radiobtns = answer_div.getElementsByTagName('input');
+                                var answer = "A.\t";
+                                for (var k = 0; k < radiobtns.length; k++) {
+                                    if (radiobtns[k].checked)
+                                        answer = answer + ("● " + radiobtns[k].value + "   ");
+                                    else answer = answer + ("○ " + radiobtns[k].value + "   ");
+                                }
+                                survey_line.push(answer);
+                                // var selected=answer_div.getAttribute('checked');
+
+                                break;
+                            case "1005"://textarea
+                                survey_line.push("A.\t(" + answer_div.childNodes[0].value+")");
+                                break;
+                            case "1010":
+                                var input_childrens = answer_div.getElementsByTagName('input');
+                                if (input_childrens[0].checked)
+                                    survey_line.push("A.\t(" + input_childrens[0].value+")");
+                                else if (input_childrens[1].checked)
+                                    survey_line.push("A.\t(" + input_childrens[1].value+")");
+                                else{
+                                    var answer=( input_childrens[2].value)?   input_childrens[2].value:"없음";
+                                    survey_line.push("A.\t(" +answer+")");
+                                }
+                                break;
+                            case "1008":
+                                var input_childrens = answer_div.getElementsByTagName('input');
+                                if (input_childrens[0].checked)
+                                    survey_line.push("A.\t(" + input_childrens[0].value+")");
+                                else {
+                                    var answer=( input_childrens[1].value)?   input_childrens[1].value:"없음";
+                                    survey_line.push("A.\t(" + answer+")");
+                                }
+                                break;
+                             case "1009":
+                                var input_childrens = answer_div.getElementsByTagName('input');
+                               // console.log("0:  "+input_childrens[0].checked);
+                               // console.log("1:  "+input_childrens[1].value);
+                                if (input_childrens[0].checked){
+                                    survey_line.push("A.\t(" + input_childrens[0].value+")");
+                                  //  console.log("if :"+input_childrens[0].value);
+                             } else {
+                                    var answer=(input_childrens[1].value)? input_childrens[1].value:"없음";
+                                    survey_line.push("A.\t(" + answer+")");
+                                   // console.log("else :"+answer);
+                                }
+
+                                break;
+                            case "1002"://text
+                                survey_line.push("A.\t(" + answer_div.childNodes[0].value+")");
+                                break;
+
+                        }
+                    }
+                    else if (children[j].classList.contains("question_group")) {
+                      //  console.log("question_group");
+                        var groupdivs= children[j].childNodes;
+                        for(var k=0; k<groupdivs.length;k++){
+                            //var groupdiv=document.getElementById("groupdiv_"+k);
+                            parsing(groupdivs[k]);
+                        }
+
+                    }
+                    else if (children[j].classList.contains("my-card-info")) {
+                        survey_line.push("I.\t" + children[j].innerText); //p
+                    }
+
+
+                }
+            
+
+        }
+
+        function generateFile(last_updatedtc,subjectIp) {
+            //if( surverytitle.length>=2)
+           // var survey_title_str = survey_title.join("\n");
+           // console.log("--" + survey_title_str);
+           var fileupdatetime=escape(encodeURIComponent(last_updatedtc), "UTF-8");
+            var survey_line_str = survey_line.join("\n");
+          //  console.log("\n0000000" + survey_line_str);
+            var encrypted_survey_line_str = escape(encodeURIComponent(survey_line_str), "UTF-8");
+          //  var encrypted_survey_header_str = escape(encodeURIComponent(survey_title_str), "UTF-8");
+            // var survey_line_str_encodede=escape(encodeURIComponent(survey_line_str), "UTF-8") ;
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                   
+                    var data=JSON.parse(xhr.responseText.trim());      
+                    console.log("generateFile"+last_updatedtc);
+                    console.log(data);
+                  //  var link = document.createElement("a");
+                      //  link.download = data.FILENAME;
+
+                       // link.href = getContextPath() + "/survey_files/" + data.FILENAME;
+                      //  link.href =data.FILEPATH + data.FILENAME;
+
+                       // link.click();  
+                      //  setDownloadBtn() ;
+                        
+                      //  $("#download").prop("disabled", false);
+                     // alert("답변해주셔서 감사합니다.");
+                     //window.history.back();
+                }
+
+            }
+
+            xhr.open("POST", subjectIp+"/src/generatePdf.jsp", false);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.send("SURVEY=" + encrypted_survey_line_str+"&SID="+SID+"&SAID="+SAID+"&SCREENING_ID="+SCREENING_ID +"&FILE_UPDATE_TIME="+fileupdatetime);
+            //xhr.send("SURVEY=" + encrypted_survey_line_str + "&HEADER=" + encrypted_survey_header_str);
+        }
+
+   
+        function save_response() {
+            if (!validate()) return;
+            // console.log("save start" + validate());
+
+            var stringMyAnswerJSON = getJSONANSWER("answer");
+
+            var encrypted_Answer_jsonArr = escape(encodeURIComponent(stringMyAnswerJSON));
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data = JSON.parse(xhttp.responseText.trim());
+                    console.log("save_response-------------"+xhttp.responseText.trim());
+                    save_group_response2();
+
+                    createPDF(data.last_updatedtc, data.subjectIp) ;
+
+                }
+            }
+            xhttp.open("POST", "./screening.jsp", true);
+            xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhttp.send("action=save_response&SCREENING_ID=" + SCREENING_ID + "&SAID=" + SAID + "&RESPONSE=" + encrypted_Answer_jsonArr);
+
+
+
+        }
+      
+        function getPhoneFormat(phone_num_only) {
+            if (phone_num_only) {
+                var phone_formatted = "";
+
+                var length = phone_num_only.length;
+                if (length >= 11) {//하이픈 두개삽입:중간에 4자  010-1234-1234
+                    phone_formatted = phone_num_only.substring(0, 3) + "-" + phone_num_only.substring(3, 7) + "-" + phone_num_only.substring(7);
+
+                }
+                else if (length >= 10) {//하이픈 두개삽입 :중간에 3자  010-123-1234
+                    phone_formatted = phone_num_only.substring(0, 3) + "-" + phone_num_only.substring(3, 6) + "-" + phone_num_only.substring(6);
+
+                }
+                else {
+                    phone_formatted = phone_num_only;
+                }
+
+                return phone_formatted;
+            }
+            else return phone_num_only;
+
+        }
+        function save_group_response2() {
+            // var stringGroupAnswerJSON=getJSONANSWER("myGroupAnswer");
+            //  console.log("stringGroupAnswerJSON="+stringGroupAnswerJSON);
+            var all_group_divs = document.getElementsByClassName('question_group')[0].childNodes;
+            var jsonArr = new Array();
+            var all_delete = false;
+            if(document.getElementById('sqid_7_2').checked==true ){
+              //  console.log("복용약물 없음 선택");               
+                all_delete = true;
+            }
+
+
+            var currentnum_of_current_groupt_group_no = document.getElementsByClassName('question_group')[0].childNodes.length;
+          //  console.log(" 현재 저장될 그룹 문제의 반복 개수" + currentnum_of_current_groupt_group_no);
+            //var at_lease_one_answer_in_group=false;
+            for (var j = 0; j < all_group_divs.length; j++) {
+                var all_my_answer_elements = all_group_divs[j].getElementsByClassName('group_answer');
+                var hasGroupAnswer = false;
+                var jsonArrTemp = new Array();
+                var group_CRUD = all_group_divs[j].dataset.type;
+                if (all_delete) {
+                    switch (all_group_divs[j].dataset.type) {
+                        case 'c': group_CRUD = 'x'; //무시: 디비로 전송 안함
+                            break;
+                        case 'r': group_CRUD = 'd'; //디비에 가서 삭제할 것
+                            break;
+                    }
+
+
+                }
+                for (var i = 0; i < all_my_answer_elements.length; i++) {
+
+                    if (group_CRUD == 'x') continue;
+
+                    var aJson = new Object();
+                    aJson.CRUD = group_CRUD;
+                    switch (all_my_answer_elements[i].dataset.type) {
+                        case '1001'://라디오버튼         
+                            aJson.SUB_QUESTION_ID = all_my_answer_elements[i].dataset.surveyqid;
+                            aJson.QUESTION_GROUP_ID = all_my_answer_elements[i].dataset.groupqid;
+
+                            if (all_my_answer_elements[i].dataset.surveyaid) aJson.GROUP_ANSWER_ID = all_my_answer_elements[i].dataset.surveyaid;
+                            else aJson.GROUP_ANSWER_ID = 0;
+
+                            if (document.querySelectorAll('input[name="' + all_my_answer_elements[i].id + '"]:checked').length === 0) {
+                                aJson.ANSWER = "";
+                            }
+                            else {
+                                aJson.ANSWER = document.querySelectorAll("input[name='" + all_my_answer_elements[i].id + "']:checked")[0].value;
+
+                            }
+
+                            jsonArrTemp.push(aJson);
+                            if (aJson.ANSWER.length > 0) hasGroupAnswer = true;
+                            break;
+
+                        case '1002': //TEXT
+                            aJson.SUB_QUESTION_ID = all_my_answer_elements[i].dataset.surveyqid;
+                            aJson.QUESTION_GROUP_ID = all_my_answer_elements[i].dataset.groupqid;
+
+                            if (all_my_answer_elements[i].dataset.surveyaid) aJson.GROUP_ANSWER_ID = all_my_answer_elements[i].dataset.surveyaid;
+                            else aJson.GROUP_ANSWER_ID = 0;
+                            aJson.ANSWER = all_my_answer_elements[i].getElementsByTagName('input')[0].value.trim();
+                            jsonArrTemp.push(aJson);
+                            if (aJson.ANSWER.length > 0) hasGroupAnswer = true;
+                            break;
+                        case '1004'://날짜
+                            aJson.SUB_QUESTION_ID = all_my_answer_elements[i].dataset.surveyqid;
+                            aJson.QUESTION_GROUP_ID = all_my_answer_elements[i].dataset.groupqid;
+
+                            if (all_my_answer_elements[i].dataset.surveyaid) aJson.GROUP_ANSWER_ID = all_my_answer_elements[i].dataset.surveyaid;
+                            else aJson.GROUP_ANSWER_ID = 0;
+
+                            aJson.ANSWER = all_my_answer_elements[i].getElementsByTagName('INPUT')[0].value;
+                            jsonArrTemp.push(aJson);
+                            if (aJson.ANSWER.length > 0) hasGroupAnswer = true;
+                            break;
+                        case '1005': //TEXTAREA
+                            aJson.SUB_QUESTION_ID = all_my_answer_elements[i].dataset.surveyqid;
+                            aJson.QUESTION_GROUP_ID = all_my_answer_elements[i].dataset.groupqid;
+
+                            if (all_my_answer_elements[i].dataset.surveyaid) aJson.GROUP_ANSWER_ID = all_my_answer_elements[i].dataset.surveyaid;
+                            else aJson.GROUP_ANSWER_ID = 0;
+
+                            aJson.ANSWER = all_my_answer_elements[i].getElementsByTagName('textarea')[0].value.trim();
+                            jsonArrTemp.push(aJson);
+                            if (aJson.ANSWER.length > 0) hasGroupAnswer = true;
+                            break;
+                        case '1009':
+                            aJson.SUB_QUESTION_ID = all_my_answer_elements[i].dataset.surveyqid;
+                            aJson.QUESTION_GROUP_ID = all_my_answer_elements[i].dataset.groupqid;
+
+                            if (all_my_answer_elements[i].dataset.surveyaid) aJson.GROUP_ANSWER_ID = all_my_answer_elements[i].dataset.surveyaid;
+                            else aJson.GROUP_ANSWER_ID = 0;
+
+
+                            if (document.getElementById(all_my_answer_elements[i].id + "_1").checked == true) {
+                                aJson.ANSWER = "복용중";
+                            }
+                            else {
+                                aJson.ANSWER = document.getElementById(all_my_answer_elements[i].id + "_2").value;
+                            }
+                            jsonArrTemp.push(aJson);
+                            if (aJson.ANSWER.length > 0) hasGroupAnswer = true;
+                            break;
+
+                    }
+                }
+                // DB table 명령어:
+                //    'c' : insert,               
+                //    'r'; 데이터가 변화되었는지 확인해서 변환되었으면 update , 
+                //    'd':삭제 할 것으로 표시됨,   
+                //     'x': db에 전송안함
+                if (group_CRUD != 'x') {
+                    switch (group_CRUD) {
+                        case 'c':
+                            if (hasGroupAnswer) {
+                                for (var k = 0; k < jsonArrTemp.length; k++) {
+                                    var aJsonObj = jsonArrTemp[k];
+                                    jsonArr.push(aJsonObj);
+                                }
+                            }
+                            break;
+                        case 'r':
+
+                            for (var k = 0; k < jsonArrTemp.length; k++) {
+                                var aJsonObj = jsonArrTemp[k];
+                                jsonArr.push(aJsonObj);
+                            }
+
+                            break;
+                        case 'd':
+                            for (var k = 0; k < jsonArrTemp.length; k++) {
+                                var aJsonObj = jsonArrTemp[k];
+                                jsonArr.push(aJsonObj);
+                            }
+                            break;
+                    }
+
+
+                }
+
+                //}
+
+
+            }
+
+            //  JSON.stringify(aJson);
+            console.log("jsonArr=  " + (JSON.stringify(jsonArr)));
+            // String jsonArrstr= JSON.stringify(jsonArr);
+
+            var encrypted_group_Answer_jsonArr = escape(encodeURIComponent(JSON.stringify(jsonArr)));
+            var xhttps = new XMLHttpRequest();
+            xhttps.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data = xhttps.responseText.trim();
+
+
+                    if (data == "success") {
+                        alert("자가점검이 저장되었습니다.");
+                        console.log("reload");
+                      //  location.reload();
+                    }
+
+                }
+            }
+            xhttps.open("POST", "./screening.jsp", true);
+            xhttps.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhttps.send("action=save_group_response&SCREENING_ID=" + SCREENING_ID + "&SAID=" + SAID + "&RESPONSE=" + encrypted_group_Answer_jsonArr);
+        }
+
+
+        function save_group_response() {
+            // var stringGroupAnswerJSON=getJSONANSWER("myGroupAnswer");
+
+            var all_my_answer_elements = document.getElementsByClassName("group_answer");
+            var jsonArr = new Array();
+            // var removeAll=false;
+            if (all_my_answer_elements.length == 0 || document.getElementById('sqid_7').val == '아니오') {
+                console.log("removeAll if there are any");
+                //  removeAll=true;           
+            }
+            else {
+                //var at_lease_one_answer_in_group=false;
+                for (var i = 0; i < all_my_answer_elements.length; i++) {
+                    //console.log(i);
+                    // if(all_my_answer_elements[i].value!=null && all_my_answer_elements[i].value.trim().length>0 ) at_lease_one_answer_in_group=true;
+
+                    var aJson = new Object();
+                    switch (all_my_answer_elements[i].dataset.type) {
+                        case '1001'://라디오버튼         
+                            aJson.SUB_QUESTION_ID = all_my_answer_elements[i].dataset.surveyqid;
+                            aJson.QUESTION_GROUP_ID = all_my_answer_elements[i].dataset.groupqid;
+
+                            if (all_my_answer_elements[i].dataset.surveyaid) aJson.GROUP_ANSWER_ID = all_my_answer_elements[i].dataset.surveyaid;
+                            else aJson.GROUP_ANSWER_ID = 0;
+
+                            if (document.querySelectorAll('input[name="' + all_my_answer_elements[i].id + '"]:checked').length === 0) {
+                                aJson.ANSWER = "";
+                            }
+                            else {
+                                aJson.ANSWER = document.querySelectorAll("input[name='" + all_my_answer_elements[i].id + "']:checked")[0].value;
+
+                            }
+                            jsonArr.push(aJson);
+
+                            break;
+
+                        case '1002': //TEXT
+                            aJson.SUB_QUESTION_ID = all_my_answer_elements[i].dataset.surveyqid;
+                            aJson.QUESTION_GROUP_ID = all_my_answer_elements[i].dataset.groupqid;
+
+                            if (all_my_answer_elements[i].dataset.surveyaid) aJson.GROUP_ANSWER_ID = all_my_answer_elements[i].dataset.surveyaid;
+                            else aJson.GROUP_ANSWER_ID = 0;
+
+
+                            aJson.ANSWER = all_my_answer_elements[i].getElementsByTagName('input')[0].value.trim();
+                            jsonArr.push(aJson);
+                            break;
+                        case '1004'://날짜
+                            aJson.SUB_QUESTION_ID = all_my_answer_elements[i].dataset.surveyqid;
+                            aJson.QUESTION_GROUP_ID = all_my_answer_elements[i].dataset.groupqid;
+
+                            if (all_my_answer_elements[i].dataset.surveyaid) aJson.GROUP_ANSWER_ID = all_my_answer_elements[i].dataset.surveyaid;
+                            else aJson.GROUP_ANSWER_ID = 0;
+
+                            aJson.ANSWER = all_my_answer_elements[i].getElementsByTagName('INPUT')[0].value;
+                            jsonArr.push(aJson);
+                            break;
+                        case '1005': //TEXTAREA
+                            aJson.SUB_QUESTION_ID = all_my_answer_elements[i].dataset.surveyqid;
+                            aJson.QUESTION_GROUP_ID = all_my_answer_elements[i].dataset.groupqid;
+
+                            if (all_my_answer_elements[i].dataset.surveyaid) aJson.GROUP_ANSWER_ID = all_my_answer_elements[i].dataset.surveyaid;
+                            else aJson.GROUP_ANSWER_ID = 0;
+
+                            aJson.ANSWER = all_my_answer_elements[i].getElementsByTagName('textarea')[0].value.trim();
+                            jsonArr.push(aJson);
+                            break;
+                        case '1009':
+                            aJson.SUB_QUESTION_ID = all_my_answer_elements[i].dataset.surveyqid;
+                            aJson.QUESTION_GROUP_ID = all_my_answer_elements[i].dataset.groupqid;
+
+                            if (all_my_answer_elements[i].dataset.surveyaid) aJson.GROUP_ANSWER_ID = all_my_answer_elements[i].dataset.surveyaid;
+                            else aJson.GROUP_ANSWER_ID = 0;
+
+
+                            if (document.getElementById(all_my_answer_elements[i].id + "_1").checked == true) {
+                                aJson.ANSWER = "복용중";
+                            }
+                            else {
+                                aJson.ANSWER = document.getElementById(all_my_answer_elements[i].id + "_2").value;
+                            }
+                            jsonArr.push(aJson);
+                            break;
+
+                    }
+
+                }
+            }
+
+            //  JSON.stringify(aJson);
+            console.log("jsonArr=  " + (JSON.stringify(jsonArr)));
+            var encrypted_group_Answer_jsonArr = escape(encodeURIComponent(JSON.stringify(jsonArr)));
+            var xhttps = new XMLHttpRequest();
+            xhttps.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data = xhttps.responseText.trim();
+
+
+                    if (data == "success") {
+                        alert("자가점검이 저장되었습니다.");
+                        location.reload();
+                    }
+
+                }
+            }
+            xhttps.open("POST", "./screening.jsp", true);
+            xhttps.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhttps.send("action=save_group_response&SCREENING_ID=" + SCREENING_ID + "&SAID=" + SAID + "&RESPONSE=" + encrypted_group_Answer_jsonArr);
+        }
+        function getJSONANSWER(className) {
+            var all_my_answer_elements = document.getElementsByClassName(className);
+            var jsonArr = new Array();
+
+            for (var i = 0; i < all_my_answer_elements.length; i++) {
+
+                var aJson = new Object();
+
+                switch (all_my_answer_elements[i].dataset.type) {
+                    case '1001'://라디오버튼         
+                        aJson.SCREENING_QUESTION_ID = all_my_answer_elements[i].dataset.surveyqid;
+                        if (all_my_answer_elements[i].dataset.surveyaid) aJson.SCREENING_ANSWER_ID = all_my_answer_elements[i].dataset.surveyaid;
+
+                        if (document.querySelectorAll('input[name="' + all_my_answer_elements[i].id + '"]:checked').length === 0) {
+                            aJson.ANSWER = "";
+                        }
+                        else {
+                            aJson.ANSWER = document.querySelectorAll("input[name='" + all_my_answer_elements[i].id + "']:checked")[0].value;
+
+                        }
+                        jsonArr.push(aJson);
+
+                        break;
+
+                    case '1002': //TEXT
+                        aJson.SCREENING_QUESTION_ID = all_my_answer_elements[i].dataset.surveyqid;
+                        if (all_my_answer_elements[i].dataset.surveyaid) aJson.SCREENING_ANSWER_ID = all_my_answer_elements[i].dataset.surveyaid;
+
+                        aJson.ANSWER = all_my_answer_elements[i].getElementsByTagName('input')[0].value.trim();
+                        jsonArr.push(aJson);
+                        break;
+                    case '1004'://날짜
+                        aJson.SCREENING_QUESTION_ID = all_my_answer_elements[i].dataset.surveyqid;
+                        if (all_my_answer_elements[i].dataset.surveyaid) aJson.SCREENING_ANSWER_ID = all_my_answer_elements[i].dataset.surveyaid;
+                        aJson.ANSWER = all_my_answer_elements[i].getElementsByTagName('INPUT')[0].value;
+                        jsonArr.push(aJson);
+                        break;
+                    case '1005': //TEXTAREA
+                        aJson.SCREENING_QUESTION_ID = all_my_answer_elements[i].dataset.surveyqid;
+                        // aJson.ANSWER=encodeURIComponent(all_my_answer_elements[i].value);
+                        if (all_my_answer_elements[i].dataset.surveyaid) aJson.SCREENING_ANSWER_ID = all_my_answer_elements[i].dataset.surveyaid;
+                        aJson.ANSWER = all_my_answer_elements[i].getElementsByTagName('textarea')[0].value.trim();
+                        jsonArr.push(aJson);
+                        break;
+                    case '1008':
+                        aJson.SCREENING_QUESTION_ID = all_my_answer_elements[i].dataset.surveyqid;
+                        // aJson.ANSWER=encodeURIComponent(all_my_answer_elements[i].value);
+                        if (all_my_answer_elements[i].dataset.surveyaid) aJson.SCREENING_ANSWER_ID = all_my_answer_elements[i].dataset.surveyaid;
+                        if (document.getElementById("case1008_0").checked == true) {
+                            aJson.ANSWER = "해당없음";
+                        }
+                        else {
+                            aJson.ANSWER = document.getElementById("case1008_2").value;
+                        }
+                        jsonArr.push(aJson);
+                        break;
+
+                    case '1010':
+                        aJson.SCREENING_QUESTION_ID = all_my_answer_elements[i].dataset.surveyqid;
+                        // aJson.ANSWER=encodeURIComponent(all_my_answer_elements[i].value);
+                        if (all_my_answer_elements[i].dataset.surveyaid) aJson.SCREENING_ANSWER_ID = all_my_answer_elements[i].dataset.surveyaid;
+                        if (document.getElementById("case1010_0").checked == true) {
+                            aJson.ANSWER = "해당없음";
+                        }
+                        else if (document.getElementById("case1010_1").checked == true) {
+                            aJson.ANSWER = "지속중";
+                        }
+                        else {
+                            aJson.ANSWER = document.getElementById("case1010_2").value;
+                        }
+
+                        jsonArr.push(aJson);
+                        break;
+                }
+            }
+            console.log(jsonArr.length + "jsonArr=  " + (JSON.stringify(jsonArr)));
+            return JSON.stringify(jsonArr);
+        }
+
+        function prev() {
+            window.history.back();
+        }
+
+        function survey_print() {
+
+
+            $("button").hide();
+            $("i").hide();
+
+            var mywindow = window.open('', 'my div', 'height=400,width=600');
+            mywindow.document.write('<html><head><title></title>');
+
+            mywindow.document.write('<link rel="stylesheet" href="../../assets/lib/bootstrap/css/bootstrap.min.css" type="text/css" />');
+            mywindow.document.write('<link rel="stylesheet" href="../../assets/css/modern.css" type="text/css" />');
+            mywindow.document.write('<link rel="stylesheet" href="../../assets/css/custom.css" type="text/css" />');
+
+            mywindow.document.write('</head><body>');
+            mywindow.document.write(jQuery('#survey_pdf').html());
+            mywindow.document.write('</body></html>');
+            mywindow.document.close();
+            mywindow.print();
+            $("button").show();
+            $("i").show();
+        }
+        function download_clicked() {
+
+            console.log("download_clicked");
+            $("button").hide();
+            $("i").hide();
+
+
+
+
+
+            window.print();
+            $("button").show();
+            $("i").show();
+
+        }
+            //////////////////////////
+        //     var doc = new jsPDF();
+        //       var elementHTML = $('#survey_m').html();
+        // var specialElementHandlers = {
+        //     'i': function (element, renderer) {
+        //         return true;
+        //     },
+        //     'button': function (element, renderer) {
+        //         return true;
+        //     }
+        // };
+        // doc.fromHTML(elementHTML, 15, 15, {
+        //     'width': 170,
+        //     'elementHandlers': specialElementHandlers
+        // });
+
+        // // Save the PDF
+        // doc.save('sample-document.pdf');
+//////////////////////////////////////////
+// var doc = new jsPDF('p', 'px', 'a4');
+// doc.setFont('font-family: arial');
+
+// doc.setFontSize(10);
+// var elementToPrint = document.getElementById('survey_m');
+// doc.html(elementToPrint, {
+//         html2canvas: {
+//             scale: 0.45
+//         },
+//         callback: function (doc) {
+//             doc.save();
+//         }
+//     });
+
+
+    </script>
+
+</head>
+
+<body>
+    <div id="navbar"></div>
+
+    <div class="container  mt-3 " style="min-width:500px;">
+
+        <div class="col-md-12" id="survey_pdf">
+            <div class="d-flex flex-row-reverse">
+                <button class="btn btn-success  mb-2 " onclick="download_clicked()" style="width:40px; ">
+                    <!-- <i class="fas fa-file-download" ></i> --><i class="fas fa-print "></i>
+                </button>
+            </div>
+            <div id="survey_header" class="card card-body ">
+
+            </div>
+            <div id="subject_info">
+
+            </div>
+
+            <div id="survey_result">
+
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <div> </div>
+
+                <div>
+                    <button class="btn btn-primary mt-1 mr-5" onclick="save_response()" style="width:100px;">
+                        수정</button>
+
+                    <button class="btn btn-default mr-2 mt-1" onclick="prev()" style="width:100px; ">뒤로가기</button>
+
+                </div>
+
+                <div>
+                    <button class="btn btn-success " onclick="download_clicked()">
+                        <i class="fas fa-print "></i>
+                    </button>
+
+                </div>
+
+            </div>
+            <div class="row  w-100" style="padding-bottom:50px;"></div>
+        </div>
+    </div>
+    <div class="modal fade bd-example-modal-lg" id="audit_modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Audit Trail</h5>
+                    <span id="question_modal"></span>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-2">
+                    <table class="table" style="text-align:center;">
+                        <thead>
+                            <tr>
+                                <th>로그구분</th>
+                                <th>변경된 데이터</th>
+                                <th>사용자소속</th>
+                                <th>사용자(이메일)</th>
+                                <th>변경 시각</th>
+                            </tr>
+
+                        </thead>
+                        <tbody id="audit_modal_tbody">
+
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer consent-modal-footer">
+                    <button type="button" style="width:100px" class="btn btn-default" data-dismiss="modal">닫기</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade bd-example-modal-lg" id="subgroup_audit_modal" tabindex="-1" role="dialog"
+        aria-hidden="true" style="min-width: 800px;">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Audit Trail</h5>
+                    <span>- 약물 복용 설문 기록</span>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-2">
+                    <table class="table" style="text-align:center;">
+                        <thead>
+                            <tr>
+                                <th width="100px">로그구분</th>
+                                <th >설문 질문</th>
+                                <th width="120px">변경된 데이터</th>
+                                <th width="100px">사용자소속</th>
+                                <th width="150px">사용자(이메일)</th>
+                                <th width="120px">변경 시각</th>
+                            </tr>
+
+                        </thead>
+                        <tbody id="subgroup_audit_modal_tbody">
+
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer consent-modal-footer">
+                    <button type="button" style="width:100px" class="btn btn-default" data-dismiss="modal">닫기</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../assets/js/app.js"></script>
+    <script src="../../assets/js/table-filter.js"></script>
+    <!-- <script src="assets/lib/bootstrap/js/bootstrap.min.js"></script> -->
+    <script type="text/javascript" src="../../assets/lib/DataTables/datatables.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"></script>
+    <!-- <script src="../../assets/js/jspdf.umd.min.js"></script>   -->
+    <!-- <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script> -->
+    <script type="text/javascript" src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+</body>
+
+</html>

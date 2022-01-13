@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="google" content="notranslate">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+  <link rel="stylesheet" href="../assets/lib/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="../assets/css/modern.css">
+  <link rel="stylesheet" href="../assets/css/custom.css">
+  <link rel="stylesheet" type="text/css" href="../assets/lib/DataTables/datatables.min.css" />
+
+  <script src="../assets/lib/jquery/jquery.min.js" type="text/javascript"></script>
+
+  <title>METORY (연구자용)</title>
+  <script type="text/javascript">
+  var xhttp = new XMLHttpRequest();
+    //var emergency_row_item_num = 3;
+    var contextpath=getContextPath();
+    $(document).ready(function () {
+
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == this.DONE && this.status == 200) {
+          var session_info = xhttp.responseText.trim();
+          var READROLE = session_info.split("_")[0];
+          var CREATEROLE = session_info.split("_")[1];
+          var MODIFYROLE = session_info.split("_")[2];
+          var RESERVEROLE = session_info.split("_")[3];
+          var IDENTITYROLE = session_info.split("_")[4];
+          var CONSENTROLE = session_info.split("_")[5];
+          var SIGNROLE = session_info.split("_")[6];
+          var ADMINROLE = session_info.split("_")[7];
+          var BCADMINROLE = session_info.split("_")[8];
+          var STUDYADMINROLE = session_info.split("_")[9];
+          var SITEID = session_info.split("_")[10];
+          var SITENAME = session_info.split("_")[11];
+          var INVNAME = session_info.split("_")[12];
+
+          console.log("READROLE=" + READROLE + "  CREATEROLE=" + CREATEROLE);
+          console.log("MODIFYROLE=" + MODIFYROLE + "  RESERVEROLE=" + RESERVEROLE + "  IDENTITYROLE=" + IDENTITYROLE + "  CONSENTROLE=" + CONSENTROLE + "   SIGNROLE=" + SIGNROLE);
+          // not logged in 된 경우 session 에 null_null_null_null..... 이므로 그중 하나의 값 특히 READROLE 을 체크한다. 왜냐하면 값이 항상 1이므로
+          console.log("ADMINROLE=" + ADMINROLE + "  BCADMINROLE=" + BCADMINROLE + "  STUDYADMINROLE=" + STUDYADMINROLE);
+          console.log("SITEID=" + SITEID + "   SITENAME=" + SITENAME + "  INVNAME=" + INVNAME);
+
+          if (READROLE == 0 || READROLE == "null") {
+            //console.log("nonono");
+            window.location=contextpath+"/pages/login.jsp";
+
+          }
+          else  window.location=contextpath+"/pages/study/study.html";
+
+
+        }
+      }
+      xhttp.open("POST", contextpath + "/pages/load_session.jsp", true);
+      xhttp.send();
+
+    
+  
+  
+    });
+    function getContextPath() {
+    var hostIndex = location.href.indexOf(location.host) + location.host.length;
+    // return location.href.substring(hostIndex, location.href.indexOf('/', hostIndex + 1));
+    console.log(location.origin);
+    return location.origin;
+  }
+  </script>
+</head>
+<body>
+  </body>
+
+</html>

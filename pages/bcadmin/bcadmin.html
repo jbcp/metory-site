@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+    <link rel="stylesheet" href="../../assets/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../assets/css/app.css">
+    <link rel="stylesheet" href="../../assets/css/modern.css">
+    <link rel="stylesheet" href="../../assets/css/custom.css">
+    <link rel="stylesheet" type="text/css" href="../../assets/lib/DataTables/datatables.min.css" />
+    <script src="../../assets/lib/jquery/jquery.min.js" type="text/javascript"></script>
+
+    <title>METORY (연구자용)</title>
+    <script type="text/javascript">
+        var studies;
+        var bcStageArr = ["", "연구자 요청", "피어정보 전달", "프로파일 설치", "채널오픈", "채널중단", "채널종료"]; //BCSTAGE
+
+        $(document).ready(function () {
+            // $.ajax({
+            //     type: 'post',
+            //     url: getContextPath() + "/pages/navbar.html",
+            //     dataType: 'html',
+            //     success: function (data) {
+            //         $(".navbar").html(data);
+            //     }
+            // })
+            $('#navbar').load(getContextPath() + '/pages/navbar.html').ready(function () {
+                $('.main').css('padding-top', $('.navbar').outerHeight());
+
+            })
+            $('#footer').load('../footer.html');
+            $(".custom-file-input").on("change", function () {
+                if ($(this).val() != "") {
+
+                    var ext = $(this).val().split(".").pop().toLowerCase();
+                    if ($.inArray(ext, ["json"]) == -1) {
+                        alert("json 파일만 업로드 할 수 있습니다.");
+                        $(this).val("");
+                        return;
+                    }
+                    else {
+                        var fileName = $(this).val().split("\\").pop();
+                        $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+                    }
+                }
+            });
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    //  $('.main').css('padding-top', $('.navbar').outerHeight());
+
+                    var data_pre = xhttp.responseText.trim();
+                    var data_eval = eval(data_pre);
+                    studies = data_eval;
+                    if (data_eval.length == 0) {
+                        document.getElementById("aDiv").innerHTML = "블록체인 데이터가 없습니다";
+                        document.getElementById("aDiv").setAttribute("class", "mb-4");
+                    }
+                    for (var i = 0; i < data_eval.length; i++) {
+                        var createTR = document.createElement("tr");
+                        document.getElementById("study_table").appendChild(createTR);
+                        //번호
+                        var SIDTD = document.createElement("td");
+                        SIDTD.appendChild(document.createTextNode(i + 1));
+                        createTR.appendChild(SIDTD);
+                        //요청일
+                        var STARTTD = document.createElement("td");
+                        STARTTD.appendChild(document.createTextNode(data_eval[i].SCREATEDTC));
+                        createTR.appendChild(STARTTD);
+                        //연구명
+                        var TITLETD = document.createElement("td");
+                        TITLETD.appendChild(document.createTextNode(data_eval[i].TITLE));
+                        TITLETD.setAttribute("id", "TITLETD_" + data_eval[i].SID);
+                        TITLETD.setAttribute("onclick", "STUDYBTN_CLICKED(id)");
+                        TITLETD.setAttribute("style", "cursor:pointer");
+                        createTR.appendChild(TITLETD);
+
+                        //채널명
+                        var CHANNELTD = document.createElement("td");
+                        var CHANNEL = document.createElement("span");
+                        CHANNEL.innerText = data_eval[i].BCCHANNEL;
+                        CHANNEL.setAttribute("id", "CHANNELNAME_" + data_eval[i].SID);
+                        CHANNELTD.appendChild(CHANNEL);
+
+                        var CHANNELBTN = document.createElement("a");
+                        CHANNELBTN.setAttribute("class", "btn btn-primary ml-2 btn-sm");
+                        CHANNELBTN.setAttribute("href", "#");
+                        CHANNELBTN.id = "CHANNELBTN_" + data_eval[i].SID;
+                        CHANNELBTN.setAttribute("onclick", "CHANNELBTN_CLICKED(id)");
+
+                        var ICON = document.createElement("i");
+                        ICON.setAttribute("class", " fas fa-edit");
+                        ICON.setAttribute("style", "border-radius : 0px");
+                        CHANNELBTN.appendChild(ICON);
+                        CHANNELTD.appendChild(CHANNELBTN);
+
+                        createTR.appendChild(CHANNELTD);
+
+
+                        //프로파일                       
+                        var PROFILETD = document.createElement("td");
+
+                        //프로파일-업로드버튼 
+                        var UPLOADBTN = document.createElement("a");
+                        UPLOADBTN.setAttribute("class", "btn btn-primary p-1 btn-block");
+                        UPLOADBTN.setAttribute("href", "#");
+                        UPLOADBTN.id = "UPLOADBTN_" + data_eval[i].SID;
+                        UPLOADBTN.setAttribute("onclick", "UPLOADBTN_CLICKED(id)");
+                        UPLOADBTN.appendChild(document.createTextNode(" 업로드 "));
+
+                        var UPLOADICON = document.createElement("i");
+                        UPLOADICON.setAttribute("class", " fas fa-upload  ml-1");
+                        UPLOADICON.setAttribute("style", "border-radius : 0px");
+                        UPLOADBTN.appendChild(UPLOADICON);
+                        PROFILETD.appendChild(UPLOADBTN);
+
+                        //프로파일-다운로드
+
+                        var DOWNLOADBTN = document.createElement("a");
+                        DOWNLOADBTN.setAttribute("class", "btn btn-success p-1 btn-block ");
+
+                        DOWNLOADBTN.setAttribute("download", "profile.json");
+                        //DOWNLOADBTN.setAttribute("onclick", "DOWNLOADBTN_CLICKED(id)");
+                        DOWNLOADBTN.id = "DOWNLOADBTN_" + data_eval[i].SID;
+                        DOWNLOADBTN.appendChild(document.createTextNode("다운로드 "));
+
+                        var DOWNLOAD_ICON = document.createElement("i");
+                        DOWNLOAD_ICON.setAttribute("class", "ml-1 fas fa-download ");
+                        DOWNLOAD_ICON.setAttribute("style", "border-radius : 0px");
+                        DOWNLOADBTN.appendChild(DOWNLOAD_ICON);
+                        PROFILETD.appendChild(DOWNLOADBTN);
+
+                        if (data_eval[i].BCPROFILE != null && data_eval[i].BCPROFILE !== "") {
+                            DOWNLOADBTN.setAttribute("href", data_eval[i].CONTEXTPATH + data_eval[i].BCPROFILE);
+                        }
+                        else DOWNLOADBTN.hidden = true;
+                        // //프로파일-다운로드
+                        // if (data_eval[i].BCPROFILE != null) {
+                        //     var DOWNLOADBTN = document.createElement("a");
+                        //     DOWNLOADBTN.setAttribute("class", "btn btn-success ml-2 ");
+                        //     DOWNLOADBTN.setAttribute("href", data_eval[i].CONTEXTPATH + data_eval[i].BCPROFILE);
+                        //     DOWNLOADBTN.setAttribute("download", "profile.json");
+                        //     DOWNLOADBTN.setAttribute("onclick", "DOWNLOADBTN_CLICKED(id)");
+                        //     DOWNLOADBTN.id = "DOWNLOADBTN_" + data_eval[i].SID;
+                        //     DOWNLOADBTN.appendChild(document.createTextNode("다운로드"));
+
+                        //     var DOWNLOAD_ICON = document.createElement("i");
+                        //     DOWNLOAD_ICON.setAttribute("class", "ml-1 fas fa-download ");
+                        //     DOWNLOAD_ICON.setAttribute("style", "border-radius : 0px");
+                        //     DOWNLOADBTN.appendChild(DOWNLOAD_ICON);
+                        //     PROFILETD.appendChild(DOWNLOADBTN);
+                        // }
+                        createTR.appendChild(PROFILETD);
+
+                        //채널상태
+                        var SELECTTD = document.createElement("td");
+                        var STATUSSELECT = document.createElement("select");
+                        STATUSSELECT.setAttribute("class", "form-control");
+                        STATUSSELECT.setAttribute("onchange", "CHANGE_BCSTAGE(id)");
+                        STATUSSELECT.setAttribute("style", "border-radius:0rem;");
+                        STATUSSELECT.id = "STAGE_" + data_eval[i].SID;
+                        for (var k = 1; k < bcStageArr.length; k++) {
+                            var option = document.createElement("option");
+                            option.value = k;
+                            option.text = bcStageArr[k];
+                            STATUSSELECT.appendChild(option);
+                            if (data_eval[i].BCSTAGE == k) option.setAttribute("selected", "");
+                        }
+
+
+
+                        SELECTTD.appendChild(STATUSSELECT);
+                        createTR.appendChild(SELECTTD);
+                    }
+                    // $('#studies_table').dataTable({
+                    //     "columnDefs": [{
+                    //         "targets": 3, //프로파일 컬럼 정렬 제외
+                    //         "orderable": false
+                    //     }]
+                    // });
+                }
+            }
+            xhttp.open("GET", "./blockchain.jsp?action=load", true);
+            xhttp.send();
+
+        })
+
+        //tomcat 이하 첫번째 경로 반환
+        function getContextPath() {
+            var hostIndex = location.href.indexOf(location.host) + location.host.length;
+            // return location.href.substring(hostIndex, location.href.indexOf('/', hostIndex + 1));
+            return location.origin;
+        }
+
+        function UPLOADBTN_CLICKED(id) {
+            $('#uploadModal').modal('show');
+            document.getElementById("Modal_TITLE").innerText = id.split("_")[1];
+
+            document.getElementById("Modal_TITLE").hidden = true;
+        }
+        function CHANNELBTN_CLICKED(id) {
+            $('#nameEditModal').modal('show');
+            document.getElementById("edit_modal_title").hidden = true;
+            document.getElementById("edit_modal_title").innerText = id.split("_")[1];
+        }
+
+        function CHANGE_BCSTAGE(id) {
+            var SID = id.split("_")[1];
+            var STATUS = $('#' + id + " option:selected").val();
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    $('#status_SELECT_' + SID).val(STATUS).attr("selected", "selected");
+                }
+            }
+            xhttp.open("POST", "./blockchain.jsp", true);
+            xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhttp.send("action=CHANGE_BCSTAGE&SID=" + SID + "&STAGE=" + STATUS);
+        }
+
+        function SAVE_CHANNEL() {
+            var SID = document.getElementById("edit_modal_title").textContent;
+            var channelName = document.getElementById("channel_name").value.trim();
+
+            console.log(SID + "--" + channelName);
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var response = xhttp.responseText.trim();
+                    console.log(response);
+                    if (response == "success") document.getElementById("CHANNELNAME_" + SID).innerText = channelName;
+                    else alert("채널이름이 설정되지 않았습니다.");
+
+                }
+            }
+            xhttp.open("POST", "./blockchain.jsp", true);
+            xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhttp.send("action=SAVE_CHANNEL&SID=" + SID + "&BCCHANNEL=" + channelName);
+        }
+
+        function STUDYBTN_CLICKED(id) {
+            var SID = id.split("_")[1];
+            localStorage.setItem("study_SID", SID);
+            location.href = "bcstudy.html";
+
+        }
+        function upload_modal_clear() {
+            document.getElementById("profile_lable").innerText = "Choose file";
+            document.getElementById("profile").innerText = "";
+            document.getElementById("upload_form").reset();  // Reset all form data
+
+        }
+        function upload_file() {
+            var input_file = document.getElementById("upload_form");
+            //  console.log(input_file);
+            //console.log("+++"+document.getElementById("profile_lable").innerText);
+            if (document.getElementById("profile_lable").innerText == "Choose file") return;
+            // var formData = new FormData(input_file);
+            var formData = new FormData(input_file);
+            // formData.append('file',input_file);  
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data = JSON.parse(xhr.responseText.trim());
+                    var filename = data.FILENAME;
+                    console.log("bcadmin" + filename);
+                    var path = getContextPath();
+                    var download_url = path + "/" + filename;
+                    var file_url = filename;//save to db(bcprofile@study )
+                    var SID = document.getElementById("Modal_TITLE").textContent;
+
+                    $('#uploadModal').modal('hide');
+                    var downloadbtn = document.getElementById("DOWNLOADBTN_" + SID);
+                    downloadbtn.hidden = false;
+
+                    // if (!downloadbtn.hasChildNodes == false) {
+                    // var proviewLink=document.createElement("a");
+                    // proviewLink.appendChild(document.createTextNode("다운로드"));
+                    downloadbtn.setAttribute("href", download_url);
+                    // proviewLink.setAttribute("download", "profile.json");
+                    // }
+                    // else {
+
+                    // }
+                    // document.getElementById("STAGE_" + SID).options[3].selected = 'selected';
+                    //CHANGE_BCSTAGE("STAGE_" + SID);
+                    alert("파일이 업로드되었습니다.");
+                    upload_modal_clear();
+
+                    sendToDAPP(file_url, SID, formData);
+                }
+
+            }
+            xhr.open("POST", getContextPath() + "/pages/fileup.jsp?type=p", false);
+            xhr.send(formData);
+
+
+        }
+
+        function sendToDAPP(file_url, SID, formData) {
+
+            //save the uploaded file link to 미투리 db
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+
+                               
+                    var data_pre = xhttp.responseText.trim();
+                    var data_eval = eval(data_pre);
+                    var PRTNO = data_eval[0].PRTNO;
+                    var SITEID = data_eval[0].SITEID;
+                    var SPONSORID = data_eval[0].SPONSORID;
+                    var DAPPIP = data_eval[0].DAPPIP;
+                    var SITENAME = data_eval[0].SITENAME;
+
+                    formData.append('protocol_no', PRTNO);
+                    formData.append('site_id', SITENAME);
+
+                    //send a file to dApp server  
+                    var settings = {
+                        "async": true,
+                        "crossDomain": true,
+                        "url": DAPPIP + "/file/upload",                       
+                        "method": "POST",
+                        "processData": false,
+                        "contentType": false,
+                        "mimeType": "multipart/form-data",
+                        "data": formData
+                    };
+                    $.ajax(settings).done(function (response) {
+                        console.log("sent a profile to DAAPPIP=" + DAPPIP + "/file/upload" + " \n protocol_no=" + formData.get('protocol_no') + "\n site_id=" + formData.get('site_id') + "\nresponse=>" + response);
+                    });
+
+                }
+            }
+            xhttp.open("POST", "./blockchain.jsp", true);
+            xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhttp.send("action=saveProfile&SID=" + SID + "&PFILEPATH=" + escape(encodeURIComponent(file_url)));
+
+
+        }
+
+    </script>
+</head>
+
+<body>
+    <div id="navbar"></div>
+
+    <div class="container  mt-3">
+        <div class="d-flex justify-content-between  ">
+            <nav aria-label="breadcrumb ">
+                <ol class="breadcrumb p-0 m-0" style="background-color:transparent; margin-bottom:0rem;">                   
+                    <li class="breadcrumb-item active" aria-current="page">블록체인</li>
+                    <li class="breadcrumb-item "></li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="card mt-3 ">
+            <div class="card-body">
+                <h5 class="myinfo"> ※ 블록체인 연결 세팅 방법 </h5>
+                <al class="myinfo"> 1. 연구자요청: 연구자가 블록체인에 연결요청을 합니다. </al><br>
+                <al class="myinfo"> 2. 채널명 입력 및 프로파일 업로드: 채널명을 입력하고 프로파일.json 파일을 업로드합니다. </al><br>
+                <al class="myinfo"> 3. 채널오픈: 채널상태를 채널오픈으로 설정합니다.</al><br><br>
+
+                <div id="aDiv" style="text-align: right;">
+                    <!-- <a class="btn btn-danger" href="create_study.html" id="createBTN"
+                        style="font-weight: bold; border-radius: 0px;">새 연구(New)</a> -->
+                </div>
+                <div class="table-responsive">
+
+                    <table class="table w-100 bg-white" id="studies_table"
+                        style="text-align: center;table-layout:fixed; min-width: 800px; ">
+                        <thead style="background-color: rgb(235,235,235);">
+                            <tr style="text-align: center; font-weight: bold;">
+                                <th width="50px" max-width="60px">번호</th>
+                                <th width="100px">요청일</th>
+                                <th width="170px">연구명</th>
+                                <th width="180px" max-width="180px">채널명</th>
+                                <th width="130px" max-width="130px">프로파일</th>
+                                <th width="140px" max-width="140px">채널상태</th>
+                            </tr>
+                        </thead>
+                        <tbody id="study_table" style="text-align: center;"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="footer" class="container mt-5 pt-5"></div>
+    <div class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" id="uploadModal" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="Modal_TITLE"></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="row m-2">
+                            <table class="table table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <p>본 연구 채널에 연결하기 위한 "profile.json" 파일을 업로드하여 주시기 바랍니다.</p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="input-group mb-3">
+                                                <form class="custom-file" method="POST" enctype="multipart/form-data"
+                                                    id="upload_form">
+                                                    <input type="file" class="custom-file-input" name="user_file"
+                                                        id="profile">
+                                                    <label id="profile_lable" class="custom-file-label" for="profile"
+                                                        aria-describedby="fileAddon" style="border-radius: 0px;">Choose
+                                                        file</label>
+                                                </form>
+                                                <div class="input-group-append">
+
+                                                    <span class="input-group-text" id="fileAddon"
+                                                        onclick="upload_file()"
+                                                        style="border-radius: 0px;">Upload</span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!-- <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" id="SAVEVISITBTN"
+                        onclick="CHECK_IDENTITY()" style="border-radius: 0px;">확인</button>
+                </div> -->
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" id="nameEditModal" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <!-- <h5 class="modal-title" id="edit_modal_title"></h5> -->
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="row m-1">
+                            <table class="table table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <p>선택하신 연구의 채널 이름을 입력하여 주세요.</p>
+                                            <span class="modal-title" id="edit_modal_title" hidden></span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="input-group mb-3"></div>
+                                            <label class=" mr-2" for="profile" aria-describedby="channel_name"
+                                                style="border-radius: 0px;">채널</label>
+
+                                            <input type="text" name="user_file" id="channel_name">
+
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" id="SAVECHANNELBTN"
+                        onclick="SAVE_CHANNEL()" style="border-radius: 0px;">확인</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="../../assets/js/app.js"></script>
+    <!-- <script src="assets/lib/bootstrap/js/bootstrap.min.js"></script> -->
+    <script type="text/javascript" src="../../assets/lib/DataTables/datatables.min.js"></script>
+</body>
+
+</html>

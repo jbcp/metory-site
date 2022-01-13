@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+    <link rel="stylesheet" href="../../assets/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../assets/css/app.css">
+    <link rel="stylesheet" href="../../assets/css/modern.css">
+    <link rel="stylesheet" href="../../assets/css/custom.css">
+    <link rel="stylesheet" type="text/css" href="../../assets/lib/DataTables/datatables.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../assets/lib/font-awesome/css/all.css">
+    <script src="../../assets/lib/jquery/jquery.min.js" type="text/javascript"></script>
+    <style>
+
+
+
+    </style>
+
+<title>METORY (연구자용)</title>
+    <script type="text/javascript">
+        var SID;
+        var CONSENTID;
+        var SAID;
+        var show_subj_sign_data=false;
+        $(document).ready(function () {
+            SID = getParameterByName('SID');
+            CONSENTID = getParameterByName('CONSENTID');
+            // var idx = decodeURIComponent(getParameterByName('id'));
+            var block_params_pre = decodeURIComponent(getParameterByName('bcparam'));
+            var block_params_pre = JSON.parse(block_params_pre);
+            var ip = decodeURIComponent(getParameterByName('ip'));
+            var bdata_pre = decodeURIComponent(getParameterByName('tdata'));
+            var bdata = JSON.parse(bdata_pre);
+            // console.log(decodeURIComponent(idx));
+            console.log(getParameterByName('bcparam'));
+            console.log(bdata);
+            console.log(getParameterByName('tdata'));
+            getStudyInfo(bdata.subjectid);
+            document.getElementById("prtno").innerText = bdata.protocolno;
+            document.getElementById("sponsorid").innerText = bdata.sponsorid;
+            document.getElementById("siteid").innerText = bdata.siteid;
+            document.getElementById("cversion").innerText = bdata.consentversion;
+            document.getElementById("cfile_hash").appendChild(document.createTextNode(bdata.consenthash));
+
+            var explanationstartdtc = new Date(bdata.consentexplanationstarttime);
+            if (isValidDate(explanationstartdtc)) {
+                // var start_time = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate() + "  " + d.getHours() + ":" + d.getMinutes();
+                document.getElementById("starttime").innerText = bdata.consentexplanationstarttime;
+            }
+            var sugj_signdtc=new Date(bdata.subjectconsentsigntime);
+            if (isValidDate(sugj_signdtc)){
+                show_subj_sign_data=true;
+                 document.getElementById("sub_signtime").innerText = bdata.subjectconsentsigntime;
+            }
+
+            var inv_signdtc = new Date(bdata.investigatorconsentsigntime);
+            if (isValidDate(inv_signdtc)) {
+          // if(bdata.investigatorconsentsigntime && bdata.investigatorconsentsigntime.length>0){
+                document.getElementById("inv_name").innerText = bdata.investigatorid;
+                document.getElementById("inv_sign").innerText = bdata.investigatorid + "*";
+                document.getElementById("inv_signtime").innerText = bdata.investigatorconsentsigntime;
+           }
+            // getConsentDetail();
+            $('#qr_div').qrcode({
+                width: 60,
+                height: 60,
+                text: bdata.consenthash,
+
+            });
+
+            // getSign(idx, block_params, ip, data_eval); // idx, block_params, ip 대신 
+        });
+        function getStudyInfo(SAID) {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttp.responseText.trim();
+                    var data_eval = JSON.parse(data_pre);
+                    console.log(data_pre);
+                   if(show_subj_sign_data){
+                       document.getElementById("sub_name").innerText = data_eval.APPLNAME + "*";
+                        document.getElementById("sub_sign").innerText = data_eval.APPLNAME + "*";
+                   }
+                    document.getElementById('study_title').innerText = data_eval.TITLE + "*";
+                    document.getElementById('pi').innerText = data_eval.PI + "*";
+                    console.log(data_eval.CFILE);
+                    if (data_eval.CFILE != "") {
+                        var a = document.createElement("a");
+                        document.getElementById("cfile_link").appendChild(a);
+
+                        a.setAttribute("href", getContextPath() + data_eval.CFILE);
+                        a.setAttribute("download", data_eval.CFILENAME);
+                        a.innerText = data_eval.CFILENAME + "*";
+
+                    }
+                    // document.getElementById('cfile_link').innerText="http://google.lsy.to**";
+
+                }
+            };
+            xhttp.open("GET", "./blockchain.jsp?action=load_consent_info&SID=" + SID + "&CONSENTID=" + CONSENTID + "&SAID=" + SAID, true);
+            xhttp.send();
+
+        }
+        function isValidDate(d) {
+            return d instanceof Date && !isNaN(d);
+        }
+        function getContextPath() {
+            var hostIndex = location.href.indexOf(location.host) + location.host.length;
+            // return location.href.substring(hostIndex, location.href.indexOf('/', hostIndex + 1));
+            return location.origin;;
+        }
+        function getHashs(consenthash) {
+            var hash_div = document.getElementById("hash_div");
+            var consenthash_p = document.createElement("p");
+            // title_p.setAttribute("class", "mr-2");
+            consenthash_p.setAttribute("style", "font-weight: bold");
+            consenthash_p.innerText = consenthash;
+            hash_div.appendChild(consenthash_p);
+        }
+        function show_sign(signer, sign, signdtc, target) {
+            var sign_div = document.getElementById("sign_div");
+            var title = target == 1 ? "시험대상자 서명" : "시험책임자(시험책임자의 위임을 받은 연구자) 확인";
+            var title_p = document.createElement("p");
+            title_p.setAttribute("class", "mt-4 mb-0 ml-0 mr-0")
+            // title_p.setAttribute("class", "mr-2");
+            title_p.setAttribute("style", "font-weight: bold");
+            title_p.innerText = title;
+            sign_div.appendChild(title_p);
+
+            if (target == 1) {
+                var sign_p = document.createElement("p");
+                sign_p.setAttribute("class", "m-0 italic");
+                sign_p.innerText = sign;
+                sign_div.appendChild(sign_p);
+                var signdtc_p = document.createElement("p");
+                signdtc_p.setAttribute("class", "m-0");
+                signdtc_p.innerText = "서명시간:" + signdtc;
+                sign_div.appendChild(signdtc_p);
+            }
+            else if (target == 2) {
+                var signer_id = document.createElement("p");
+                signer_id.setAttribute("class", "m-0");
+                signer_id.innerText = "성명:" + signer;
+                sign_div.appendChild(signer_id);
+                var signdtc_p = document.createElement("p");
+                signdtc_p.setAttribute("class", "m-0");
+                signdtc_p.innerText = "확인시간:" + signdtc;
+                sign_div.appendChild(signdtc_p);
+            }
+
+
+        }
+
+        function getConsentDetail() {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttp.responseText.trim();
+                    var data_eval = eval(data_pre);
+                    console.log(data_pre);
+                    var study = data_eval[data_eval.length - 1];
+                    console.log(study.TITLE);
+                    console.log(study);
+                    // document.getElementById("consent_info").innerText = study.CVERSION;
+
+                    document.getElementById("study_title").innerText = study.TITLE;
+                    document.getElementById("sponsor_name").innerText = study.SPONSOR_NAME;
+                    document.getElementById("pi_name").innerText = study.PI_NAME;
+                    document.getElementById("site_name").innerText = study.SITE_NAME;
+                    // document.getElementById("sponsor_name").innerText=study.TITLE;
+
+
+
+                    for (var i = 0; i < data_eval.length - 1; i++) {
+                        var p = document.createElement("p");
+
+                        //소제목                        
+                        var title = document.createElement("span");
+                        title.setAttribute("class", "mr-2");
+                        title.setAttribute("style", "font-weight:bold;");
+                        title.innerText = data_eval[i].CDTITLE.split('<br/>').join('\r\n') + "\n";
+                        p.appendChild(title);
+                        //내용
+                        var content = document.createElement("span");
+                        content.innerText = data_eval[i].CDCONTENT.split('<br/>').join('\r\n');
+                        p.appendChild(content);
+
+                        document.getElementById("consent_detail").appendChild(p);
+                    }
+                }
+            };
+            xhttp.open("GET", "./blockchain.jsp?action=load_consent_detail&SID=" + SID + "&CONSENTID=" + CONSENTID, false);
+            xhttp.send();
+
+        }
+        function getSign(data_eval) {
+            getConsentDetail();//블록체인으로 가서 동의서 버전으로 찾거나 동의서 키 값으로 찾아야한다.
+
+
+        }
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search);
+            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+
+
+
+
+    </script>
+</head>
+
+<body>
+    <div class="container  pt-2 pb-2" style="width:800px; background: white">
+
+        <div class="card ">
+            <div class="card-body d-flex flex-row">
+                <div class="align-self-center ">
+                    문서번호: <span id="doc_num"></span>
+                    <br> 블록체인 :
+                </div>
+
+                <div id="qr_div" class="align-self-center ml-auto">
+
+                </div>
+            </div>
+        </div>
+        <div class="card w-100" style="border:1px  solid #000">
+            <div class="m-2" style="text-align: center; vertical-align: middle; ">
+                <h2 class="m-2">시험 대상자 동의서</h2>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <table class="table" style="table-layout:fixed;">
+                    <tbody>
+                        <tr>
+                            <td style="width: 25%;"> 연구제목:
+                            </td>
+                            <td id="study_title">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td> 연구계획서 번호:
+                            </td>
+                            <td id="prtno">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                의뢰자:
+                            </td>
+                            <td id="sponsorid">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                실시기관:
+                            </td>
+                            <td id="siteid">
+
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                시험 책임자:
+                            </td>
+                            <td id="pi">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                동의서 버전:
+                            </td>
+                            <td id="cversion">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                동의 설명서 해시:
+                            </td>
+                            <td id="cfile_hash" style="overflow-wrap: break-word;">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                동의 설명서:
+                            </td>
+                            <td id="cfile_link">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                동의설명시작일시:
+                            </td>
+                            <td id="starttime">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                동의설명자:
+                            </td>
+                            <td id="explain_inv"></td>
+                        </tr>
+
+
+
+                        <tr>
+                            <td colspan="2" class="p-0 m-0">
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+
+
+        <div class="card">
+            <div class="card-title"> 시험대상자</div>
+            <div class="card-body">
+                <table>
+                    <tr>
+                        <td>
+                            성명:
+                        </td>
+                        <td id="sub_name" class="pl-2">
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            서명:
+                        </td>
+                        <td>
+                            <label class="pl-2  mysign " style=" font-weight: bold;" id="sub_sign"></label>
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            서명일시:
+                        </td>
+                        <td id="sub_signtime" class="pl-2">
+
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">시험책임자(시험책임자의 위임을 받은 연구자)</div>
+            <div class="card-body">
+                <table>
+                    <tr>
+                        <td>
+                            성명:
+                        </td>
+                        <td class="pl-2" id="inv_name">
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            서명:
+                        </td>
+                        <td>
+                            <label class="pl-2  mysign " style=" font-weight: bold;" id="inv_sign"></label>
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            서명일시:
+                        </td>
+                        <td class="pl-2" id="inv_signtime">
+
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <!-- <hr class="w-100">
+        <div class="card italic" style="background: rgb(233, 233, 233)">
+            <div id="hash" class="card-body"></div>
+        </div> -->
+        <!--end of card-->
+    </div>
+    <!--end of container-->
+
+
+
+    <script src="../../assets/js/app.js"></script>
+    <script type="text/javascript" src="../../assets/lib/DataTables/datatables.min.js"></script>
+    <script type="text/javascript" src="../../assets/js/sha256.js"></script>
+    <script src="../../assets/lib/moment/moment-with-locales.js" type="text/javascript"></script>
+    <script src="../../assets/lib/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"
+        type="text/javascript"></script>
+    <script type="text/javascript" src="../../assets/js/jquery.qrcode.min.js"></script>
+
+
+</body>
+
+</html>

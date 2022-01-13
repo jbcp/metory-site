@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+    <link rel="stylesheet" href="../../assets/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../assets/css/app.css">
+    <link rel="stylesheet" href="../../assets/css/modern.css">
+    <script src="../../assets/lib/jquery/jquery.min.js" type="text/javascript"></script>
+
+    <title>METORY (연구자용)</title>
+    <script type="text/javascript">
+        var SID;
+        var CONSENTID;
+        var applicant;
+      //  var appointid=0;
+      
+
+        $(document).ready(function(){
+            SID = getParameterByName('SID');
+          //  CONSENTID = getParameterByName('CONSENTID');
+        })
+
+        function SUBMIT(){
+            var qrcode = document.getElementById("qr_input").value.trim(); //test: 2743994676 
+            qrcode=qrcode.replace(/\s/g, "");
+            // qrcode="2743994676";
+            console.log(qrcode);
+            if (qrcode == "") {
+                document.getElementById("qr_input").focus();
+                return;
+            }
+            //  qr코드 입력시 회원 정보가 없는지 체크 status=0
+            //  회원정보는 있으나 다른 임상시험 신청  status=1
+            //
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (this.readyState == this.DONE && this.status == 200) {
+                        var data_eval = xhttp.responseText.trim();
+                        applicant = JSON.parse(data_eval);
+                        if(data_eval == 0){
+                            alert("존재하지 않는 대상자입니다.");
+                            document.getElementById("qr_input").value = "";
+                            document.getElementById("qr_input").focus();
+                        }
+                        else{
+                            //var data_eval = eval(data_pre);
+                           // applicant = JSON.parse(data_eval);
+                            $('#identityModal').modal('show');
+                            console.log("data_eval.APPLNAME" + applicant.APPLNAME);
+                            $("#APPLNAME").text(applicant.APPLNAME);
+                            $("#APPLPHONENUM").text(applicant.APPLPHONENUM);
+                            $("#APPLBIRTHDTC").text(applicant.APPLBIRTH);
+                            if (applicant.APPLSEX == "2") $("#APPLSEX").text('여');
+                            else if(applicant.APPLSEX == "1") $("#APPLSEX").text('남');
+                            var today=new Date();
+
+                            $("#APPLVISITDTC").text(applicant.APPOINTDTC);
+                            if(getDateFormat(applicant.APPOINTDTC)!= getDateFormat(today) ){
+                                //$("#APPLVISITDTC").attr();
+                                alert("예약일이 오늘이 아닙니다.");
+                            }
+                            $("#MTITLE").text(applicant.TITLE);
+                           
+                        }
+                    }
+                }
+                xhttp.open("GET", "./qrcode.jsp?action=load_APPL_info&QRCODE=" + qrcode+"&SID="+SID, true);
+                xhttp.send();
+
+
+
+            
+
+        }
+        function getDateFormat(visitdtc){
+            var date= new Date(visitdtc);
+            return  date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate();
+        }
+        function CHECK_IDENTITY(){
+            console.log("본인확인 appointid="+applicant.APPOINTID);
+            $('#identityModal').modal('hide');
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    document.getElementById("qr_input").value = "";
+                    document.getElementById("qr_input").focus();
+                }
+            }
+            //xhttp.open("GET", "./qrcode.jsp?action=identity&SAID=" + applicant.SAID+"&SID="+SID+"&APPLID="+applicant.APPLID+"&CONSENTID="+CONSENTID+"&APPOINTID="+appointid, true);
+            xhttp.open("GET", "./qrcode.jsp?action=identity&SAID=" + applicant.SAID+"&APPOINTID="+applicant.APPOINTID, true);
+            xhttp.send();
+        }
+
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search);
+               return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+
+    </script>
+    </head>
+    <body class="bg-white">
+        <div class="container" style="padding-top: 100px;">
+            <div class="d-flex justify-content-center">
+                <img id="identity_img" src="../../assets/img/qrcode.png" width="500">
+            </div>
+            <div class="d-flex justify-content-center" id="action">
+                <div class="form-inline">
+                    <input class="form-control mr-lg-2" type="text" style="border-radius: 0px;" id="qr_input" onchange="SUBMIT()" placeholder="QR 코드를 입력하세요." autofocus required>
+                    <button class="btn btn-danger btn-lg" style="border-radius: 0rem;" onclick="SUBMIT()">본인확인</button>
+                </div>
+            </div>
+        </div>
+        <script src="../../assets/js/app.js"></script>
+
+    </body>
+ 
+</html>

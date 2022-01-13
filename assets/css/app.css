@@ -1,0 +1,95 @@
+html, body {
+    margin: 0; 
+    padding: 0; 
+    height: 99%;
+}
+
+.h-100{
+    height: 99%;
+}
+
+/* section */
+.section{
+    border: black;
+    height: 99%;
+    margin: 1;
+    padding: 0;
+}
+.section-data{
+    width: 150px;
+}
+.section-model{
+    width: 300px;
+}
+.section-text{
+    font-weight: bold;
+    font-size: x-large;
+}
+
+/* button */
+.variable{
+    width: 93%;
+    height: 30px;
+    border-radius: 12px;
+}
+
+.data-import{
+    width: 140px;
+    border-color: rgb(206,212,218);
+    border-radius: 0px;
+}
+
+/* Model section*/
+.index-model{
+    font-size: small;
+}
+
+.selection-model{
+    border-radius: 0;
+}
+
+.drag-input-div{
+    height: 30px; 
+    width: 270px; 
+    border: 1px solid rgb(206,212,218);
+}
+
+.drag-input-label{
+    color: black;
+    font-weight: bold;
+}
+
+.type-input-div{
+    height: 30px; 
+    width: 270px; 
+    border: 1px solid rgb(206,212,218) ; 
+}
+
+.type-input-label{
+    color: black;
+    font-weight: bold;
+}
+.type-input-form{
+    height: 25px;
+    border: transparent;
+    text-align: right;
+}
+
+.centered {
+    width: 130px;
+    left: 50%; 
+    margin-left: 430px;
+}
+
+.home-img{
+    height:30% !important;
+}
+
+/*responsive table*/
+td.details-control {
+    background: url('../img/details_open.png') no-repeat center center;
+    cursor: pointer;
+}
+tr.shown td.details-control {
+    background: url('../img/details_close.png') no-repeat center center;
+}

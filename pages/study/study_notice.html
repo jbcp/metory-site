@@ -1,0 +1,630 @@
+<script type="text/javascript">
+    var file_url = "";
+    var adfileName = "";
+    var removedFileFlag = false;
+    var extra_content_count = 0;
+
+    $(document).ready(function () {
+        removedFileFlag = false;
+        $(".custom-file-input1").on("change", function () {
+            if ($(this).val() != "") {
+                var ext = $(this).val().split(".").pop().toLowerCase();
+                if ($.inArray(ext, ["gif", "jpg", "jpeg", "png"]) == -1) {
+                    alert("gif, jpg, jpeg, png 파일만 업로드 할 수 있습니다.");
+                    $(this).val("");
+                    return;
+                }
+                else {
+                    adfileName = $(this).val().split("\\").pop();
+                    $(this).siblings(".custom-file-label1").addClass("selected").html(adfileName);
+                    show_icon_on_tab(true);
+                    // document.getElementById("TAB_ICON_6").setAttribute("class", "ml-1 tab_icon fas fa-check");
+
+                    // document.getElementById("TAB_ICON_6").setAttribute("style", "color: #28a745; font-size:large;");
+                }
+            }
+
+        });
+
+        $('.inputs').css('border-radius', '0rem');
+        $('.short').css("width", "250px");
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                var data_eval = eval(data_pre);
+
+                switch (data_eval[0].SPUBLISHED) {
+                    case 1:
+                        $("#publish_BTN1").attr("class", "btn btn-outline-primary active");
+                        $("#publish_BTN2").attr("class", "btn btn-outline-primary");
+                        $("#publish1").prop("checked", true);
+                        break;
+                    case 2:
+                        $("#publish_BTN1").attr("class", "btn btn-outline-primary");
+                        $("#publish_BTN2").attr("class", "btn btn-outline-primary active");
+                        $("#publish2").prop("checked", true);
+                        break;
+                    default:
+                        $("#publish2").prop("checked", true);
+                        break;
+
+                }
+                // if(data_eval[0].EMERGENCY == 1){
+                //     $("#Emergency_BTN").attr("class", "btn btn-outline-danger active");
+                //     $("#Emergency").prop("checked", true);
+                // }
+                if ($('input[name=publishOptions]:checked').val() == 2) {
+
+                    document.getElementById("msg").innerHTML = "※ 모집 공고 게시가 비활성화 되어 있습니다. 게시하시려면 게시함으로 설정해 주세요.";
+                }
+                //     $('#publish2').on('click', function(event) {
+                //         document.getElementById("msg").innerText="모집 공고 게시가 비활성화 되어 있습니다. 게시하시려면 게시함으로 설정해 주세요."});
+                // // document.getElementById("study_applicant_number").value = data_eval[0].SNUM;
+                // document.getElementById("study_applicant").value = data_eval[0].STARGET;
+                document.getElementById("study_datetime").value = data_eval[0].SDATE;
+
+                var fileBTN = document.createElement("a");
+                fileBTN.setAttribute("class", "btn btn-outline-primary");
+
+                if (data_eval[0].SFILE != null) {
+                    // console.log(data_eval[0].SFILE);
+                    fileBTN.setAttribute("href", data_eval[0].CONTEXTPATH + data_eval[0].SFILE);
+                    fileBTN.setAttribute("download", data_eval[0].SFILENAME);
+                    fileBTN.appendChild(document.createTextNode(data_eval[0].SFILENAME));
+                    document.getElementById("FILEDIV").appendChild(fileBTN);
+                    var closeICON = document.createElement("i");
+                    closeICON.setAttribute("class", "ml-2 far fa-trash-alt");
+                    closeICON.setAttribute("onclick", "REMOVEFILE()");
+                    document.getElementById("FILEDIV").appendChild(closeICON);
+                    //adfileName=data_eval[0].SFILENAME;
+                    console.log("SFILE is not null" + adfileName);
+                    show_icon_on_tab(true, 1);
+                }
+
+
+
+            }
+        }
+        xhttp.open("POST", "./study.jsp?action=LOAD_STUDY_NOTICE&SID=" + SID, true);
+        xhttp.send();
+
+        var xhttps = new XMLHttpRequest();
+        xhttps.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttps.responseText.trim();
+                var data_eval = eval(data_pre);
+                if (data_eval.length > 0) {
+                    show_icon_on_tab(true, 2);
+                    for (var i = 0; i < data_eval.length; i++) {
+                        add_content();
+
+                        document.getElementById("extra_title_" + extra_content_count).value = data_eval[i].TITLE;
+                        document.getElementById("extra_content_" + extra_content_count).value = (data_eval[i].CONTENT).split('<br/>').join('\r\n');
+                    }
+                }
+                else {
+                    // show_icon_on_tab(false,3);
+                    var hasFile = document.getElementById("FILEDIV").hasChildNodes();
+                    if (!hasFile) show_icon_on_tab(false, 3);
+                }
+            }
+        }
+        xhttps.open("POST", "./study.jsp?action=LOAD_EXTRA_CONTENTS&SID=" + SID, true);
+        xhttps.send();
+
+
+    })
+    function show_icon_on_tab(showChecked, num) {
+        console.log("-----------------" + num);
+
+        if (showChecked == null) {
+            var hasFile = (adfileName.length > 0 || document.getElementById("FILEDIV").hasChildNodes());
+            var hasExtraContent = false;
+
+            var extras = document.getElementsByClassName("extra");
+
+            for (var i = 0; i < extras.length; i++) {
+                var text = extras[i].value;
+                // console.log("-" + text + "===" + hasExtraContent);
+                if (text.length > 0) {
+
+                    hasExtraContent = true;
+                    break;
+                }
+
+            }
+            showChecked = (hasFile || hasExtraContent);
+        }
+
+        console.log("showChecked" + showChecked);
+        if (showChecked) {
+
+            document.getElementById("TAB_ICON_6").setAttribute("class", "ml-1 tab_icon fas fa-check");
+            document.getElementById("TAB_ICON_6").setAttribute("style", "color: #28a745; font-size:large;");
+        } else {
+
+            document.getElementById("TAB_ICON_6").setAttribute("class", "ml-1 tab_icon fas fa-ban ");
+        }
+
+    }
+    function add_content() {
+        extra_content_count = extra_content_count + 1;
+
+        var createTR = document.createElement("tr");
+        createTR.setAttribute("id", "content_" + extra_content_count);
+
+        document.getElementById("advanced_content_table").insertBefore(createTR, document.getElementById("advanced_content_table").childNodes[document.getElementById("advanced_content_table").childNodes.length - 2]);
+
+        var createtitleTD = document.createElement("td");
+        createtitleTD.setAttribute("style", "width:150px")
+        var titleInput = document.createElement("input");
+        titleInput.setAttribute("class", "form-control extra");
+        titleInput.setAttribute("type", "text");
+        titleInput.setAttribute("style", " border-radius: 0px; text-align:right;");
+        titleInput.setAttribute("maxlength", "100");
+        titleInput.setAttribute("id", "extra_title_" + extra_content_count);
+        titleInput.setAttribute("placeholder", "연구 소제목");
+        createtitleTD.appendChild(titleInput);
+
+        var createcontentTD = document.createElement("td");
+        var contentform = document.createElement("form");
+        contentform.setAttribute("class", "form-inline");
+        contentform.setAttribute("style", "width:100%")
+
+        var contentInput = document.createElement("textarea");
+        contentInput.setAttribute("class", "form-control extra");
+        contentInput.setAttribute("type", "text");
+        contentInput.setAttribute("rows", "5");
+        contentInput.setAttribute("placeholder", "연구 내용 (오른쪽 아래를 잡아당겨 크기를 조절하실 수 있습니다.)");
+        contentInput.setAttribute("maxlength", "1000");
+        // contentInput.setAttribute("onkeydown", "resize(this)");
+        // contentInput.setAttribute("onkeyup", "resize(this)");
+        contentInput.setAttribute("style", "border-radius: 0px; width:calc(100% - 60px);");
+        contentInput.setAttribute("id", "extra_content_" + extra_content_count);
+        contentform.appendChild(contentInput);
+
+        var deleteButton = document.createElement("button");
+        deleteButton.setAttribute("class", "btn btn-sm btn-outline-primary ml-1");
+        deleteButton.setAttribute("style", "width:50px; font-weight:bold");
+        deleteButton.setAttribute("href", "#");
+        deleteButton.setAttribute("onclick", "delete_content(this);");
+        deleteButton.appendChild(document.createTextNode("삭제"));
+        contentform.appendChild(deleteButton);
+        createcontentTD.appendChild(contentform);
+
+        createTR.appendChild(createtitleTD);
+        createTR.appendChild(createcontentTD);
+    }
+
+    function chk_before_save(SID){
+        var SPUBLISHED = $('input[name=publishOptions]:checked').val();
+        if (SPUBLISHED == 1) {
+            // console.log("adfileName=" + adfileName);
+            // console.log(".hasChildNodes()=" + document.getElementById("FILEDIV").hasChildNodes());
+            var hasFile = (adfileName.length > 0 || document.getElementById("FILEDIV").hasChildNodes());
+            var hasExtraContent = false;
+
+            var extras = document.getElementsByClassName("extra");
+
+            for (var i = 0; i < extras.length; i++) {
+                var text = extras[i].value;
+                if (text.length > 0) {
+                    hasExtraContent = true;
+                    break;
+                }
+            }
+            if (!hasFile && !hasExtraContent) {
+                alert("모집공고파일이 없거나 연구내용이 없으면 개시할수 없습니다.");
+                return false;
+
+            }
+        }
+        return true;
+    }
+    //게시함이 체크되어 있으면 필수 항목 체크 후 게시
+    function check_publish_notice(SID) {
+        var SPUBLISEHD = $('input[name=publishOptions]:checked').val();
+        console.log("SPUBLISEHD1 =" + SPUBLISEHD);
+        var notpublished = false;
+        //체크 
+        //게시O 모집공고파일 X
+        if(!chk_before_save(SID)){
+            $.ajax({
+                    type: 'post',
+                    url: "study_notice.html",
+                    dataType: 'html',
+                    success: function (data) {
+                        $(".notice").html(data);
+                    }
+                })
+            return;
+        }
+
+
+        save_ads(SID);
+        //  if(SPUBLISHED==1) {
+
+        //         publish(SID);
+        //     }
+        //     else  console.log("SPUBLISEHD0 =" + SPUBLISEHD);
+
+
+
+
+    }
+    function save_ads(SID) {
+
+        if (study_active == 0) {
+            if (confirm("종료된 연구는 모집공고 게시 상태만 수정할 수 있습니다.\n계속 진행하시겠습니까?") == true) {
+                var SPUBLISHED = $('input[name=publishOptions]:checked').val();
+                var params = "action=UPDATE_NOTICE&SID=" + SID +
+                    "&SPUBLISHED=" + SPUBLISHED;
+                var xhttps = new XMLHttpRequest();
+                xhttps.onreadystatechange = function () {
+                    if (this.readyState == this.DONE && this.status == 200) {
+
+                        alert("저장되었습니다.");
+                        $.ajax({
+                            type: 'post',
+                            url: "study_notice.html",
+                            dataType: 'html',
+                            success: function (data) {
+                                $(".notice").html(data);
+                            }
+                        })
+
+
+                    }
+                }
+                xhttps.open("GET", "./study.jsp?" + params, true);
+                xhttps.send();
+            }
+            return;
+
+        }
+        if (adfileName != "") upload_file();
+        if (removedFileFlag) REMOVEFILETOSERVER();
+
+        var SDATE = document.getElementById("study_datetime").value;
+
+        // var EMERGENCY = ($("input:checkbox[name='emergencyOptions']").is(":checked"))? 1:0;
+
+        var params = "action=SAVE_ADS&SID=" + SID +
+            "&SDATE=" + encodeURIComponent(SDATE) +
+            "&SFILE=" +   encodeURIComponent(file_url)+
+            "&SFILENAME=" +  encodeURIComponent(adfileName)
+            ;
+        //  "&EMERGENCY="+EMERGENCY;
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                publish_extra_content(SID);
+
+
+            }
+        }
+        xhttp.open("GET", "./study.jsp?" + params, true);
+        xhttp.send();
+
+    }
+    // function publish_notice(SID) {
+
+    //     if (adfileName != "") upload_file();
+    //     if (removedFileFlag) REMOVEFILETOSERVER();
+
+    //     var SDATE = document.getElementById("study_datetime").value;
+
+    //     var SPUBLISEHD = $('input[name=publishOptions]:checked').val();
+    //     // var EMERGENCY = ($("input:checkbox[name='emergencyOptions']").is(":checked"))? 1:0;
+
+
+
+    //     var params = "action=UPDATE_NOTICE&SID=" + SID +
+    //         "&SDATE=" + SDATE +
+    //         "&SFILE=" + file_url +
+    //         "&SFILENAME=" + adfileName +
+    //         "&SPUBLISHED=" + SPUBLISEHD;
+    //     //  "&EMERGENCY="+EMERGENCY;
+    //     var xhttp = new XMLHttpRequest();
+    //     xhttp.onreadystatechange = function () {
+    //         if (this.readyState == this.DONE && this.status == 200) {
+
+    //             publish_extra_content(SID);
+    //             if (SPUBLISEHD == 1) {
+    //                 alert("게시되었습니다.");
+    //             }
+    //             else {
+    //                 alert("저장되었습니다.");
+    //             }
+    //             $.ajax({
+    //                 type: 'post',
+    //                 url: "study_notice.html",
+    //                 dataType: 'html',
+    //                 success: function (data) {
+    //                     $(".notice").html(data);
+    //                 }
+    //             })
+
+
+    //         }
+    //     }
+    //     xhttp.open("GET", "./study.jsp?" + params, true);
+    //     xhttp.send();
+
+    // }
+    function publish(SID) {
+
+        // if (adfileName != "") upload_file();
+        // if (removedFileFlag) REMOVEFILETOSERVER();
+        console.log("in published");
+        // var SDATE = document.getElementById("study_datetime").value;
+        var SPUBLISHED = $('input[name=publishOptions]:checked').val();
+        if (SPUBLISHED == 1) {
+            // console.log("adfileName=" + adfileName);
+            // console.log(".hasChildNodes()=" + document.getElementById("FILEDIV").hasChildNodes());
+            var hasFile = (adfileName.length > 0 || document.getElementById("FILEDIV").hasChildNodes());
+            var hasExtraContent = false;
+
+            var extras = document.getElementsByClassName("extra");
+
+            for (var i = 0; i < extras.length; i++) {
+                var text = extras[i].value;
+
+                if (text.length > 0) {
+
+                    hasExtraContent = true;
+                    break;
+                }
+
+            }
+
+
+
+            if (!hasFile && !hasExtraContent) {
+                alert("모집공고파일이 없거나 연구내용이 없으면 개시할수 없습니다.");
+                $("#publish_BTN1").attr("class", "btn btn-outline-primary");
+                $("#publish_BTN2").attr("class", "btn btn-outline-primary active");
+                $("#publish2").prop("checked", true);
+
+                //  return;
+
+            }
+
+            //다른 탭들이 모두 체크표시가 되어야함.
+            // var tabicosn=document.getElementById("TAB_ICON_1");
+            var allchecked = true;
+            for (var i = 1; i <= 4; i++) {//마지막 모집공고는 체크안해도 됨.
+                var tabicon = document.getElementById("TAB_ICON_" + i);
+                if (!tabicon.classList.contains('fa-check')) {
+                    allchecked = false;
+
+                    break;
+
+                }
+            }
+
+
+            if (!allchecked) {
+
+                alert("게시하기위한 모든 정보가 저장되지 않았습니다. 녹색 체크 안된 곳을 확인하세요.");
+                $("#publish_BTN1").attr("class", "btn btn-outline-primary");
+                $("#publish_BTN2").attr("class", "btn btn-outline-primary active");
+                $("#publish2").prop("checked", true);
+                return;
+            }
+        }
+        SPUBLISHED = $('input[name=publishOptions]:checked').val();
+
+        var params = "action=UPDATE_NOTICE&SID=" + SID +
+            "&SPUBLISHED=" + SPUBLISHED;
+        //  "&EMERGENCY="+EMERGENCY;
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+
+                // publish_extra_content(SID);
+                if (SPUBLISHED == 1) {
+                    alert("게시되었습니다.");
+                }
+                else alert("저장되었습니다.");
+                $.ajax({
+                    type: 'post',
+                    url: "study_notice.html",
+                    dataType: 'html',
+                    success: function (data) {
+                        $(".notice").html(data);
+                    }
+                })
+
+
+            }
+        }
+        xhttp.open("GET", "./study.jsp?" + params, true);
+        xhttp.send();
+
+    }
+
+    function publish_extra_content(SID) {
+
+        var default_length = 11;
+        var start_index = 9;
+
+        console.log(document.getElementById("advanced_content_table").childNodes.length + "====default_length" + default_length);
+        if (document.getElementById("advanced_content_table").childNodes.length > default_length) {
+            var extra_contents = new Array();
+            for (var i = start_index; i < document.getElementById("advanced_content_table").childNodes.length - 2; i++) {
+                var extra_content = new Object();
+                extra_content.title = document.getElementById("advanced_content_table").childNodes[i].childNodes[0].childNodes[0].value.trim();
+                extra_content.content = document.getElementById("advanced_content_table").childNodes[i].childNodes[1].childNodes[0].childNodes[0].value.trim();
+                extra_content.content = extra_content.content.replace(/(?:\r\n|\r|\n)/g, '<br/>');
+                if (extra_content.title.length > 0 || extra_content.content.length > 0) {
+                    extra_contents.push(extra_content);
+                    console.log(" 1");
+                    show_icon_on_tab(true, 6);
+                }
+            }
+            var extra_content_decode = escape(encodeURIComponent(JSON.stringify(extra_contents)));
+            //  console.log("JSON.stringify(extra_contents)=   " + JSON.stringify(extra_contents));
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    if (extra_contents.length > 0) {
+                        console.log(" 2-1");
+                        show_icon_on_tab(true, 7);
+                    } else console.log(" 2-2");
+                }
+            }
+            xhttp.open("POST", "./study.jsp", true);
+            xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhttp.send("action=UPDATE_EXTRA_CONTENTS&SID=" + SID + "&contents=" + extra_content_decode);
+        }
+        else if (document.getElementById("advanced_content_table").childNodes.length == default_length) {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    console.log("3");
+                    // show_icon_on_tab();
+                    //publish(SID);
+
+                    // return true;
+                    // location.reload;
+                }
+            }
+            xhttp.open("POST", "./study.jsp", true);
+            xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhttp.send("action=DELETE_EXTRA_CONTENTS&SID=" + SID);
+        }
+
+        publish(SID);
+    }
+
+    function upload_file() {
+        var input_file = document.getElementById("upload_form");
+        var formData = new FormData(input_file);
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhr.responseText.trim();
+                var data = JSON.parse(data_pre);
+                file_url = data.FILENAME.replace(/\\/gi, "/");
+
+
+                // var filelabel = document.createElement("label");
+                // filelabel.setAttribute("type", "text");
+
+                //    console.log("----"+adfileName);
+
+                //    filelabel.appendChild(document.createTextNode(adfileName));
+                //     document.getElementById("FILEDIV").appendChild(filelabel);
+
+                //     var closeICON = document.createElement("i");
+                //     closeICON.setAttribute("class", "ml-2 far fa-trash-alt");
+                //     closeICON.setAttribute("onclick", "REMOVEFILE()");
+                //     document.getElementById("FILEDIV").appendChild(closeICON);
+
+
+            }
+        }
+        xhr.open("POST", contextpath + "/pages/fileup.jsp?type=r", false); //type=r means 모집공고, recruit, type=c-> 동의서, consent 
+        xhr.send(formData);
+    }
+
+    function REMOVEFILE() {
+
+        document.getElementById("FILEDIV").innerHTML = "";
+        adfileName = "";
+
+        removedFileFlag = true;
+        document.getElementById("TAB_ICON_6").setAttribute("class", "ml-1 tab_icon fas fa-ban ");
+        document.getElementById("TAB_ICON_6").setAttribute("style", "");
+
+    }
+    function REMOVEFILETOSERVER() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                document.getElementById("FILEDIV").innerHTML = "";
+                // document.getElementById("TAB_ICON_6").setAttribute("class", "ml-1 tab_icon fas fa-ban ");
+                show_icon_on_tab(null, 8);
+
+            }
+        }
+        xhttp.open("GET", "./study.jsp?action=DELETE_SFILE&SID=" + SID, false);
+        xhttp.send();
+
+    }
+    function delete_content(obj) {
+        var tr = $(obj).parent().parent().parent();
+        tr.remove();
+    }
+
+
+</script>
+<div class="d-flex justify-content-end ">
+    <span id="msg" class="mr-3 text-danger my-auto"></span>
+
+    <button class="btn btn-outline-danger" onclick="check_publish_notice(SID)">저장하기</button>
+
+</div>
+<table class="table table-borderless" style="vertical-align:middle">
+    <tbody id="advanced_content_table">
+
+        <tr>
+            <td style="width: 150px;"><label style="font-weight: bold;">게시여부</label></td>
+            <td>
+                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                    <label class="btn btn-outline-primary" id="publish_BTN2" style="border-radius: 0rem;">
+                        <input type="radio" name="publishOptions" id="publish2" value="2" autocomplete="off">
+                        게시안함</input>
+                    </label>
+                    <label class="btn btn-outline-primary" id="publish_BTN1" style="border-radius: 0rem;">
+                        <input type="radio" name="publishOptions" id="publish1" value="1" autocomplete="off">
+                        게시함</input>
+                    </label>
+
+                </div>
+            </td>
+        </tr>
+        <!-- <tr>
+            <td><label style="font-weight: bold;">긴급모집</label></td>
+            <td>
+                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                    <label class="btn btn-outline-danger" id="Emergency_BTN" style="border-radius: 0rem;">
+                        <input type="checkbox" name="emergencyOptions" id="Emergency" value="1" autocomplete="off"> 긴급모집
+                    </label>
+                </div>
+            </td>
+        </tr>
+        <tr> -->
+        <td><label style="font-weight: bold;">일정</label></td>
+        <td><input class="form-control form-control-lg inputs" type="text" maxlength="1000" id="study_datetime"
+                placeholder="입원일정을 입력해주세요."></td>
+        </tr>
+        <tr>
+            <td><label style="font-weight: bold;">모집공고파일</label></td>
+            <td>
+                <div class="input-group mb-3">
+
+                    <form class="custom-file" method="POST" enctype="multipart/form-data" id="upload_form">
+                        <input type="file" class="custom-file-input custom-file-input1" name="fileName1" id="inputfile">
+                        <label class="custom-file-label custom-file-label1" for="inputfile"
+                            style="border-radius: 0px;">Choose file</label>
+                    </form>
+
+                </div>
+                <div id="FILEDIV"></div>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="2">
+                <button class="btn btn-outline-secondary w-100" style="border-radius: 0px;" onclick="add_content()"
+                    id="extra_content_button">연구 내용 추가</button>
+            </td>
+        </tr>
+
+    </tbody>
+</table>

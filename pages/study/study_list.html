@@ -1,0 +1,411 @@
+<script type="text/javascript">
+    var studies;
+    var CREATEROLE;
+    var MODIFYROLE;
+    var RESERVEROLE;
+    var IDENTITYROLE;
+    var CONSENTROLE;
+    var SIGNROLE;
+    var BCADMINROLE;
+    var STUDYADMIN;
+    
+    $(document).ready(function () {
+        sleep(500).then(() => {//사용자 관리 테이블에 권한 드랍다운을 읽기 위해 load_role 을 먼저 읽고 얼마 지나야한다.    
+            load_page();
+        });
+
+    })
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    function load_page() {
+        localStorage.removeItem("study_SID");
+        CREATEROLE = sessionStorage.getItem("CREATEROLE");
+        MODIFYROLE = sessionStorage.getItem("MODIFYROLE");
+        RESERVEROLE = sessionStorage.getItem("RESERVEROLE");
+        IDENTITYROLE = sessionStorage.getItem("IDENTITYROLE");
+        CONSENTROLE = sessionStorage.getItem("CONSENTROLE");
+        SIGNROLE = sessionStorage.getItem("SIGNROLE");
+        STUDYADMIN = sessionStorage.getItem("STUDYADMINROLE");
+        
+console.log("sessionStorage.getItem(STUDYADMINROLE)"+STUDYADMIN);
+        if (CREATEROLE == 0) document.getElementById("createBTN").setAttribute("style", "display: none");
+
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                // $('.main').css('padding-top', $('.navbar').outerHeight());
+
+                var data_pre = xhttp.responseText.trim();
+                var data_eval = eval(data_pre);
+                studies = data_eval;
+                var showHeader = false;
+                for (var i = 0; i < data_eval.length; i++) {
+                    // var SIMODIFY=data_eval[i].SIMODIFY;
+
+
+                    var createTR = document.createElement("tr");
+                    document.getElementById("study_table").appendChild(createTR);
+
+                    var SIDTD = document.createElement("td");
+                    SIDTD.appendChild(document.createTextNode(i + 1));
+                    createTR.appendChild(SIDTD);
+
+                    // var EMERGENCYTD = document.createElement("td");
+                    // if (data_eval[i].EMERGENCY == 1) {
+                    //     var EMERGENCYSPAN = document.createElement("span");
+                    //     EMERGENCYSPAN.setAttribute("class", "badge badge-pill badge-danger ml-2");
+                    //     EMERGENCYSPAN.setAttribute("style", "color:white;");
+                    //     EMERGENCYSPAN.appendChild(document.createTextNode("긴급모집"));
+                    //     EMERGENCYTD.appendChild(EMERGENCYSPAN);
+                    // }
+                    // createTR.appendChild(EMERGENCYTD);
+
+                    var PRTTD = document.createElement("td");
+                    PRTTD.appendChild(document.createTextNode(data_eval[i].PRTNO));
+                    PRTTD.setAttribute("id", "PRTTD_" + data_eval[i].SID);
+
+                 //   if (STUDYADMIN == 1 || RESERVEROLE == 1 || IDENTITYROLE == 1 || CONSENTROLE == 1 || SIGNROLE == 1 || data_eval[i].SIRESERVEROLE == 1 || data_eval[i].SIIDENTITYROLE == 1 || data_eval[i].SICONSENTROLE == 1 || data_eval[i].SISIGNROLE == 1) {
+                        PRTTD.setAttribute("onclick", "TITLEBTN_CLICKED(id)");
+                        PRTTD.setAttribute("style", "cursor:pointer");
+                  //  }
+
+                    createTR.appendChild(PRTTD);
+
+                    var TITLETD = document.createElement("td");
+                    TITLETD.appendChild(document.createTextNode(data_eval[i].TITLE));
+                    TITLETD.setAttribute("id", "TITLETD_" + data_eval[i].SID);
+
+                  //  if ( STUDYADMIN == 1 || data_eval[i].SIRESERVEROLE == 1 || data_eval[i].SIIDENTITYROLE == 1 || data_eval[i].SICONSENTROLE == 1 || data_eval[i].SISIGNROLE == 1) {
+
+                        TITLETD.setAttribute("onclick", "TITLEBTN_CLICKED(id)");
+                        TITLETD.setAttribute("style", "cursor:pointer");
+                  //  }
+                   // console.log(data_eval[i].PRTNO+" STUDYADMIN == "+STUDYADMIN+"data_eval[i].SIRESERVEROLE=="+data_eval[i].SIRESERVEROLE+"  data_eval[i].SIIDENTITYROLE =="+data_eval[i].SIIDENTITYROLE+"  data_eval[i].SICONSENTROLE == "+data_eval[i].SICONSENTROLE+" data_eval[i].SISIGNROLE == "+data_eval[i].SISIGNROLE)
+                    createTR.appendChild(TITLETD);
+                    //연구상태
+                    var STATUSTD = document.createElement("td");
+                    var STATSPAN = document.createElement("span");
+                    STATUSTD.appendChild(STATSPAN);
+                    switch (data_eval[i].SACTIVE) {
+                 
+                        case 1:
+                            STATSPAN.setAttribute("class", "badge badge-primary");
+                            STATSPAN.appendChild(document.createTextNode("진행중"));
+                            break;
+                        case 0:
+                            STATSPAN.setAttribute("class", "badge badge-secondary");
+                            STATSPAN.appendChild(document.createTextNode("연구종료"));
+                            break;
+                    }
+                    createTR.appendChild(STATUSTD);
+
+                    var SPUBTD = document.createElement("td");
+                    var SPUBSPAN = document.createElement("span");
+                    SPUBTD.appendChild(SPUBSPAN);
+                    switch (data_eval[i].SPUBLISHED) {
+                        case 1:
+                            SPUBSPAN.setAttribute("class", "badge badge-success");
+                            SPUBSPAN.appendChild(document.createTextNode("게시함"));
+                            break;
+                        case 2:
+                            SPUBSPAN.setAttribute("class", "badge badge-danger");
+                            SPUBSPAN.appendChild(document.createTextNode("게시안함"));
+                            break;
+                    }
+                    createTR.appendChild(SPUBTD);
+
+                    //모집인원
+                    var SNUM = document.createElement("td");
+                    SNUM.appendChild(document.createTextNode(data_eval[i].APPLNUM + "/" + data_eval[i].SNUM));
+                    if (data_eval[i].NEWAPPLNUM > 0) {
+                        var SNUMNEWBADGE = document.createElement("span");
+                        SNUMNEWBADGE.setAttribute("class", "badge badge-warning ml-2");
+                        SNUMNEWBADGE.setAttribute("style", "color:white;");
+                        SNUMNEWBADGE.appendChild(document.createTextNode("NEW"));
+                        SNUM.appendChild(SNUMNEWBADGE);
+                    }
+                    createTR.appendChild(SNUM);
+                               //모집공고
+                     var ADTD = document.createElement("td");
+                   
+
+                    var ADLINK = document.createElement("a");
+
+                    ADLINK.setAttribute("href",  getContextPath() +"/pages/recruit_detail.html?SID="+ data_eval[i].SID);
+                   // ADLINK.setAttribute("onclick", "DETAILBTN_CLICKED(id)");
+                    ADLINK.setAttribute("class", "btn btn-outline-primary btn-sm mr-2");
+                    ADLINK.setAttribute("style", "border-radius : 0px");
+                   // ADLINK.setAttribute("id", "DETAILBTN_" + data_eval[i].SID);
+                    ADLINK.appendChild(document.createTextNode("보기"));
+                    ADTD.appendChild(ADLINK);
+                    createTR.appendChild(ADTD);
+
+
+
+                    //연구설정
+                    var BUTTONTD = document.createElement("td");
+                    BUTTONTD.setAttribute("class", "hide");
+
+                    var DETAILBTN = document.createElement("button");
+
+                    DETAILBTN.setAttribute("href", "#");
+                    DETAILBTN.setAttribute("onclick", "DETAILBTN_CLICKED(id)");
+                    DETAILBTN.setAttribute("class", "btn btn-outline-primary btn-sm mr-2");
+                    DETAILBTN.setAttribute("style", "border-radius : 0px");
+                    DETAILBTN.setAttribute("id", "DETAILBTN_" + data_eval[i].SID);
+                    DETAILBTN.appendChild(document.createTextNode("설정"));
+                    BUTTONTD.appendChild(DETAILBTN);
+                    createTR.appendChild(BUTTONTD);
+
+
+                    //블록체인  
+                    //   var bcStageArr = ["", "연구자 요청", "피어정보 전달", "프로파일 설치", "채널오픈", "채널중단", "채널종료"]; //BCSTAGE    
+
+                    var BCTD = document.createElement("td");
+                    BCTD.setAttribute("class", "hide");
+                    if (data_eval[i].BCSTAGE == 0) {
+                        BCTD.setAttribute("id", "BCTD_" + data_eval[i].SID);
+                        var BCBTN = document.createElement("button");
+                        BCBTN.setAttribute("href", "#");
+                        BCBTN.setAttribute("onclick", "BCBTN_CLICKED(id)");
+                        BCBTN.setAttribute("class", "btn btn-outline-primary btn-sm mr-2 ");
+                        BCBTN.setAttribute("style", "border-radius : 0px");
+                        BCBTN.setAttribute("id", "BCBTN_" + data_eval[i].SID);
+                        BCBTN.appendChild(document.createTextNode("연결요청"));
+                        BCTD.appendChild(BCBTN);
+                        //if(SIMODIFY ==0) BCBTN.disabled=true; //연구 수정 권한이 있는 자가 블록체인 연결요청을 하도록 한다.
+
+                    }
+                    else if (data_eval[i].BCSTAGE < 4) {
+                        BCTD.innerText = "준비중";
+                    }
+                    else if (data_eval[i].BCSTAGE == 4) {
+                        BCTD.innerText = "연결중";
+                    }
+                    else if (data_eval[i].BCSTAGE == 5) {
+                        BCTD.innerText = "연결중단";
+                    }
+                    else if (data_eval[i].BCSTAGE == 6) {
+                        BCTD.innerText = "연결종료";
+                    }
+                    else {
+                        BCTD.innerText = "관리자에게 문의";
+                    }
+
+                    createTR.appendChild(BCTD);
+                    showHeader = true;
+
+
+                    // if (data_eval[i].SIMODIFY == 1) {
+                    //     showHeader = true;
+                    // }
+                    // else {
+                    //     DETAILBTN.disabled = true;
+                    //     BCBTN.disabled = true; //연구 수정 권한이 있는 자가 블록체인 연결요청을 하도록 한다.
+
+                    // }
+                }//end for 
+               
+                if (data_eval.length > 0) {
+                    $('#studies_table').dataTable({
+                        "columnDefs": [{
+                            targets: [5,6, 7],
+                            orderable: false
+                        }]
+                    });
+                    if (showHeader == false) {
+                        $('.hide').remove();
+                    }
+                }
+                else { //데이터 없음
+                    // document.getElementById("card-body").setAttribute("display", "none");
+                    //  document.getElementById("studies_table").style.display = "none";
+                    var TR = document.createElement("tr");
+                    var TD = document.createElement("td");
+                    TD.setAttribute("colspan", 8);
+                    TD.setAttribute("class", "text-center");
+                    TD.innerHTML = "참여 연구가 없습니다.";
+                    TR.appendChild(TD);
+                    document.getElementById("studies_table").appendChild(TR);
+                }
+
+
+            }
+        }
+
+        xhttp.open("GET", "./study.jsp?action=LOAD_STUDY_LIST", true);
+        xhttp.send();
+    }
+
+        //tomcat 이하 첫번째 경로 반환
+        //ex) http://localhost:8080/미투리_site/study.html 일때, return "/미투리_site"
+        function getContextPath() {
+            var hostIndex = location.href.indexOf(location.host) + location.host.length;
+            // return location.href.substring(hostIndex, location.href.indexOf('/', hostIndex + 1));
+            return location.origin;
+        }
+
+    function TITLEBTN_CLICKED(id) { //연구 참여자인 경우 연결
+        var SID = id.split("_")[1];
+
+        console.log("STUDYADMIN=="+STUDYADMIN);
+        if(STUDYADMIN==0){
+            var xhttps = new XMLHttpRequest();
+            xhttps.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttps.responseText.trim();
+                     var data_eval = JSON.parse(data_pre);
+
+                   if (data_eval.result == 0) {
+                         alert("미투리 플랫폼의 연구 자원자 정보를 볼 수 있는 권한이 없습니다.\n관리자에게 문의하시거나 연구에 참여된 후에  권한을 부여받으세요. ");
+                   }
+                   else{
+                    localStorage.setItem("study_SID", SID);
+                   
+                    location.href = "../applicants/applicants.html";
+                    }
+                   
+                }
+            }
+
+            xhttps.open("GET", "./study.jsp?action=CHECK_VIEW_APPLICANTS&SID=" + SID, true);
+            xhttps.send();
+        }  
+        else {
+            localStorage.setItem("study_SID", SID);
+            location.href = "../applicants/applicants.html";
+        }
+           
+
+
+      
+        // location.href="a_study.html?SID="+SID+"&SELECTED_PANNEL=1";
+    }
+
+    function BCBTN_CLICKED(id) { //연구 수정권한이 있는지 확인후 연결
+        var SID = id.split("_")[1];
+       
+
+        console.log("STUDYADMIN=="+STUDYADMIN);
+        if(STUDYADMIN==0){
+            var xhttps = new XMLHttpRequest();
+            xhttps.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttps.responseText.trim();
+                     var data_eval = JSON.parse(data_pre);
+                    console.log(data_pre);
+              
+                  if (data_eval.result==0 ) {
+                       alert("미투리 플랫폼의 연구 수정 권한이 없습니다. \n관리자에게 문의하시거나 연구에 참여된 후에 연구수정권한을 부여받으세요. ");
+                        
+                    }
+                    else {
+                          CHANGE_BC(SID);
+                    }
+                   
+                }
+            }
+
+            xhttps.open("GET", "./study.jsp?action=CHECK_ONE_ROLE&SID=" + SID+"&CHECKROLE=SIMODIFYROLE&CREATOR_PRIORITY=TRUE", true);
+            xhttps.send();
+        } 
+        else       CHANGE_BC(SID);
+
+    }
+    function CHANGE_BC(SID){
+        
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttp.responseText.trim();
+                    //  var data_eval = JSON.stringify(data_pre);
+                    console.log(typeof (data_pre));
+                    if (typeof (data_pre) == undefined) {
+                        alert("저장안됨");
+                    }
+                    else if (data_pre == "success") {
+                        location.reload();
+                        //document.getElementById("BCTD_" + SID).innerHTML = "준비중";
+                    }
+                }
+            }
+
+            xhttp.open("GET", "./study.jsp?action=STARTBC&SID=" + SID, true);
+            xhttp.send();
+    
+    }
+    function DETAILBTN_CLICKED(id) { //연구 수정 권한이 있는지 확인하고 연결
+        var SID = id.split("_")[1];
+        //if(MODIFYROLE == 0) location.href="recruit_detail.html?SID="+SID;
+        // else 
+        if(STUDYADMIN==0){
+            var xhttps = new XMLHttpRequest();
+            xhttps.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttps.responseText.trim();
+                     var data_eval = JSON.parse(data_pre);
+                   
+              
+                  if (data_eval.result == 0) {
+                       alert("미투리 플랫폼의 연구 수정 권한이 없습니다. \n관리자에게 문의하시거나 연구에 참여된 후에 연구수정권한을 부여받으세요. ");
+                        
+                    }
+                    else {
+                        location.href = "modify_study.html?SID=" + SID;                        
+                    }
+                   
+                }
+            }
+
+            xhttps.open("GET", "./study.jsp?action=CHECK_ONE_ROLE&SID=" + SID+"&CHECKROLE=SIMODIFYROLE&CREATOR_PRIORITY=TRUE", true);
+            xhttps.send();
+        } 
+        else       location.href = "modify_study.html?SID=" + SID;
+
+
+        
+    }
+</script>
+
+<div class="d-flex justify-content-between">
+    <nav aria-label="breadcrumb" >
+        <ol class="breadcrumb p-0 m-0" style="background-color:transparent;">           
+            <li class="breadcrumb-item  active" aria-current="page">연구</li>
+            <li class="breadcrumb-item  primary-color "></li>
+        </ol>
+
+    </nav>
+</div>
+
+<div class="card mt-3 ">
+    <div class="card-body">
+        <div class="mb-4" style="text-align: right;">
+            <a class="btn btn-danger" href="create_study.html" id="createBTN"
+                style="font-weight: bold; ">새 연구(New)</a>
+        </div>
+        <div class="table-responsive pb-5 ">
+        <table class="table w-100 bg-white" id="studies_table"style="text-align: center;table-layout:fixed; min-width:800px; ">
+        
+            <thead>
+                <tr style="text-align: center; font-weight: bold;">
+                    <th width="60px">번호</th>
+                    <!-- <th width="60px">모집유형</th> -->
+                    <th width="140px">연구계획서번호</th>
+                    <th width="150px">연구명</th>
+                    <th width="80px">상태</th>
+                    <th width="80px">게시여부</th>
+                    <th width="80px">모집인원</th>
+                    <th width="70px" >모집공고</th>
+                    <th width="70px" class="hide">연구설정</th>
+                    
+                    
+                    <th width="70px" class="hide">블록체인</th>
+                </tr>
+            </thead>
+            <tbody id="study_table" style="text-align: center;"></tbody>
+        </table>
+    </div>
+    </div>
+</div>

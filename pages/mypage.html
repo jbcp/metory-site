@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+    <link rel="stylesheet" href="../assets/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/css/app.css">
+    <link rel="stylesheet" href="../assets/css/modern.css">
+    <link rel="stylesheet" href="../assets/css/custom.css">
+    <script src="../assets/lib/jquery/jquery.min.js" type="text/javascript"></script>
+    <script src="../assets/js/sha256.min.js"></script>
+    <title>METORY (연구자용)</title>
+    <script type="text/javascript">
+        var INVID;
+        var INVOFFICE_ORIGIN;
+        var INVCELLPHONE_ORIGIN;
+        var INVPHONE_ORIGIN;
+        var INVDEPARTMENT_ORIGIN;
+        var INVPOSITION_ORIGIN;
+
+        $(document).on("keyup", ".phoneNumber", function () { $(this).val($(this).val().replace(/[^0-9]/g, "").replace(/(^02|^0[0-9]{2}|[0-9]{4})([0-9]+)?([0-9]{4})$/, "$1-$2-$3").replace("--", "-")); });
+
+
+        $(document).ready(function () {
+
+            $('.number_input').keypress(function (event) {
+                if (event.which && (event.which <= 47 || event.which >= 58) && event.which != 8) {
+                    event.preventDefault();
+                }
+            });
+            $('#navbar').load('navbar.html').ready(function () {
+                $('.main').css('padding-top', $('.navbar').outerHeight());
+            });
+            $('#footer').load('footer.html');
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttp.responseText.trim();
+                    var data_eval = eval(data_pre);
+                    INVID = data_eval[0].INVID;
+                    document.getElementById("INVNAME").value = data_eval[0].INVNAME;
+                    document.getElementById("INVDEPARTMENT").value = data_eval[0].INVDEPARTMENT;
+                    document.getElementById("INVPOSITION").value = data_eval[0].INVPOSITION;
+                    document.getElementById("INVOFFICE").value = data_eval[0].INVOFFICE;
+                    document.getElementById("INVMAIL").value = data_eval[0].INVMAIL;
+
+                    document.getElementById("INVCELLPHONE").value = data_eval[0].INVCELLPHONENUM;
+                    document.getElementById("INVPHONE").value = data_eval[0].INVPHONENUM;
+                    INVOFFICE_ORIGIN = data_eval[0].INVOFFICE;
+                    INVCELLPHONE_ORIGIN = data_eval[0].INVCELLPHONENUM;
+                    INVPHONE_ORIGIN = data_eval[0].INVPHONENUM;
+                    INVDEPARTMENT_ORIGIN = data_eval[0].INVDEPARTMENT;
+                    INVPOSITION_ORIGIN = data_eval[0].INVPOSITION;
+                }
+            }
+            xhttp.open("GET", "./mypage.jsp?action=load_detail", true);
+            xhttp.send();
+        })
+
+        function prev() {
+            window.history.back();
+        }
+
+        function save() {
+            var password = document.getElementById("INVPASSWORD").value.trim();
+
+            if (validate()) {
+                var params = "action=modify_mypage&INVID=" + INVID
+                    + "&INVPASSWORD=" + ((password == "") ? "" : escape(encodeURIComponent(sha256(String(document.getElementById("INVPASSWORD").value.trim())))))
+                    + "&INVOFFICE=" + escape(encodeURIComponent(document.getElementById("INVOFFICE").value.trim()))
+                    + "&INVCELLPHONENUM=" + escape(encodeURIComponent(document.getElementById("INVCELLPHONE").value.trim()))
+                    + "&INVDEPARTMENT=" + escape(encodeURIComponent(document.getElementById("INVDEPARTMENT").value.trim()))
+                    + "&INVPOSITION=" + escape(encodeURIComponent(document.getElementById("INVPOSITION").value.trim()))
+                    + "&INVPHONENUM=" + escape(encodeURIComponent(document.getElementById("INVPHONE").value.trim()));
+
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (this.readyState == this.DONE && this.status == 200) {
+                        alert("저장되었습니다.");
+                        //  location.reload();
+                        window.history.back();
+                    }
+                }
+                xhttp.open("POST", "./mypage.jsp", true);
+                xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                xhttp.send(params);
+            }
+
+        }
+
+        function validate() {
+            var result = true;
+            var content_check = true;
+
+            var params = "action=check_password&INVID=" + INVID
+                + "&INVPASSWORD=" + escape(encodeURIComponent(sha256(String(document.getElementById("INVPASSWORDORIGIN").value.trim()))));
+
+            if (document.getElementById("INVDEPARTMENT").value.trim() != INVDEPARTMENT_ORIGIN) {
+                // console.log("office");
+                content_check = false;
+                // result = false;
+            }
+            if (document.getElementById("INVPOSITION").value.trim() != INVPOSITION_ORIGIN) {
+                // console.log("office");
+                content_check = false;
+                // result = false;
+            }
+            if (document.getElementById("INVOFFICE").value.trim() != INVOFFICE_ORIGIN) {
+                // console.log("office");
+                content_check = false;
+                // result = false;
+            }
+            if (document.getElementById("INVCELLPHONE").value.trim() != INVCELLPHONE_ORIGIN) {
+                content_check = false;
+            }
+            if (document.getElementById("INVPHONE").value.trim() != INVPHONE_ORIGIN) {
+                content_check = false;
+            }
+            //비밀번호==비밀번호확인
+            if (document.getElementById("INVPASSWORD").value.trim() != "") {
+                content_check = false;
+                if (document.getElementById("INVPASSWORD").value.trim() != document.getElementById("INVPASSWORDCHECK").value.trim()) {
+                    alert("비밀번호가 일치하지 않습니다. 다시입력해주세요.");
+                    result = false;
+                }
+            }
+            if (content_check == true) {
+                alert("변경된 내용이 없습니다.");
+                result = false;
+            }
+
+            //기존 비밀번호의 값과  db에 있는 값 비교
+            if (result == true) {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (this.readyState == this.DONE && this.status == 200) {
+                        var response = xhttp.responseText.trim();
+                        if (response == "false") {
+                            result = false;
+                            alert("기존 비밀번호가 일치하지 않습니다. 다시입력해주세요.");
+                        }
+                    }
+                }
+                xhttp.open("POST", "./mypage.jsp", false);
+                xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                xhttp.send(params);
+            }
+
+            return result;
+        }
+
+    </script>
+</head>
+
+<body>
+    <div id="navbar"></div>
+    <div class="container">
+        <div class="col-sm-10 col-md-8 col-lg-6 mx-auto ">
+
+            <div class="mt-3 ">
+                <nav aria-label="breadcrumb ">
+                    <ol class="breadcrumb ml-0 pl-0" style="background-color:transparent;">
+                        <li class="breadcrumb-item active" aria-current="page">내 정보</li>
+                        <li class="breadcrumb-item "></li>
+                    </ol>
+
+                </nav>
+            </div>
+
+            <div class="card ">
+
+                <div class="card-body">
+
+                    <div class="text-center">
+                        <h1 class="h3 mb-3 mt-3 font-weight-bold">내 정보 수정하기</h1>
+                    </div>
+                    <!-- <h1 class="h3 mb-3 mt-3 font-weight-bold">내 정보 수정하기</h1> -->
+                    <form class="form-signin" method="post" id="loginForm" name="loginForm"
+                        action="sub_authentication.jsp">
+                        <div class="form-group">
+                            <label>이메일</label>
+                            <input class="form-control form-control-lg" type="email" id="INVMAIL" disabled>
+                        </div>
+
+                        <div class="form-group">
+                            <label>이름</label>
+                            <input class="form-control form-control-lg" type="text" id="INVNAME" disabled>
+                            <!-- <div class="invalid-feedback" id="NAME_FEEDBACK"></div> -->
+                        </div>
+                        <div class="form-group">
+                            <label>소속 병원</label>
+                            <input class="form-control form-control-lg" type="text" id="INVDEPARTMENT">
+                        </div>
+                        <div class="form-group">
+                            <label>부서 또는 팀</label>
+                            <input class="form-control form-control-lg" type="text" id="INVOFFICE">
+                        </div>
+                        <div class="form-group">
+                            <label>직책</label>
+                            <input class="form-control form-control-lg" type="text" id="INVPOSITION">
+                        </div>
+
+
+                        <div class="form-group " id="PHONE_FORM">
+                            <label>유선 번호</label>
+                            <input class="form-control form-control-lg phoneNumber" type="text" id="INVPHONE"
+                                placeholder="번호만 입력하세요.">
+                        </div>
+                        <div class="form-group " id="CELLPHONE_FORM">
+                            <label>휴대폰 번호</label>
+                            <input class="form-control form-control-lg  phoneNumber" type="text" id="INVCELLPHONE"
+                                placeholder="번호만 입력하세요.">
+                        </div>
+
+                        <div class="form-group mt-3" id="OLDPASSWD_FORM">
+                            <label>기존 비밀번호</label>
+                            <input class="form-control form-control-lg" type="password" id="INVPASSWORDORIGIN" required>
+                        </div>
+                        <div class="form-group" id="PASSWD_FORM">
+                            <label>비밀번호</label>
+                            <input class="form-control form-control-lg" type="password" id="INVPASSWORD" required>
+                        </div>
+                        <div class="form-group" id="PASSWDCHECK_FORM">
+                            <label>비밀번호 확인</label>
+                            <input class="form-control form-control-lg" type="password" id="INVPASSWORDCHECK" required>
+                        </div>
+
+                    </form>
+
+
+                    <!-- <table class="table table-borderless">
+                    <tbody>
+                        <tr>
+                            <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">이름</td>
+                            <td id="INVNAME"></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">소속</td>
+                            <td id="INVDEPARTMENT"></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">직책</td>
+                            <td id="INVPOSITION"></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">근무처</td>
+                            <td>
+                                <input class="form-control" type="text" style="text-align:center; border-radius: 0px;" id="INVOFFICE" required>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">이메일</td>
+                            <td id="INVMAIL"></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">휴대폰 번호</td>
+                            <td>
+                                <input class="form-control" type="text" style="text-align:center; border-radius: 0px;" id="INVCELLPHONE" required>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">유선번호</td>
+                            <td>
+                                <input class="form-control" type="text" style="text-align:center; border-radius: 0px;" id="INVPHONE" required>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">기존 비밀번호</td>
+                            <td>
+                                <input class="form-control" type="password" style="text-align:center; border-radius: 0px;" id="INVPASSWORDORIGIN" required>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">비밀번호 재설정</td>
+                            <td>
+                                <input class="form-control" type="password" style="text-align:center; border-radius: 0px;" id="INVPASSWORD" required>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">비밀번호 확인</td>
+                            <td>
+                                <input class="form-control" type="password" style="text-align:center; border-radius: 0px;" id="INVPASSWORDCHECK" required>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table> -->
+                    <div class="text-center mt-3">
+                        <button class="btn btn-primary mr-2  mt-1" href="#" onclick="save()" style="width:100px; ">
+                            저장</button>
+                        <button class="btn btn-default mt-1" href="#" onclick="prev()"
+                            style="width:100px;">취소</button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="footer" class="container mt-5 pt-5"></div>
+    <script src="../assets/js/app.js"></script>
+    <!-- <script src="assets/lib/bootstrap/js/bootstrap.min.js"></script> -->
+</body>
+
+</html>

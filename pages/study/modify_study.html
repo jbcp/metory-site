@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+    <link rel="stylesheet" href="../../assets/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../../assets/lib/font-awesome/css/all.css">
+    <link rel="stylesheet" href="../../assets/css/app.css">
+    <link rel="stylesheet" href="../../assets/css/modern.css">
+    <link rel="stylesheet" href="../../assets/css/custom.css">
+    <script src="../../assets/lib/jquery/jquery.min.js" type="text/javascript"></script>
+
+    <title>METORY (연구자용)</title>
+    <script type="text/javascript">
+        var consent_list_count = 0;
+        var SID;
+        var uploadcheck = false;
+        var uploadcount = 0;
+        var selected_consent_group=0;
+
+        var last_consent_id=0;
+        var last_consent_version="";
+        var action = "modify";
+        var study_active=1;
+        $(document).ready(function(){
+
+            SID = getParameterByName('SID');
+
+            $('#navbar').load(getContextPath() +'/pages/navbar.html').ready(function(){
+                    $('.main').css('padding-top', $('.navbar').outerHeight());
+
+                })
+            $('#footer').load('../footer.html');
+            $.ajax({
+                type: 'post',
+                url : "study_info_view.html",
+                dataType: 'html',
+                success: function(data){
+                    $(".info_view").html(data);
+                }
+            })
+
+            $.ajax({
+                type: 'post',
+                url : "study_info.html?action=modify",
+                dataType: 'html',
+                success: function(data){
+                    $(".info").html(data);
+                }
+            })
+            $.ajax({
+                type: 'post',
+                url : "study_inv.html",
+                dataType: 'html',
+                success: function(data){
+                    $(".researchers").html(data);
+                }
+            })
+            $.ajax({
+                type: 'post',
+                url : "study_notice.html",
+                dataType: 'html',
+                success: function(data){
+                    $(".notice").html(data);
+                }
+            })
+            $.ajax({
+                type: 'post',
+                url : "study_consent_list.html",
+                dataType: 'html',
+                success: function(data){
+                    $(".consent").html(data);
+                }
+            })
+            $.ajax({
+                type: 'post',
+                url : "study_appoint_fix.html",
+                dataType: 'html',
+                success: function(data){
+                    $(".appoint_fix").html(data);
+                }
+            })
+            $.ajax({
+                type: 'post',
+                url : "study_criteria.html",
+                dataType: 'html',
+                success: function(data){
+                    $(".criteria").html(data);
+                }
+            })
+        
+        })
+
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search);
+            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+        function getContextPath() {         
+                var hostIndex=location.href.indexOf(location.host)+ location.host.length;
+                // return location.href.substring(hostIndex, location.href.indexOf('/', hostIndex+1));
+                return location.origin;;
+        }
+        function changeStudyDepth(depth) {
+            // console.log(consent_tab_page_number);
+            switch (depth) {
+                case 1:  //연구페이지   
+                    location.href = "./study.html";
+                    break;
+
+                case 2:  //대상자관리 
+                    localStorage.setItem("study_SID", SID);
+                    location.href = "../applicants/applicants.html";
+                    break;
+
+                default: location.reload();
+                    break;
+            }
+        }
+    </script>
+  </head>
+  <body>
+    <div id="navbar"></div>    
+    <div class="container mt-3 "  >
+        <div class="d-flex justify-content-between mb-3"> 
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb p-0 m-0 " style="background-color:transparent;">
+                        <li class="breadcrumb-item"><a href="javascript:changeStudyDepth(1);"> 연구</a></li>                              
+                        <li class="breadcrumb-item " ><a
+                            href="javascript:changeStudyDepth(2);"><span id="prtno_bread"></span></a></li>
+                        <li class="breadcrumb-item active" aria-current="page">연구설정</li>                          
+                    </ol>
+        
+                </nav>
+        
+            </div>
+        
+           
+        </div>
+
+        <div class="card mb-0 mt-3">
+            <div class="card-body">
+                <div class="info_view"></div>
+               
+            </div>
+        </div>
+  
+        <div class="card mt-2">
+
+             <div class="card-body">
+               
+
+                 <h5 class="myinfo">※ 각 탭을 선택하여 관련된 연구 내용을 작성하고 "저장하기" 버튼을 눌러 저장해주세요. </h5>
+               
+
+
+                 <h5 class="myinfo mb-3">※ 필수 정보가 입력 완료가 되면 녹색으로 체크 표시가 됩니다. </h5>
+                 <hr>
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="common-tab" data-toggle="tab" href="#common" role="tab" aria-controls="common" aria-selected="true">1.기본 <i id="TAB_ICON_1" class="ml-1 tab_icon"></i></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " id="researchers-tab" data-toggle="tab" href="#researchers" role="tab" aria-controls="researchers" aria-selected="true">2.연구자 명단 <i id="TAB_ICON_2" class="ml-1 tab_icon"></i> </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" id="consent-tab" data-toggle="tab" href="#consent" role="tab" aria-controls="consent" aria-selected="false">3.동의 문서 <i id="TAB_ICON_3" class="ml-1 tab_icon"></i></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="consent-tab" data-toggle="tab" href="#appoint_fix" role="tab" aria-controls="appoint_fix" aria-selected="false">4.예약 일정 <i id="TAB_ICON_4" class="ml-1 tab_icon"></i></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="criteria-tab" data-toggle="tab" href="#criteria" role="tab" aria-controls="criteria" aria-selected="false">5.체크리스트 <i id="TAB_ICON_5" class="ml-1 tab_icon"></i> </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="advanced-tab" data-toggle="tab" href="#advanced" role="tab" aria-controls="advanced" aria-selected="false">6.모집공고 <i id="TAB_ICON_6" class="ml-1 tab_icon"></i> </a>
+                    </li>
+                </ul>
+                <div class="tab-content mt-3" id="myTabContent">
+                    <div class="tab-pane fade show info active" id="common" role="tabpanel" aria-labelledby="common-tab" style="border-color: gray;">
+                    </div>
+                    <div class="tab-pane fade show researchers" id="researchers" role="tabpanel" aria-labelledby="researchers-tab" style="border-color: gray;">
+                    </div>
+              
+                    <div class="tab-pane fade show consent" id="consent" role="tabpanel" aria-labelledby="consent-tab" style="border-color: gray;">
+                    </div>
+                    <div class="tab-pane fade show appoint_fix" id="appoint_fix" role="tabpanel" aria-labelledby="appoint_fix_tab" style="border-color: gray;">
+                    </div>
+                    <div class="tab-pane fade show notice" id="advanced" role="tabpanel" aria-labelledby="advanced-tab" style="border-color: gray;">
+                    </div>
+                    <div class="tab-pane fade show criteria" id="criteria" role="tabpanel" aria-labelledby="criteria-tab" style="border-color: gray;">
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div id="footer" class="container mt-5 pt-5"></div>
+    <script src="../../assets/js/app.js"></script>
+
+    <!-- <script src="assets/lib/bootstrap/js/bootstrap.min.js"></script> -->
+  </body>
+</html>

@@ -1,0 +1,218 @@
+<script type="text/javascript">
+  var xhttp = new XMLHttpRequest();
+  var Timer;
+  var TimerCheck = null;
+  var contextpath = getContextPath();
+
+  $(document).ready(function () {
+    Timer = 7200; //한페이지에 오래머물경우, 화면을 자동으로 로그인으로 가기위해 세션이 살아있는지 체크. 
+    //1초마다 호출되어 1씩 감소되므로 한페이지당 로그아웃까지 7200초=120분=2시간으로 세션이 2시간 살아있다. subject 는 1200초 즉 20분 정도로 설정
+    initTimer();
+
+    $('.navbtn').hover(function () {
+      $(this).attr("style", "color:#2c7be5; cursor:pointer");
+    }, function () {
+      $(this).attr("style", "cursor:pointer");
+    });
+
+    document.getElementById('logoimg').src = contextpath + "/assets/img/영문.png"; //크기 160x45
+  })
+
+  function initTimer() {
+    if (Timer > 0) {
+      Timer--;
+      TimerCheck = setTimeout("initTimer()", 1000); //1초마다 initTimer() 를 호출한다.
+      //  console.log(Timer+"초 남음");
+    }
+    else {
+      alert("접속시간이 지나 로그아웃되었습니다.");
+      window.location = contextpath + "/pages/logout.jsp";
+    }
+  }
+  function getContextPath() {
+    var hostIndex = location.href.indexOf(location.host) + location.host.length;
+    // return location.href.substring(hostIndex, location.href.indexOf('/', hostIndex + 1));
+    return location.origin;
+  }
+
+  //function gotoLogin() 
+  //로그 아웃된 상태에서 공개 메뉴(모집공고, 로그인, 홈, 참여기관) 외 로그인 시 접근하는 연구, 블록체인, 관리자 메뉴 아래의 특정 화면(pages/폴더명/xx.html)에 접근하는 경우 로그인 페이지로 전환. 
+  //아직 내정보는 반영안됨->pages/폴더명/mypage.html 로 변경해야함
+  function gotoLogin() {
+    var hostIndex = location.href.indexOf('pages') + 6; //"6"을 더하는 것은 http://site_address/pages 에서 pages/ 까지의 index 
+    var nextSubIndex = location.href.indexOf('/', hostIndex + 1);
+
+    if (nextSubIndex == -1) return; //pages 이하에 '/' 가 있는지 확인. 없으면 -1   즉, http::host/pages/*.html    
+    location.href = contextpath + "/pages/login.jsp";
+  }
+
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == this.DONE && this.status == 200) {
+      var session_info = xhttp.responseText.trim();
+      var READROLE = session_info.split("_")[0];
+      var CREATEROLE = session_info.split("_")[1];
+      var MODIFYROLE = session_info.split("_")[2];
+      var RESERVEROLE = session_info.split("_")[3];
+      var IDENTITYROLE = session_info.split("_")[4];
+      var CONSENTROLE = session_info.split("_")[5];
+      var SIGNROLE = session_info.split("_")[6];
+      var ADMINROLE = session_info.split("_")[7];
+      var BCADMINROLE = session_info.split("_")[8];
+      var STUDYADMINROLE = session_info.split("_")[9];
+      var SITEID = session_info.split("_")[10];
+      var SITENAME = session_info.split("_")[11];
+      var INVNAME = session_info.split("_")[12];
+
+      // console.log("READROLE=" + READROLE + "  CREATEROLE=" + CREATEROLE);
+      // console.log("MODIFYROLE=" + MODIFYROLE + "  RESERVEROLE=" + RESERVEROLE + "  IDENTITYROLE=" + IDENTITYROLE + "  CONSENTROLE=" + CONSENTROLE + "   SIGNROLE=" + SIGNROLE);
+      // // not logged in 된 경우 session 에 null_null_null_null..... 이므로 그중 하나의 값 특히 READROLE 을 체크한다. 왜냐하면 값이 항상 1이므로
+      // console.log("ADMINROLE=" + ADMINROLE + "  BCADMINROLE=" + BCADMINROLE + "  STUDYADMINROLE=" + STUDYADMINROLE);
+      // console.log("SITEID=" + SITEID + "   SITENAME=" + SITENAME + "  INVNAME=" + INVNAME);
+
+      if (READROLE == 0 || READROLE == "null") {
+        gotoLogin();
+        document.getElementById("inv_study").setAttribute("style", "display: none");
+        document.getElementById("my_page").setAttribute("style", "display: none");
+        document.getElementById("admin").setAttribute("style", "display: none");
+        document.getElementById("bcadmin").setAttribute("style", "display: none");
+        document.getElementById("signinout").setAttribute("href", contextpath + "/pages/login.jsp");
+        document.getElementById("signinout").appendChild(document.createTextNode("로그인"));
+
+      }
+      else {
+        sessionStorage.setItem("CREATEROLE", CREATEROLE);
+        sessionStorage.setItem("MODIFYROLE", MODIFYROLE);
+        sessionStorage.setItem("RESERVEROLE", RESERVEROLE);
+        sessionStorage.setItem("IDENTITYROLE", IDENTITYROLE);
+        sessionStorage.setItem("CONSENTROLE", CONSENTROLE);
+        sessionStorage.setItem("SIGNROLE", SIGNROLE);
+        sessionStorage.setItem("STUDYADMINROLE", STUDYADMINROLE);
+
+        document.getElementById("signinout").setAttribute("style", "display: none");
+        // if(CREATEROLE == 1) document.getElementById("inv_study").setAttribute("style", "display: inline-block; text-align: center;");
+        // else document.getElementById("inv_study").setAttribute("style", "display: none");            
+        document.getElementById("my_page").setAttribute("style", "display: inline-block;text-align: center;");
+
+        document.getElementById("inv_study").setAttribute("style", "display: inline-block; text-align: center;");
+        if (BCADMINROLE == 1) document.getElementById("bcadmin").setAttribute("style", "display: inline-block; text-align: center;");
+        else document.getElementById("bcadmin").setAttribute("style", "display: none");
+
+
+        if (ADMINROLE == 1) document.getElementById("admin").setAttribute("style", "display: inline-block; text-align: center;");
+        else document.getElementById("admin").setAttribute("style", "display: none");
+
+        if (SITEID != "null") {
+          document.getElementById("user_name").innerHTML = INVNAME;
+          document.getElementById("inv_site_name").innerHTML = SITENAME;
+        }
+
+      }
+    }
+  }
+  xhttp.open("POST", contextpath + "/pages/load_session.jsp", true);
+  xhttp.send();
+
+  // function search_study() {
+  //   var search = $('#search_value').val().trim();
+  //   location.href = "recruit.html?search=" + search;
+  // }
+  function goto(addr) {
+    location.href = contextpath + addr;
+  }
+
+</script>
+
+
+<nav class="navbar navbar-expand navbar-default navbar-light   pt-2 " style="height:70px;background-color:#12bee317 ;" >
+ <div class="container" > 
+
+  <a class="navbar-brand p-0 " onclick="goto('/pages/study/study.html');">
+    <img class="navbar-brand-img m-2 img-fluid" alt="METORY" id="logoimg"  style="max-height: 45px;
+    max-width: 160px;">
+
+  </a>
+
+  <button class="navbar-toggler ml-auto" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" width="70%" id="navbarSupportedContent">
+    <ul class="navbar-nav mt-2 mt-lg-0">
+      <!-- <li class="nav-item  " style="text-align: center; " onclick="goto('/pages/home.html');">
+          <h4 class="nav-link  navbtn ">홈</h4>
+        </li>
+        <li class="nav-item  " style="text-align: center; " onclick="goto('/pages/about.html');">
+          <h4 class="nav-link navbtn ">참여기관</h4>
+        </li>
+        <li class="nav-item   " style="text-align: center; " onclick="goto('/pages/recruit.html');">
+          <h4 class="nav-link navbtn">모집공고</h4>
+        </li> -->
+      <li class="nav-item mt-3 mb-0" style="text-align: center;  " id="inv_study"
+        onclick="goto('/pages/study/study.html');">
+        <h4 class="nav-link navbtn">연구</h4>
+      </li>
+      <li class="nav-item mt-3 mb-0" style="text-align: center;  " id="bcadmin"
+        onclick="goto('/pages/bcadmin/bcadmin.html');">
+        <h4 class="nav-link navbtn">블록체인</h4>
+      </li>
+      <li class="nav-item mt-3 mb-0" style="text-align: center;  " id="admin"
+        onclick="goto('/pages/admin/admin.html');">
+        <h4 class="nav-link navbtn">관리자</h4>
+      </li>
+    </ul>
+    <!-- <input class="form-control form-control-lg ml-3" type="text" placeholder="병원명으로 검색" id="search_value"
+      style="border-radius: 0px; min-width:300px; width: 100%; margin-top:12px; border-width: 3px; border-color: #2c7be5;"
+      onKeypress="javascript:if(event.keyCode==13) {search_study()}"> -->
+    <!-- </div> -->
+  </div>
+  <!--   
+  <div class="navbar-nav ml-auto">
+    <li class="nav-item dropdown " id="my_page">
+      <a class="nav-link dropdown-toggle"  href="#" data-toggle="dropdown" aria-expanded="false">
+        <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="user-circle" role="img" xmlns="http://www.w3.org/2000/svg"  width="20" height="20" viewBox="0 0 496 512" class="svg-inline--fa fa-user-circle fa-w-16 fa-2x"><path fill="currentColor" d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 96c48.6 0 88 39.4 88 88s-39.4 88-88 88-88-39.4-88-88 39.4-88 88-88zm0 344c-58.7 0-111.3-26.6-146.5-68.2 18.8-35.4 55.6-59.8 98.5-59.8 2.4 0 4.8.4 7.1 1.1 13 4.2 26.6 6.9 40.9 6.9 14.3 0 28-2.7 40.9-6.9 2.3-.7 4.7-1.1 7.1-1.1 42.9 0 79.7 24.4 98.5 59.8C359.3 421.4 306.7 448 248 448z" class=""></path></svg></a>
+      <div class="dropdown-menu dropdown-menu-right">
+        <div class="dropdown-item"  id="user_name"></div>
+        <div class="dropdown-item"  id="inv_site_name"></div>
+        <hr>
+        <a class="dropdown-item" onclick="goto('/pages/mypage.html');">내 정보</a>
+        <a class="dropdown-item" onclick="goto('/pages/logout.jsp');">로그아웃</a>
+      </div>
+    </li>
+    </ul>
+    <a class="btn btn-primary btn-md mt-2" id="signinout" ></a>
+  </div> -->
+
+ <div style="margin-right:50px;">
+
+  
+    <ul class=" pt-0 pb-0 mb-0">
+
+
+        <div class="navbar-nav ml-auto">
+         
+          <li class="nav-item dropdown mt-2 mr-2" id="my_page">
+            <a class="nav-link dropdown-toggle" id="user_icon" href="#" data-toggle="dropdown" aria-expanded="false">
+             <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="user-circle" role="img" xmlns="http://www.w3.org/2000/svg"  
+        width="20" height="20" viewBox="0 0 496 512" class="svg-inline--fa fa-user-circle fa-w-16 fa-2x"><path fill="currentColor"
+         d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm0 96c48.6 0 88 39.4 88 88s-39.4 88-88 88-88-39.4-88-88 39.4-88 88-88zm0 344c-58.7 0-111.3-26.6-146.5-68.2 18.8-35.4 55.6-59.8 98.5-59.8 2.4 0 4.8.4 7.1 1.1 13 4.2 26.6 6.9 40.9 6.9 14.3 0 28-2.7 40.9-6.9 2.3-.7 4.7-1.1 7.1-1.1 42.9 0 79.7 24.4 98.5 59.8C359.3 421.4 306.7 448 248 448z" class="">
+        </path></svg>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right">
+             
+              <div class="dropdown-item"  ><h3 id="user_name"></h3></div>
+              <div class="dropdown-item"  id="inv_site_name"></div>
+              <hr>
+              <a class="dropdown-item" onclick="goto('/pages/mypage.html');">내 정보</a>
+              <a class="dropdown-item" onclick="goto('/pages/logout.jsp');">로그아웃</a>
+            </div>
+          </li>
+          </ul>
+          <a class="btn btn-primary btn-md mt-2" id="signinout"></a>
+       
+        </ul>
+
+  </div>
+
+
+</div>
+</nav>

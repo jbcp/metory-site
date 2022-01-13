@@ -1,0 +1,1576 @@
+<script type="text/javascript">
+
+    // var STARTDTC;
+    var SAID_CLICKED;//QNA 사용
+    var APPLNAME_CLICKED;//QNA 사용
+    // var APPLVISIT_CLICKED;
+    var intervals = [];;//QNA 사용
+    var ismodify = false;//QNA 사용
+    // var check_all;
+   // var appoint_fix_arr;
+    var search = "";
+    var appoint_arr = [];
+    var lastValue;
+
+    $(document).ready(function () {
+
+        jQuery.extend(jQuery.expr[':'], {
+            focusable: function (el, index, selector) {
+                return $(el).is('a, button, :input, [tabindex]');
+            }
+        });
+
+        var qr_input = document.getElementById("qr_input");
+        qr_input.focus();
+        qr_input.onblur = function () {
+            qr_input.setAttribute("placeholder", "여기를 클릭하세요");
+
+        };
+        qr_input.onfocus = function () {
+            qr_input.setAttribute("placeholder", "핸드폰 또는 QR코드 입력");
+
+        };
+
+
+
+
+        // function callback() {
+        //   //here use previous variable to select previous option
+        //   $(".selectpicker").val(lastValue);
+        // }
+
+        // $('.selectpicker').bind("focus", function(e) {
+        //             lastValue = $(this).val();
+
+        //         }).bind("change", function (e){
+        //             var r=confirm('변경하시겠습니까?');
+        //         if (r==true){
+        //             var SAID = id.split("_")[2];
+        //             var selectedvalue = $('#' + id + " option:selected").val();
+        //             CHANGE_STATUS(SAID, selectedvalue);
+        //             console.log('Thing was saved to the database.');
+        //         } else {
+        //           //  $('#' + id + " option:selected").val()=lasgValue      ;
+        //             console.log('Thing was not saved to the database.');
+        //         }
+        //         });
+
+        $('#passModal').on('show.bs.modal', function (e) {
+            //     document.getElementById('SAVEPASSBTN').setAttribute('data-id',applicant.SAID+"_"+applicant.APPOINTID+"_"+applicant.APPLID);
+            document.getElementById("passtd").innerHTML = "";
+
+            var title = document.getElementById("passtd");
+            //  var msg=document.getElementById("passMsg");
+
+            var h2 = document.createElement("h2");
+            h2.setAttribute("style", "color: red ; ");
+            h2.innerText = "신원확인을 해주세요.";
+            title.appendChild(h2);
+
+            var p = document.createElement("p");
+            p.setAttribute("style", "color: #6c757d; font-size:large;");
+            p.innerText = "신분증(주민등록증, 면허증 또는 여권)으로 방문자의 정보가 신분증과 동일함을 확인해주십시오.";
+            title.appendChild(p);
+
+        });
+        $('#identityModal').on('show.bs.modal', function (e) {
+            //$('#SAVEIDENTIFYBTN').focus();
+
+            document.getElementById("passtd").innerHTML = "";
+            document.getElementById("show_pass").innerHTML = "";
+            var checkICON = document.createElement("i");
+            checkICON.setAttribute("class", "fas fa-check ml-2");
+            checkICON.setAttribute("style", "color: #28a745; font-size:large;");
+
+
+
+
+            document.getElementById("show_pass").appendChild(checkICON);
+            var span = document.createElement("span");
+            span.setAttribute("style", "color: #28a745; font-size:small;");
+            span.innerHTML = "신원이 확인되었습니다";
+            document.getElementById("show_pass").appendChild(span);
+
+
+        });
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                var data_eval = eval(data_pre);
+                console.log(data_eval.length);
+                for (var i = 0; i < data_eval.length; i++) {
+
+                    var createTR = document.createElement("tr");
+                    document.getElementById("APPOINT_TABLE_BODY").appendChild(createTR);
+                    createTR.setAttribute("id", "TR_" + data_eval[i].SAID);
+                    //번호
+                    var numTD = document.createElement("td");
+                    numTD.appendChild(document.createTextNode(i + 1));
+                    createTR.appendChild(numTD);
+                    //상태
+                    // var statusTD = document.createElement("td");
+                    // createTR.appendChild(statusTD);
+                    // var statusSELECT = document.createElement("select");
+                    // statusSELECT.setAttribute("class", "form-control selectpicker");
+                    // statusSELECT.setAttribute("onchange", "SELECTED(id)");
+                    // // statusSELECT.setAttribute("onchange", "SELECTED(id)");
+                    // //                    $(".selectpicker").on('focus', function() {
+                    // //   // Store the current value on focus and on change
+                    // //   lastValue = this.value;
+                    // //   console.log("lastValue"+ lastValue);
+                    // // });
+                    // statusSELECT.setAttribute("id", "status_SELECT_" + data_eval[i].SAID);
+                    // statusSELECT.setAttribute("style", "border-radius:0rem;");
+                    // statusTD.appendChild(statusSELECT);
+                    // var selectedvalue = 1;
+                    // if (data_eval[i].SASTAGE >= 5) selectedvalue = data_eval[i].SASTAGE;
+                    // for (var j = 0; j < SASTAGE_ARR.length; j++) {
+                    //     if (j >= 1 && j <= 3) continue;
+                    //     var option = document.createElement("option");
+                    //     option.setAttribute("value", j + 1);
+                    //     if (j + 1 == selectedvalue) option.setAttribute("selected", "");
+
+                    //     option.appendChild(document.createTextNode(SASTAGE_ARR[j]));
+                    //     statusSELECT.appendChild(option);
+                    // }
+                    // if (data_eval[i].SASTAGE >= 7) {//탈락, 동의철회, 신청취소
+                    //     createTR.setAttribute("style", "background:#aaa");
+                    // }
+                    //  statusTD.setAttribute("data-sastatus", data_eval[i].SASTAGE);
+                    //이름
+                    var nameTD = document.createElement("td");
+                    var a = document.createElement('a');
+
+                    var name = document.createTextNode(data_eval[i].APPLNAME);
+                    a.appendChild(name);
+                    a.title = "my consent history";
+                    a.href = "./appl_consent_history.html?SAID=" + data_eval[i].SAID + "&SID=" + SID;
+                    nameTD.appendChild(a);
+
+                    var qnaICON = document.createElement("i");
+                    qnaICON.setAttribute("class", "far fa-comment-dots ml-2");
+                    qnaICON.setAttribute("style", "cursor:pointer; font-size:20px");
+                    qnaICON.setAttribute("name", "qnaICON_" + data_eval[i].SAID);
+                    qnaICON.setAttribute("id", "qnaICON_" + data_eval[i].SAID + "_" + data_eval[i].APPLNAME);
+                    qnaICON.setAttribute("onclick", "SHOW_QNA(id)");
+                    nameTD.appendChild(qnaICON);
+                    createTR.appendChild(nameTD);
+                    //성별
+                    var genderTD = document.createElement("td");
+                    switch (data_eval[i].APPLSEX) {
+                        case 1:
+                            genderTD.appendChild(document.createTextNode("남성"));
+                            break;
+                        case 2:
+                            genderTD.appendChild(document.createTextNode("여성"));
+                            break;
+                    }
+                    createTR.appendChild(genderTD);
+                    //생년월일
+                    var birthTD = document.createElement("td");
+                    birthTD.appendChild(document.createTextNode(data_eval[i].APPLBIRTH));
+                    birthTD.appendChild(document.createElement("br"));
+                    birthTD.appendChild(document.createTextNode("(만 " + getAge(data_eval[i].APPLBIRTH) + "세)"));
+                    createTR.appendChild(birthTD);
+
+
+                    //핸드폰
+                    var phoneTD = document.createElement("td");
+                    if (data_eval[i].APPLPHONE) phoneTD.appendChild(document.createTextNode(data_eval[i].APPLPHONE));
+                    createTR.appendChild(phoneTD);
+
+                    //방문예약과 예약상태
+
+                    var reserveDateTD = document.createElement("td");
+                    var reserveStatusTD = document.createElement("td");
+                    // reserveTD.setAttribute("style", "padding-right:0;width:120px")                   
+                    //reserveICONTD.setAttribute("style", "padding-left:0;width:40px")                   
+                    var preVisit = "";
+                    var appointid = (data_eval[i].APPOINTID) ? data_eval[i].APPOINTID : "0";
+                    var visitdate = "";
+
+                    var visitstatus = "";
+                    var data_appoint_value = ""; // select 로 필터링할때 읽는 값 설정 data-appoint=data_appoint_value
+                    //reserveICONTD.style.display = 'none';     
+
+
+                    var calICON = document.createElement("i");
+
+                    calICON.setAttribute("data-toggle", "tooltip");
+                    calICON.setAttribute("name", "VISIT_BTN_" + data_eval[i].SAID);
+
+                    calICON.setAttribute("onclick", "VISIT(id)");
+
+                    if (data_eval[i].MEMO) {
+
+                        //입력된 값이 날짜로 변경되는지 체크하여 변경되면 모달에 값을 지정해준다.
+                        var timestamp = Date.parse(data_eval[i].MEMO);
+
+
+                        if (isNaN(timestamp) == false) {  //날짜로 변경됨 이미 실시기관이 셋팅된 예약 값을 선택한 경우
+                            var d = new Date(timestamp);
+                            isPreVisit = d.getFullYear() + "-" + (d.getMonth() < 9 ? '0' : '') + (d.getMonth() + 1) + "-" + (d.getDate() < 10 ? '0' : '') + d.getDate() + " " + (d.getHours() < 10 ? '0' : '') + d.getHours() + ":" + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
+                            //visitdate=isPreVisit+"\n(신청)";
+                            visitdate = isPreVisit;
+                            // console.log("HIHI" + isPreVisit);
+                            if (data_eval[i].VISITDTC == null) {
+                                visitstatus = "신청완료";
+                                data_appoint_value = visitstatus;
+                            }
+                            else {
+                                visitstatus = "예약변경요청";
+                                data_appoint_value = visitstatus;
+                            }
+                            calICON.setAttribute("title", "예약요청시간 : " + isPreVisit + "");
+
+                        } else {
+                            //   console.log(timestamp); //isNAN 값이 나옴
+                            isPreVisit = "메모";
+                            var memo = data_eval[i].MEMO;
+                            calICON.setAttribute("title", "예약요청시간 : " + memo + "");
+                            if (memo.length > 10) memo = " \"" + memo.slice(0., 7) + " ...\"";// visitdate.innerText=.splice(0,7)+ "...\n(신청안함)" 
+                            if (data_eval[i].VISITDTC == null) {
+                                visitdate = memo;
+                                visitstatus = "신청완료";
+                                data_appoint_value = visitstatus;
+                            }
+                            else {
+                                data_appoint_value = data_eval[i].VISITDTC;
+                                visitdate = memo;
+                                visitstatus = "예약변경요청";
+                                data_appoint_value = visitstatus;
+                            }
+                        }
+                        calICON.setAttribute("class", "fas fa-calendar-alt ml-2");
+                        calICON.setAttribute("style", "color:  #6c757d; font-size:large; cursor:pointer;");//color: #28a745; 
+
+
+                        calICON.setAttribute("id", "VISIT_BTN_" + data_eval[i].SAID + "_" + data_eval[i].APPLNAME + "_" + visitstatus + "_" + appointid);
+                    
+                        reserveDateTD.appendChild(document.createTextNode(visitdate));
+                        // reserveDateTD.setAttribute("data-appoints", isPreVisit);
+                        // reserveDateTD.appendChild(visitstatus);
+
+                        reserveDateTD.appendChild(calICON);
+
+                        reserveDateTD.setAttribute("data-appoints", data_appoint_value);
+
+                    }
+                    else {
+                        if (data_eval[i].VISITDTC == null) {
+                            visitstatus = "신청안함";
+                            data_appoint_value = "신청안함";
+                            calICON.setAttribute("class", "fas fa-calendar-alt ml-2");
+                            calICON.setAttribute("style", "color:  #6c757d; font-size:large; cursor:pointer;");//color: #28a745; 
+
+                            calICON.setAttribute("title", "예약요청시간 : " + visitstatus + "");
+                            calICON.setAttribute("id", "VISIT_BTN_" + data_eval[i].SAID + "_" + data_eval[i].APPLNAME + "_" + visitstatus + "_" + appointid);
+                        }
+                        else {
+                            data_appoint_value = data_eval[i].VISITDTC;
+                            visitdate = data_eval[i].VISITDTC;
+                            visitstatus = "예약확인완료";
+
+                            calICON.setAttribute("class", "fas fa-check ");
+                            calICON.setAttribute("style", "color: #28a745; font-size:large;  cursor:pointer;");
+                            calICON.setAttribute("id", "VISIT_BTN_" + data_eval[i].SAID + "_" + data_eval[i].APPLNAME + "_" + visitdate.slice(0, 16) + "_" + appointid);
+
+                        }
+
+
+                        reserveDateTD.appendChild(document.createTextNode(visitdate));
+                        //  reserveDateTD.appendChild(visitstatus);
+                        reserveDateTD.setAttribute("data-appoints", data_appoint_value);
+
+
+
+
+
+                        reserveDateTD.appendChild(calICON);
+
+
+                    }
+
+                    createTR.appendChild(reserveDateTD);
+
+                    var reserveStatusTD = document.createElement("td");
+                    createTR.appendChild(reserveStatusTD);
+
+
+
+                    reserveStatusTD.appendChild(document.createTextNode(visitstatus));
+
+
+                    //예약일: 데이터 필터용 TD
+                    // var reserveDateTD = document.createElement("td");
+                    // createTR.appendChild(reserveDateTD);
+
+                    // var visitdate = (data_eval[i].VISITDTC == null) ? "미정" : data_eval[i].VISITDTC.slice(0, 10).trim();
+
+                    // reserveDateTD.appendChild(document.createTextNode(visitdate));
+                    // reserveDateTD.setAttribute("data-appoints", visitdate);
+                    //reserveICONTD.style.display = 'none';     
+
+
+                    //중복되는 값 제외하고 select option에 등록
+                    //     if (appoint_arr.indexOf(data_appoint_value) === -1 && data_appoint_value.length>0) {
+                    //         appoint_arr.push(data_appoint_value.slice(0,10));
+                    //         var createOption = document.createElement("option");
+                    //         document.getElementById("appoint_list").appendChild(createOption);
+
+                    //         createOption.setAttribute("value", data_appoint_value);
+                    //         createOption.appendChild(document.createTextNode(data_appoint_value));
+
+                    //     }
+
+                    //   for(var i; i<appoint_arr.length; i++){
+                    //       console.log(i+"-"+appoint_arr[i])
+                    //   }
+                    //예약시간
+                    // var reserveTimeTD = document.createElement("td");
+
+                    // // reserveTD.setAttribute("style", "padding-right:0;width:120px")                   
+                    // //reserveICONTD.setAttribute("style", "padding-left:0;width:40px")
+                    // if (data_eval[i].VISITDTC == null) {
+                    //     // if (data_eval[i].AFID == 0) {
+                    //     //     reserveTD.appendChild(document.createTextNode(data_eval[i].MEMO));
+
+                    //     // }
+                    //     // var calICON = document.createElement("i");
+                    //     // calICON.setAttribute("class", "fas fa-calendar-alt ml-2");
+                    //     // calICON.setAttribute("style", "color: #6c757d; font-size:large; cursor:pointer;");
+                    //     // calICON.setAttribute("name", "VISIT_BTN_" + data_eval[i].SAID);
+                    //     // calICON.setAttribute("id", "VISIT_BTN_" + data_eval[i].SAID + "_" + data_eval[i].APPLNAME + "_미정" + "_" + data_eval[i].APPOINTID);
+                    //     // calICON.setAttribute("onclick", "VISIT(id)");
+                    //     // reserveTD.appendChild(calICON);
+                    // }
+                    // else {
+                    //     var time = data_eval[i].VISITDTC.split(" ")[1].trim();
+                    //     reserveTimeTD.appendChild(document.createTextNode(time));
+
+                    //     // var checkICON = document.createElement("i");
+                    //     // checkICON.setAttribute("class", "fas fa-calendar-alt ml-2");
+                    //     // checkICON.setAttribute("data-toggle", "tooltip");
+                    //     // checkICON.setAttribute("title", "예약시간 : " + data_eval[i].VISITDTC + "");
+                    //     // checkICON.setAttribute("style", "color: #28a745; font-size:large; cursor:pointer;");
+                    //     // checkICON.setAttribute("name", "VISIT_BTN_" + data_eval[i].SAID);
+                    //     // checkICON.setAttribute("id", "VISIT_BTN_" + data_eval[i].SAID + "_" + data_eval[i].APPLNAME + "_" + data_eval[i].VISITDTC + "_" + data_eval[i].APPOINTID);
+                    //     // checkICON.setAttribute("onclick", "VISIT(id)");
+                    //     // reserveTD.appendChild(checkICON);
+
+                    // }
+                    // createTR.appendChild(reserveTimeTD);
+                    var search_dateonly = data_appoint_value.slice(0, 10);
+
+                    //중복되는 값 제외하고 select option에 등록
+                    if (appoint_arr.indexOf(search_dateonly) === -1) {
+                        appoint_arr.push(search_dateonly);
+                        var createOption = document.createElement("option");
+                        document.getElementById("appoint_list").appendChild(createOption);
+
+                        createOption.setAttribute("value", search_dateonly);
+                        createOption.appendChild(document.createTextNode(search_dateonly));
+
+                    }
+
+                    //방문 확인
+                    var identityTD = document.createElement("td");
+                    identityTD.setAttribute("id", "CONFIRM_VISIT_" + data_eval[i].SAID);
+                    if (data_eval[i].CSPASS == null || data_eval[i].CSPASS == "") {
+                        var noICON = document.createElement("i");
+                        noICON.setAttribute("class", "fas fa-times  ");
+                     
+                      
+                       
+                        // noICON.setAttribute("class", "fas fa-times btn-primary btn");
+                        // noICON.setAttribute("style", "color: #white; font-size:large;");
+
+
+                        var noshowbtn = document.createElement("button");
+                        noshowbtn.setAttribute("class", "btn-primary btn");
+                      
+                        noshowbtn.appendChild(document.createTextNode("방문확인"));
+                        // noICON.setAttribute("class", "fas fa-times btn-primary btn");
+                        // noICON.setAttribute("style", "color: #white; font-size:large;");
+                        noshowbtn.setAttribute("onclick", "confirmSubjectSAID("+data_eval[i].SAID+")");
+                        if(data_eval[i].SAACTIVE==1) identityTD.appendChild(noshowbtn);
+                        else{
+                             identityTD.appendChild(noICON);
+                             noICON.setAttribute("data-toggle", "tooltip");
+                             var stage="";
+                             switch(data_eval[i].SASTAGE){
+                                 case 6:
+                                 stage="연구종료";
+                                     break;
+                                case 7 :   stage="탈락";
+                                     break;
+                                     case 8 :   stage="동의철회";
+                                     break;
+                                     case 9 :   stage="신청취소";
+                                     break;
+                             }
+                             var title=stage+((data_eval[i].SACLOSEDTC)? "  "+data_eval[i].SACLOSEDTC:"");
+                             console.log(data_eval[i].SACLOSEDTC)
+                             console.log(title)
+                             noICON.setAttribute("title",title );
+                              noICON.setAttribute("style", "color: # #6c757d; font-size:large;   cursor:pointer;");
+                           //if( title.length>0)   noICON.setAttribute("style", "color: # #6c757d; font-size:large;  ");
+                            }
+
+                    }
+                    else {
+
+                        // var visitdtc_btn = document.createElement("button");
+                        var visitICON = document.createElement("i");
+                        visitICON.setAttribute("class", "fas fa-check ");
+                        visitICON.setAttribute("style", "color: #28a745; font-size:large;  cursor:pointer;");
+                        // identityTD.appendChild(visitdtc_btn);
+                        visitICON.setAttribute("data-toggle", "tooltip");
+                        visitICON.setAttribute("title", data_eval[i].CSPASS);
+                        // visitdtc_btn.appendChild(visitICON);
+                        //     var a = document.createElement("a");
+                        //    // a.setAttribute("class", "btn btn-primary");
+                        //     a.setAttribute("href", "#");
+                        //     a.setAttribute("data-toggle", "tooltip");  //a.setAttribute("data-trigger", "click");
+                        //     a.setAttribute("title", data_eval[i].CSPASS);
+                        //     a.appendChild(visitICON);
+                        identityTD.appendChild(visitICON);
+
+                        // identityTD.appendChild(document.createTextNode(data_eval[i].CSPASS));
+                        // var checkICON = document.createElement("i");
+                        // checkICON.setAttribute("class", "fas fa-check ml-2");
+                        // checkICON.setAttribute("style", "color: #28a745; font-size:large;");
+                        // identityTD.appendChild(checkICON);
+                    }
+                    
+                    createTR.appendChild(identityTD);
+                }
+                CHECK_QNA();
+                //Table init
+
+
+
+
+                var table = $('#APPOINT_TABLE').DataTable({
+                    dom: "<'row be-datatable-body'<'col-sm-12'tr>>" +
+                        "<'row be-datatable-footer'<'col-sm-5'i><'col-sm-7'p>>",
+                    "columnDefs": [{
+                        targets: [5, 6, 7],
+                        orderable: false
+                    }]
+                    // columnDefs: [{
+                    //     targets: [1],
+                    //     render: function (data, type, full, meta) {
+                    //         if (type === 'filter' || type === 'sort') {
+                    //             var api = new $.fn.dataTable.Api(meta.settings);
+                    //             var td = api.cell({ row: meta.row, column: meta.col }).node();
+                    //            // var $input = $('select, input', td);
+                    //             //if ($input.length && $input.is('select')) {
+                    //             //    data = $('option:selected', $input).val();
+                    //            // } else {
+                    //                 data = $input.val();
+                    //            // }
+                    //         }
+
+                    //         return data;
+                    //     }
+                    // }
+                    // ]
+
+                });
+
+
+                $('.select2').on('change', function () {
+                    console.log("chan")
+                    table.draw();
+                });
+
+                // .appoint_table 
+                $.fn.dataTable.ext.search.push(
+                    function (settings, searchData, index, rowData, counter) {
+                        //Select2        
+                        if (settings.nTable.id !== 'APPOINT_TABLE') {
+
+                            return true;
+                        }
+
+                        var filter_appoint = $('#appoint_list').val();
+                        var appoint = settings.aoData[index].anCells[5].dataset.appoints; //data-appoints로 저장한 데이터 즉 테이블 셀 값
+                        var appoint_date = appoint.slice(0, 10);
+
+                        //Status
+                        //   var filter_to_do = $('#toDo').is(':checked');
+                        //   var filter_in_progress = $('#inProgress').is(':checked');
+                        //   var filter_in_review = $('#inReview').is(':checked');
+                        //   var filter_done = $('#done').is(':checked');
+
+                        console.log(appoint + "==" + filter_appoint + (filter_appoint == appoint_date));
+
+
+                        //Conditional filters
+                        if (!(filter_appoint == appoint_date || filter_appoint == 'All')) {
+                            return false;
+                        }
+                        return true;
+
+                    }
+                );
+            }
+        }
+        xhttp.open("POST", "./applicant.jsp?action=LOAD_APPL_APPOINTMENTS&SID=" + SID, true);
+        xhttp.send();
+
+        // $('#qnaModal').on('hidden.bs.modal', function () {
+        //     clearInterval(intervals[SAID_CLICKED]);
+        //     intervals[SAID_CLICKED] = null;
+        //     ismodify = false;
+        //     console.log("close")
+        // });
+
+
+    });
+
+
+    // var clipboard = new Clipboard('.mytooltip');
+
+    // clipboard.on('success', function(e) {
+    //     var btn = $(e.trigger);
+    //   setTooltip(btn, 'Copied');
+    //   hideTooltip(btn);
+    // });
+
+    // $(document).on('focus click', 'select', function (e) {
+    //    console.log("222f222ocused on " + e.target.id);
+    //     lastValue = e.target.value;
+    // });
+    $(document).on('keypress', 'input,select', function (e) {
+
+        if (e.which == 13) {//enter key 인 경우
+            e.preventDefault();
+            // Get all focusable elements on the page
+            var $canfocus = $(':focusable');
+            var index = $canfocus.index(this) + 1;
+            if (index >= $canfocus.length) index = 0;
+            $canfocus.eq(index).focus();
+        }
+    });
+
+    // function check_status_for_withdraw(id,selectedvalue) {
+
+    //  //   var selectedvalue = $('#' + id + " option:selected").val();
+    //     var SAID = id.split("_")[2];
+    //     console.log('confirm not3 --'+lastValue);
+    //     var message_notchanged = "*동의철회 및 신청취소 후에는 대상자가 참여신청을 다시 하여야합니다.";
+    //     var xhttps = new XMLHttpRequest();
+    //     xhttps.onreadystatechange = function () {
+    //         if (this.readyState == this.DONE && this.status == 200) {
+    //             var data_pre = xhttps.responseText.trim();
+    //             console.log(data_pre);
+    //             var data=JSON.parse(data_pre);
+    //            // console.log('confirm not4 --'+lastValue);
+    //            var previous_sastage=data.SASTAGE;
+    //            var count_csid=data.COUNT_CSID;
+    //            console.log(previous_sastage+" -------------  "+ count_csid)
+    //           // var to_be_status = parseInt(to_be_status, 10);
+    //            var to_be_sastage=(count_csid==0)? 9:8; //신청취소: 동의철회
+    //             if (to_be_sastage != selectedvalue) {
+
+
+    //               //  console.log(to_be_status + typeof (to_be_status)+ selectedvalue)
+    //                 console.log('confirm not5 --'+lastValue);
+
+    //                 var to_be_sastage=$('#'+id+" option[value='"+to_be_sastage+"']").text();
+    //                // console.log(test);
+    //                message="선택하신 "+($('#' + id + " option:selected").text()) +"는 "+  to_be_sastage+"로 변경할 수 있습니다. 변경하시겠습니까?\n"+message_notchanged;
+
+    //                 //if (to_be_status==8)? 
+    //                 //"선택하신 대상자는 동의서를 제출한 적이 있습니다. 동의철회로 ": "선택하신 대상자는 동의서를 제출한 적이 없습니다. 신청철회로 " )+ "계속 진행하시겠습니까?" +"\n"+message_notchanged  ;
+    //             }
+    //             else message =  ($('#' + id + " option:selected").text()) + "로 변경하시겠습니까? \n"+message_notchanged;
+    //             var r = confirm(message);
+    //             console.log('confirm not6 --'+lastValue);
+    //             if (r == true) {
+    //                 CHANGE_STATUS(SAID, selectedvalue);
+    //                 // console.log('Thing was saved to the database.');
+    //             } else {
+    //                 // Do nothing!
+    //                 $('#' + id).val(previous_sastage);
+    //             // $('#' + id).val(lastValue).prop("selected",true);
+    //             console.log(previous_sastage+'confirm not '+lastValue);
+    //             }
+
+    //         }
+
+    //     }
+    //     xhttps.open("GET", "./applicant.jsp?action=GET_STATUS_WITHDRAW_OR_CANCEL&SAID=" + SAID, true);
+    //     xhttps.send();
+
+
+
+
+    // }
+    // // function SELECTED(id) {
+    //     var r = confirm('변경하시겠습니까?');
+    //     if (r == true) {
+    //         var SAID = id.split("_")[2];
+    //         var selectedvalue = $('#' + id + " option:selected").val();
+    //         CHANGE_STATUS(SAID, selectedvalue);
+    //         // console.log('Thing was saved to the database.');
+    //     } else {
+    //         // Do nothing!
+    //         $('#' + id).val(lastValue);
+    //         // console.log('confirm not '+lastValue);
+    //     }
+    // }
+
+    // function CHANGE_STATUS(SAID, STATUS) {
+    //     var xhttp = new XMLHttpRequest();
+    //     xhttp.onreadystatechange = function () {
+    //         if (this.readyState == this.DONE && this.status == 200) {
+    //             $('#status_SELECT_' + SAID).val(STATUS).attr("selected", "selected");
+    //         }
+    //     }
+    //     xhttp.open("POST", "./applicant.jsp", true);
+    //     xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    //     xhttp.send("action=CHANGE_STATUS&SAID=" + SAID + "&status=" + STATUS + "&CONSENTID=" + CONSENTID);
+    // }
+    function now() {
+        let today = new Date();
+        let year = today.getFullYear(); // 년도
+        let month = today.getMonth() + 1;  // 월
+        let date = today.getDate();  // 날짜
+        let hours = today.getHours(); // 시
+        let minutes = today.getMinutes();  // 분
+
+        var NOW = year + "-" + month + "-" + date + " " + hours + ":" + minutes;
+        return NOW;
+    }
+    function VISIT(id) {
+        var SAID = id.split("_")[2];
+        var SANAME = id.split("_")[3];
+        var PREVISIT = id.split("_")[4];
+        var PREAPPOINTID = id.split("_")[5]; // appointid 가 없으면 0
+
+
+        console.log(id);
+
+        while (document.getElementById("visitModal_TITLE").hasChildNodes()) document.getElementById("visitModal_TITLE").removeChild(document.getElementById("visitModal_TITLE").firstChild);
+        document.getElementById("visitModal_TITLE").appendChild(document.createTextNode(SANAME + "님 예약"));
+        // var info=document.getElementById("subj_appoint_info");
+
+        var current_appoint = document.getElementById("subj_current_appoint");
+        var request_appoint = document.getElementById("subj_request_appoint");
+        current_appoint.innerHTML = "";
+        request_appoint.innerHTML = "";
+
+        var date = new Date();
+        var dd = String(date.getDate()).padStart(2, '0');
+        var mm = String(date.getMonth() + 1).padStart(2, '0'); //January is 0!
+        var yyyy = date.getFullYear();
+        var currentDate = yyyy + '-' + mm + '-' + dd;
+
+        if (date.getHours() + 1 < 10)
+            nextTime = '0' + (date.getHours() + 1) + ':00';
+        else nextTime = (date.getHours() + 1) + ':00';
+
+        document.getElementById("datePicker").value = currentDate;
+        document.getElementById("timePicker").value = nextTime;
+        document.getElementById("SAVEVISITBTN").setAttribute("value", "SAVE_VISITBTN_" + SAID + "_" + PREAPPOINTID);
+
+        // appointid 로 예약 정보를 가져와서 모달에 뿌린다. 만약 예약정보가 0 인 경우는 제외한다.
+        // if(PREAPPOINTID!="0"){
+       
+
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                var data_eval = JSON.parse(data_pre);
+                var timestamp = Date.parse(data_eval.MEMO);
+               
+
+
+                switch (PREVISIT) {
+                    case "신청완료":
+                        current_appoint.appendChild(document.createTextNode("예약을 신청하셨습니다."));
+                        request_appoint.appendChild(document.createTextNode(SANAME + "님 요청:  "));
+
+                        var span = document.createElement("span");
+                        span.setAttribute("style", "font-weight:bold; font-size: larger;");
+                        span.innerText = "\"" + data_eval.MEMO + " \"";
+
+                        request_appoint.appendChild(span);
+                        if (isNaN(timestamp) == false) {  //날짜로 변경되는 경우, 즉 예약 요청 혹은 예약 확정이 있는 경우.   
+               
+                    var preDate =  data_eval.MEMO.split(" ")[0].trim();//toISOString().slice(0,10); //2020-10-30 14:33
+                    var preTime =  data_eval.MEMO.split(" ")[1].trim();
+                    document.getElementById("datePicker").value = preDate;
+                    document.getElementById("timePicker").value = preTime;
+                }
+                        break;
+
+                    case "예약변경요청":
+
+                        current_appoint.appendChild(document.createTextNode("현재 예약일: " + data_eval.VISITDTC));
+
+
+                        request_appoint.appendChild(document.createTextNode(" 예약변경을 요청하셨습니다."));
+                        var div = document.createElement("div");
+                        div.setAttribute("class", "mt-2");
+                        div.appendChild(document.createTextNode(SANAME + "님 요청:  "));
+                        var span = document.createElement("span");
+                        span.setAttribute("style", "font-weight:bold; font-size: larger;");
+                        span.innerText = "\"" + data_eval.MEMO + " \"";
+
+                        div.appendChild(span);
+                        request_appoint.appendChild(div);
+
+                    
+
+                        if (isNaN(timestamp) == false) {  //날짜로 변경되는 경우, 즉 예약 요청 혹은 예약 확정이 있는 경우.   
+                   
+                    var preDate = data_eval.MEMO.split(" ")[0].trim();//toISOString().slice(0,10); //2020-10-30 14:33
+                    var preTime =  data_eval.MEMO.split(" ")[1].trim();
+                    document.getElementById("datePicker").value = preDate;
+                    document.getElementById("timePicker").value = preTime;
+                }
+
+                        break;
+                    case "신청안함":
+                        current_appoint.appendChild(document.createTextNode("아직 예약신청을 하지 않았습니다."));
+
+
+                        break;
+                    default: //예약확정
+                        // var preDate = PREVISIT.split(" ")[0].trim();//toISOString().slice(0,10); //2020-10-30 14:33
+                        //  var preTime = PREVISIT.split(" ")[1].trim();
+
+
+                        current_appoint.appendChild(document.createTextNode("현재 예약일: " + PREVISIT));
+                       
+                   
+                    var preDate = PREVISIT.split(" ")[0].trim();//toISOString().slice(0,10); //2020-10-30 14:33
+                    var preTime = PREVISIT.split(" ")[1].trim();
+                    document.getElementById("datePicker").value = preDate;
+                    document.getElementById("timePicker").value = preTime;
+           
+
+                        break;
+
+                }
+
+
+                //   //  info.append("");
+
+                //     var timestamp = Date.parse(PREVISIT);
+                //    if (isNaN(timestamp) == false) {  //날짜로 변경되는 경우, 즉 예약 요청 혹은 예약 확정이 있는 경우.   
+
+                //         var preDate = PREVISIT.split(" ")[0].trim();//toISOString().slice(0,10); //2020-10-30 14:33
+                //         var preTime = PREVISIT.split(" ")[1].trim();
+                //         var span=document.createElement("span");
+                //         span.innerText=SANAME+" 님은 "+ PREVISIT+" 에 예약하셨습니다.";
+                //         info.appendChild(span);
+
+                //         document.getElementById("datePicker").value = preDate;
+                //         document.getElementById("timePicker").value = preTime;
+                //         document.getElementById("SAVEVISITBTN").setAttribute("value", "SAVE_VISITBTN_" + SAID + "_" + PREAPPOINTID);
+                //     }
+                //     else { //날짜로 변경 안됨 
+                //         var date = new Date();
+                //         var dd = String(date.getDate()).padStart(2, '0');
+                //         var mm = String(date.getMonth() + 1).padStart(2, '0'); //January is 0!
+                //         var yyyy = date.getFullYear();
+                //         var currentDate = yyyy + '-' + mm + '-' + dd;
+
+                //         if (date.getHours() + 1 < 10)
+                //             nextTime = '0' + (date.getHours() + 1) + ':00';
+                //         else nextTime = (date.getHours() + 1) + ':00';
+
+                //         document.getElementById("datePicker").value = currentDate;
+                //         document.getElementById("timePicker").value = nextTime;
+                //         document.getElementById("SAVEVISITBTN").setAttribute("value", "SAVE_VISITBTN_" + SAID + "_" + PREAPPOINTID);
+                //     }
+            }
+        };
+        xhttp.open("POST", "./applicant.jsp?action=LOAD_APPOINTMENT&APPOINTID=" + PREAPPOINTID + "&SAID=" + SAID, true);
+        xhttp.send();
+
+
+        //info.appendChild(document);
+        //  var timestamp = Date.parse(PREVISIT);
+
+
+        // if (isNaN(timestamp) == false) {  //날짜로 변경되는 경우, 즉 예약 요청 혹은 예약 확정이 있는 경우.   
+
+        //     var preDate = PREVISIT.split(" ")[0].trim();//toISOString().slice(0,10); //2020-10-30 14:33
+        //     var preTime = PREVISIT.split(" ")[1].trim();
+
+        //     document.getElementById("datePicker").value = preDate;
+        //     document.getElementById("timePicker").value = preTime;
+        //     document.getElementById("SAVEVISITBTN").setAttribute("value", "SAVE_VISITBTN_" + SAID + "_" + PREAPPOINTID);
+        // }
+        // else { //날짜로 변경 안됨 
+        //     var date = new Date();
+        //     var dd = String(date.getDate()).padStart(2, '0');
+        //     var mm = String(date.getMonth() + 1).padStart(2, '0'); //January is 0!
+        //     var yyyy = date.getFullYear();
+        //     var currentDate = yyyy + '-' + mm + '-' + dd;
+
+        //     if (date.getHours() + 1 < 10)
+        //         nextTime = '0' + (date.getHours() + 1) + ':00';
+        //     else nextTime = (date.getHours() + 1) + ':00';
+
+        //     document.getElementById("datePicker").value = currentDate;
+        //     document.getElementById("timePicker").value = nextTime;
+        //     document.getElementById("SAVEVISITBTN").setAttribute("value", "SAVE_VISITBTN_" + SAID + "_" + PREAPPOINTID);
+        // }
+        $('#visitModal').modal('show');
+    }
+
+    function getDateFormat(visitdtc) {
+        var date = new Date(visitdtc);
+        return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
+    }
+
+    function SAVEVISITDTC(value) {
+        console.log("++++++++"+ value);
+        var SAID = value.split("_")[2];
+        var APPOINTID = value.split("_")[3];
+        var VISITDATE = document.getElementById("datePicker").value
+        var VISITTIME= document.getElementById("timePicker").value;
+        var APPLNAME = document.getElementById("visitModal_TITLE").innerText.split(" ")[0];
+        // var action="SAVE_APPOINTDTC";
+
+        APPLNAME = APPLNAME.slice(0, APPLNAME.length - 1).trim();
+      //  console.log(APPLNAME + "--" + SAID + "----" + APPOINTID + "-----" + VISITDTC);
+
+        // var AFID = "null";
+        // for (var i = 0; i < appoint_fix_arr.length; i++) {
+        //     //  ul.appendChild(li);
+        //     var fixdate = appoint_fix_arr[i].DATE;
+        //     var fixtime = appoint_fix_arr[i].TIME;
+        //     console.log(fixdate + "   " + fixtime);
+        //     if (fixdate == document.getElementById("datePicker").value && fixtime == document.getElementById("timePicker").value) {
+        //         AFID = "" + appoint_fix_arr[i].AFID;
+        //         break;
+        //     }
+        // }
+
+        $('#visitModal').modal('hide');
+        $('#visitModal').on('hidden.bs.modal', function () {
+
+
+            $('#appl_menu_groups').trigger('click');
+        });
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var DATA_APPOINTID = xhttp.responseText.trim();
+
+
+
+
+                console.log(DATA_APPOINTID);
+
+                showAppointMsgModal(DATA_APPOINTID, message);
+                view_appointment();
+            }
+        }
+        xhttp.open("GET", "./applicant.jsp?action=SAVE_APPOINTDTC&VISITDATE=" + VISITDATE + "&VISITTIME="+VISITTIME+"&APPOINTID=" + APPOINTID + "&SID=" + SID + "&SAID=" + SAID);
+        xhttp.send();
+    }
+
+    function showAppointMsgModal(appointid, message) {
+        var hostIndex = location.href.indexOf(location.host) + location.host.length;
+        var path = location.href.substring(0, location.href.indexOf('/', hostIndex + 1));
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                console.log(data_pre);
+                var data_eval = JSON.parse(data_pre);
+                document.getElementById("phonenum").value = data_eval.APPLPHONE;
+                document.getElementById("msgModal_receiver").value = data_eval.APPLNAME; //applname
+                document.getElementById("message").value = "[임상시험 방문예약안내]\n" +
+                    "■ 예약날짜\n-" + data_eval.APPOINTDTC +
+                    "\n\n" +
+                    "■ 실시기관\n-" + data_eval.SITENAME +
+                    "\n\n" +
+                    "■ 주소\n-" + data_eval.SITEADDR +
+                    "\n\n" +
+                    "※ 병원에 방문시 아래링크를 클릭하여 나온 화면을 보여주세요.\n" +
+                    "▶ " + data_eval.SITEIP + "/pages/qr.html?qrcode=" + data_eval.QRCODE;
+
+
+                // "http://203.254.143.66:8080/site/pages/qr.html?applid="+data_eval.APPLID+";";
+
+                $('#msgModal').modal('show');
+                // $('#msgModal').on('hidden.bs.modal', function() {
+
+                // });
+            }
+        }
+        xhttp.open("GET", "./applicant.jsp?action=GET_MSG_INFO&APPOINTID=" + appointid);
+        xhttp.send();
+    }
+
+    function getAge(birthday) {
+        const today = new Date();
+        const birthDate = new Date(birthday); // 2000년 8월 10일
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
+
+    // function CLICK_IDENTITY() {
+    //     window.open("identity.html?SID=" + SID, "본인확인", 'location=no, directories=no, resizable=no, status=no, toolbar=no, menubar=no, location=no, width=1000, height=670, left=0, top=0, scrollbars=no');
+    // }
+    function add_new_subject() {
+        $('#newSubjectModal').modal('hide');
+        var APPLNAME = document.getElementById("applicant_name").value.trim();
+        var APPLMAIL = document.getElementById("applicant_mail").value.trim();
+        var APPLPHONE = document.getElementById("applicant_phone").value.trim();
+        var APPLBIRTH = document.getElementById("applicant_birth").value;
+        var APPLSEX = $('input[name=genderRadio]:checked').val();
+
+        var validate = true;
+        if (document.getElementById("applicant_mail").value.trim() == "") {
+            document.getElementById("MAIL_FORM").setAttribute("class", "was-validated");
+            document.getElementById("applicant_mail").setAttribute("class", "form-control is-valid");
+            while (document.getElementById("MAIL_FEEDBACK").hasChildNodes()) document.getElementById("MAIL_FEEDBACK").removeChild(document.getElementById("MAIL_FEEDBACK").firstChild);
+            document.getElementById("MAIL_FEEDBACK").appendChild(document.createTextNode("형식에 맞춰 이메일을 입력해주세요."));
+            validate = false;
+        }
+        else {
+            document.getElementById("MAIL_FORM").setAttribute("class", "was-validated");
+            document.getElementById("applicant_mail").setAttribute("class", "form-control is-valid");
+        }
+
+        if (document.getElementById("APPLPASSWORD").value.trim() == "") {
+            document.getElementById("PASSWD_FORM").setAttribute("class", "was-validated");
+            validate = false;
+        }
+        else {
+            document.getElementById("PASSWD_FORM").setAttribute("class", "was-validated");
+            document.getElementById("APPLPASSWORD").setAttribute("class", "form-control is-valid");
+        }
+
+        if (document.getElementById("applicant_phone").value.trim() == "") {
+            document.getElementById("PHONE_FORM").setAttribute("class", "was-validated");
+            document.getElementById("applicant_phone").setAttribute("class", "form-control is-valid");
+            while (document.getElementById("PHONE_FEEDBACK").hasChildNodes()) document.getElementById("PHONE_FEEDBACK").removeChild(document.getElementById("PHONE_FEEDBACK").firstChild);
+            document.getElementById("PHONE_FEEDBACK").appendChild(document.createTextNode("휴대폰 번호를 입력해주세요."));
+            validate = false;
+        }
+        else {
+            document.getElementById("PHONE_FORM").setAttribute("class", "was-validated");
+            document.getElementById("applicant_phone").setAttribute("class", "form-control is-valid");
+        }
+
+        var params = "action=add_subject" +
+            "&APPLNAME=" + escape(encodeURIComponent(APPLNAME)) +
+            "&APPLMAIL=" + escape(encodeURIComponent(APPLMAIL)) +
+            "&APPLPHONE=" + escape(encodeURIComponent(APPLPHONE)) +
+            "&APPLBIRTH=" + escape(encodeURIComponent(APPLBIRTH)) +
+            "&APPLSEX=" + escape(encodeURIComponent(APPLSEX)) +
+            "&APPLPWD=" + escape(encodeURIComponent(sha256(String(document.getElementById("APPLPASSWORD").value.trim()))))
+            + "&SID=" + escape(encodeURIComponent(SID));
+
+
+        if (validate) {
+            console.log(params);
+            var xhttps = new XMLHttpRequest();
+            xhttps.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    console.log(xhttps.responseText.trim());
+                    var response = xhttps.responseText.trim();
+                    alert(APPLNAME + "님이 본 연구에 참여신청되었습니다.");
+                    view_appointment();
+
+                }
+            }
+
+            xhttps.open("POST", "./applicant.jsp", false);
+            xhttps.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhttps.send(params);
+
+        }
+
+    }
+    function name_birth_sex_duplicate_check() {
+        var APPLNAME = document.getElementById("applicant_name").value.trim();
+        var APPLMAIL = document.getElementById("applicant_mail").value.trim();
+        // var APPLPHONE = document.getElementById("applicant_phone").value.trim();
+        var APPLBIRTH = document.getElementById("applicant_birth").value;
+        var APPLSEX = $('input[name=genderRadio]:checked').val();
+        // APPLBIRTH="1986-05-02";
+        // APPLNAME="정상운";
+        //var APPLKEY = APPLNAME+APPLBIRTH.split("-")[0]+APPLBIRTH.split("-")[1]+APPLBIRTH.split("-")[2];
+        console.log(APPLNAME + APPLBIRTH.split("-")[0] + APPLBIRTH.split("-")[1] + APPLBIRTH.split("-")[2]);
+        var validate = true;
+        if (document.getElementById("applicant_name").value.trim() == "") {
+            document.getElementById("NAME_FORM").setAttribute("class", "was-validated");
+
+            document.getElementById("applicant_name").setAttribute("class", "form-control is-valid");
+
+            while (document.getElementById("NAME_FEEDBACK").hasChildNodes()) document.getElementById("NAME_FEEDBACK").removeChild(document.getElementById("NAME_FEEDBACK").firstChild);
+            document.getElementById("NAME_FEEDBACK").appendChild(document.createTextNode("이름을 입력해주세요."));
+
+            validate = false;
+        }
+        else {
+            document.getElementById("NAME_FORM").setAttribute("class", "was-validated");
+            document.getElementById("applicant_name").setAttribute("class", "form-control is-valid");
+        }
+
+        if (document.getElementById("applicant_birth").value.trim() == "") {
+            document.getElementById("BIRTH_FORM").setAttribute("class", "was-validated");
+            document.getElementById("applicant_birth").setAttribute("class", "form-control is-valid");
+            while (document.getElementById("BIRTH_FEEDBACK").hasChildNodes()) document.getElementById("BIRTH_FEEDBACK").removeChild(document.getElementById("BIRTH_FEEDBACK").firstChild);
+            document.getElementById("BIRTH_FEEDBACK").appendChild(document.createTextNode("생년월일을 입력하세요."));
+            validate = false;
+        }
+        else if (Number(document.getElementById("applicant_birth").value.split("-")[0]) < 1900) {
+            document.getElementById("BIRTH_FORM").setAttribute("class", "was-validated");
+            document.getElementById("applicant_birth").setAttribute("class", "form-control is-valid");
+            while (document.getElementById("BIRTH_FEEDBACK").hasChildNodes()) document.getElementById("BIRTH_FEEDBACK").removeChild(document.getElementById("BIRTH_FEEDBACK").firstChild);
+            document.getElementById("BIRTH_FEEDBACK").appendChild(document.createTextNode("생년월일은 '1900-01-01' 이후로 입력하실 수 있습니다."));
+            validate = false;
+        }
+        else {
+            document.getElementById("BIRTH_FORM").setAttribute("class", "was-validated");
+            document.getElementById("applicant_birth").setAttribute("class", "form-control is-valid");
+        }
+
+        if ($('#passcheck').prop('checked') == true) {
+
+            //  document.getElementById("PASS_DIV").setAttribute("class", "was-validated");
+
+        }
+        else {
+            //  document.getElementById("PASS_DIV").setAttribute("class", "was-validated form-control ");
+            // document.getElementById("passcheck").setAttribute("class", "form-control is-valid");
+            // document.getElementById("PASS_DIV").setAttribute("class", "was-validated");
+            alert("신분증을 확인하여 본인인증에 체크하여 주십시오.");
+            //while(document.getElementById("GENDER_FEEDBACK").hasChildNodes()) document.getElementById("GENDER_FEEDBACK").removeChild(document.getElementById("GENDER_FEEDBACK").firstChild);
+            // $('#GENDER_FEEDBACK').empty();
+            // document.getElementById("GENDER_FEEDBACK").appendChild(document.createTextNode("성별을 선택하세요."));
+            validate = false;
+        }
+
+        if (!$('input[name=genderRadio]:checked').val()) {
+            document.getElementById("GENDER_FORM").setAttribute("class", "was-validated");
+            //while(document.getElementById("GENDER_FEEDBACK").hasChildNodes()) document.getElementById("GENDER_FEEDBACK").removeChild(document.getElementById("GENDER_FEEDBACK").firstChild);
+            $('#GENDER_FEEDBACK').empty();
+            document.getElementById("GENDER_FEEDBACK").appendChild(document.createTextNode("성별을 선택하세요."));
+            validate = false;
+        }
+        else {
+            document.getElementById("GENDER_FORM").setAttribute("class", "was-validated");
+        }
+
+        if (validate) {
+            var xhttps = new XMLHttpRequest();
+            xhttps.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+
+                    var data_pre = xhttps.responseText.trim();
+                    var response = JSON.parse(data_pre);
+                    if (response.result > 0) {
+                        document.getElementById("name_birth_sex_duplicate_check_msg").innerHTML = ("이메일이 존재합니다. " + response.email);
+                        document.getElementById("joinBTN").disabled = true;
+                        document.getElementById("applicant_name").disabled = false;
+
+                        document.getElementById("applicant_birth").disabled = false;
+
+                        var x = document.getElementsByName("genderRadio");
+                        for (var i = 0; i < x.length; i++) {
+                            x[i].disabled = false;
+                        }
+
+                    }
+                    else {
+
+                        document.getElementById("name_birth_sex_duplicate_check_msg").innerHTML = ('가입하신 적이 없습니다.');
+                        document.getElementById("joinBTN").disabled = false;
+
+                        document.getElementById("applicant_name").disabled = true;
+                        document.getElementById("applicant_birth").disabled = true;
+
+                        var x = document.getElementsByName("genderRadio");
+                        for (var i = 0; i < x.length; i++) {
+                            x[i].disabled = true;
+                        }
+
+                    }
+                    // else location.href = "../src/login.jsp";
+                }
+            }
+
+            xhttps.open("GET", "./applicant.jsp?action=check_subject_joined&APPLNAME=" + APPLNAME + "&APPLBIRTH=" + APPLBIRTH + "&APPLSEX=" + APPLSEX + "&APPLMAIL=" + APPLMAIL, false);
+            xhttps.send();
+
+        }
+    }
+    function email_duplicate_check(){
+        var inputAPPLMAIL = document.getElementById("applicant_mail").value;
+        
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var responseString = xhttp.responseText.trim();
+                var responseJsonObject = JSON.parse(responseString);
+                //document.getElementById("MAIL_FORM").setAttribute("class","form-group mt-4 was-validated");
+                if(responseJsonObject.result > 0){
+                    // mail address is duplicated
+                    document.getElementById("applicant_mail").setAttribute("class", "form-control form-control-lg is-invalid");
+                    while (document.getElementById("MAIL_FEEDBACK").hasChildNodes()) document.getElementById("MAIL_FEEDBACK").removeChild(document.getElementById("MAIL_FEEDBACK").firstChild);
+                    document.getElementById("MAIL_FEEDBACK").appendChild(document.createTextNode("이미 등록된 이메일 주소입니다."));
+                }else{
+                    document.getElementById("applicant_mail").setAttribute("class", "form-control form-control-lg is-valid");
+                    //while (document.getElementById("MAIL_FEEDBACK").hasChildNodes()) document.getElementById("MAIL_FEEDBACK").removeChild(document.getElementById("MAIL_FEEDBACK").firstChild);
+                    //document.getElementById("MAIL_FEEDBACK").appendChild(document.createTextNode("이미 등록된 이메일 주소입니다."));
+                }
+            }
+        }
+        xhttp.open("GET", "./applicant.jsp?action=check_email&APPLMAIL="+inputAPPLMAIL, false);
+        xhttp.send();
+    }
+    // function email_check() {
+    //     var APPLNAME = document.getElementById("applicant_name").value.trim();
+    //     // var APPLMAIL = document.getElementById("applicant_mail").value.trim();
+    //     // var APPLPHONE = document.getElementById("applicant_phone").value.trim();
+    //     var APPLBIRTH = document.getElementById("applicant_birth").value;
+    //     var APPLSEX = $('input[name=genderRadio]:checked').val();
+    //     // APPLBIRTH="1986-05-02";
+    //     // APPLNAME="정상운";
+    //     //var APPLKEY = APPLNAME+APPLBIRTH.split("-")[0]+APPLBIRTH.split("-")[1]+APPLBIRTH.split("-")[2];
+    //     console.log(APPLNAME + APPLBIRTH.split("-")[0] + APPLBIRTH.split("-")[1] + APPLBIRTH.split("-")[2]);
+    //     var validate = true;
+    //     if (document.getElementById("applicant_name").value.trim() == "") {
+    //         document.getElementById("NAME_FORM").setAttribute("class", "was-validated");
+
+    //         document.getElementById("applicant_name").setAttribute("class", "form-control is-valid");
+
+    //         while (document.getElementById("NAME_FEEDBACK").hasChildNodes()) document.getElementById("NAME_FEEDBACK").removeChild(document.getElementById("NAME_FEEDBACK").firstChild);
+    //         document.getElementById("NAME_FEEDBACK").appendChild(document.createTextNode("이름을 입력해주세요."));
+
+    //         validate = false;
+    //     }
+    //     else {
+    //         document.getElementById("NAME_FORM").setAttribute("class", "was-validated");
+    //         document.getElementById("applicant_name").setAttribute("class", "form-control is-valid");
+    //     }
+
+    //     if (document.getElementById("applicant_birth").value.trim() == "") {
+    //         document.getElementById("BIRTH_FORM").setAttribute("class", "was-validated");
+    //         document.getElementById("applicant_birth").setAttribute("class", "form-control is-valid");
+    //         while (document.getElementById("BIRTH_FEEDBACK").hasChildNodes()) document.getElementById("BIRTH_FEEDBACK").removeChild(document.getElementById("BIRTH_FEEDBACK").firstChild);
+    //         document.getElementById("BIRTH_FEEDBACK").appendChild(document.createTextNode("생년월일을 입력하세요."));
+    //         validate = false;
+    //     }
+    //     else if (Number(document.getElementById("applicant_birth").value.split("-")[0]) < 1900) {
+    //         document.getElementById("BIRTH_FORM").setAttribute("class", "was-validated");
+    //         document.getElementById("applicant_birth").setAttribute("class", "form-control is-valid");
+    //         while (document.getElementById("BIRTH_FEEDBACK").hasChildNodes()) document.getElementById("BIRTH_FEEDBACK").removeChild(document.getElementById("BIRTH_FEEDBACK").firstChild);
+    //         document.getElementById("BIRTH_FEEDBACK").appendChild(document.createTextNode("생년월일은 '1900-01-01' 이후로 입력하실 수 있습니다."));
+    //         validate = false;
+    //     }
+    //     else {
+    //         document.getElementById("BIRTH_FORM").setAttribute("class", "was-validated");
+    //         document.getElementById("applicant_birth").setAttribute("class", "form-control is-valid");
+    //     }
+
+    //     if (!$('input[name=genderRadio]:checked').val()) {
+    //         document.getElementById("GENDER_FORM").setAttribute("class", "was-validated");
+    //         //while(document.getElementById("GENDER_FEEDBACK").hasChildNodes()) document.getElementById("GENDER_FEEDBACK").removeChild(document.getElementById("GENDER_FEEDBACK").firstChild);
+    //         $('#GENDER_FEEDBACK').empty();
+    //         document.getElementById("GENDER_FEEDBACK").appendChild(document.createTextNode("성별을 선택하세요."));
+    //         validate = false;
+    //     }
+    //     else {
+    //         document.getElementById("GENDER_FORM").setAttribute("class", "was-validated");
+    //     }
+
+    //     if (validate) {
+    //         var xhttps = new XMLHttpRequest();
+    //         xhttps.onreadystatechange = function () {
+    //             if (this.readyState == this.DONE && this.status == 200) {
+
+    //                 var data_pre = xhttps.responseText.trim();
+    //                 var response = JSON.parse(data_pre);
+    //                 if (response.result > 0) {
+    //                     document.getElementById("email_check_msg").innerHTML = ("이메일이 존재합니다. " + response.email);
+    //                     document.getElementById("joinBTN").disabled = true;
+    //                     document.getElementById("applicant_name").disabled = false;
+
+    //                     document.getElementById("applicant_birth").disabled = false;
+
+    //                     var x = document.getElementsByName("genderRadio");
+    //                     for (var i = 0; i < x.length; i++) {
+    //                         x[i].disabled = false;
+    //                     }
+
+    //                 }
+    //                 else {
+
+    //                     document.getElementById("email_check_msg").innerHTML = ('가입하신 적이 없습니다.');
+    //                     document.getElementById("joinBTN").disabled = false;
+
+    //                     document.getElementById("applicant_name").disabled = true;
+    //                     document.getElementById("applicant_birth").disabled = true;
+
+    //                     var x = document.getElementsByName("genderRadio");
+    //                     for (var i = 0; i < x.length; i++) {
+    //                         x[i].disabled = true;
+    //                     }
+
+    //                 }
+    //                 // else location.href = "../src/login.jsp";
+    //             }
+    //         }
+
+    //         xhttps.open("GET", "./applicant.jsp?action=check_subject_joined&APPLNAME=" + APPLNAME + "&APPLBIRTH=" + APPLBIRTH + "&APPLSEX=" + APPLSEX, false);
+    //         xhttps.send();
+
+    //     }
+
+    // }
+
+    function SUBMIT_QR() {
+        //  close_modal();
+        var qrcode = document.getElementById("qr_input").value.trim(); //test: 2743994676 
+        // var qrcode="	39744 33304";
+        qrcode = qrcode.replace(/\s/g, "");
+
+        console.log(qrcode);
+
+        if (qrcode == "") {
+            document.getElementById("qr_input").focus();
+            return;
+        }
+console.log("-SUBMIT_QR--");
+
+        confirmSubject(qrcode);
+
+
+
+
+    }
+
+
+    function confirmSubject(qrcode) {
+        //if(qrcode==null) qrcode="";
+        
+         /*
+        input: QRCODE, SID
+        return: jsonobject
+        자원자가 방문하여 방문확인시 QRCODE를 가지고 신원 확인
+        1. 가입안된경우 {"RESULT":"error", "MSG":"회원아님"} 
+        2. 참여중인 연구가 없음  {"RESULT":"error", "MSG":"참여중 연구 없음", "SID":0} 
+        3. 참여중인 연구가 이 연구가 아님  {"RESULT":"error", "MSG":"다른 연구 참여중", "SID":[참여중 연구 sid], "TITLE" : [참여중 연구의 제목] } 
+        4. 본인확인과 관련없이 예약이 하나도 없는 경우 {"RESULT":"error", "MSG":"예약없음", "SAID":[said], "SID":[sid],"TITLE" : [참여중 연구의 제목], "APPOINTID":0} 
+        5. 연구에 대해 예약이 있음 (항상 1개임)
+            {"RESULT":"success", "MSG":"예약", "SAID":[said], "SID":[sid], "TITLE" : [참여중 연구의 제목], "APPOINTID":[appointid], "APPOINTDTC": [appointdtc], "IDENTIFYDTC":[identifydtc]} 
+            - javascript에서 오늘 예약인지 아닌지 보여준다.
+            -회원가입시 신분확인을 안한 경우 또는 한번도 실시기관에서 신분확인을 안한 경우
+        */
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                var data_eval = JSON.parse(data_pre);
+
+                if (data_eval.RESULT == "error") {
+                    if (data_eval.MSG == "회원아님") {
+                        alert("회원정보가 존재하지 않는 대상자입니다. 회원가입을 하여주세요.");
+                    }
+                    else if (data_eval.MSG == "참여중 연구 없음") {
+                        alert("참여중인 연구가 없습니다. 연구에 참여하여 주세요.");
+                    }
+                    else if (data_eval.MSG == "다른 연구 참여중") {
+                        alert(data_eval.APPLNAME + "님은 다른 연구에 참여중입니다.\n" + "참여중인 연구:" + data_eval.TITLE);
+                    }
+                    else if (data_eval.MSG == "예약없음") {
+                        alert("예약정보가 없습니다. 예약을 하여주세요.");
+                    }
+
+                    document.getElementById("qr_input").value = "";
+                    document.getElementById("qr_input").focus();
+
+                }
+                else if (data_eval.RESULT == "success") {
+                    //var data_eval = eval(data_pre);
+                    var applicant = data_eval;
+                    var today = new Date();
+
+                    $(".APPLVISITDTC").text(applicant.APPOINTDTC);
+                    if (applicant.APPOINTDTC && (getDateFormat(applicant.APPOINTDTC) != getDateFormat(today))) {
+                        //$("#APPLVISITDTC").attr();
+                        //alert("예약일이 오늘이 아닙니다.");
+                        alert(data_eval.APPLNAME + "님은 " + applicant.APPOINTDTC + " 에 예약하셨습니다.");
+                    }
+
+                    console.log("data_eval.APPLNAME" + applicant.APPLNAME);
+                    $(".APPLNAME").text(applicant.APPLNAME);
+                    $(".APPLPHONENUM").text(applicant.APPLPHONENUM);
+                    $(".APPLBIRTHDTC").text(applicant.APPLBIRTH);
+                    if (applicant.APPLSEX == "2") $(".APPLSEX").text('여');
+                    else if (applicant.APPLSEX == "1") $(".APPLSEX").text('남');
+                    $(".MTITLE").text(applicant.TITLE);
+
+
+
+                    // $("#SAVEPASSBTN").click(function () {
+                    //     $('#passModal').modal('hide');
+                    //     SAVEPASS(applicant.SAID + "_" + applicant.APPLID + "_" + applicant.APPOINTID);
+
+                    // });
+                    // $("#SAVEIDENTIFYBTN").click(function () {
+                    //     $('#identityModal').modal('hide');
+                    //     console.log("clicked_saveidentity");
+                    //     CHECK_IDENTITY(applicant.SAID + "_" + applicant.APPOINTID);
+
+                    // });
+
+                    document.getElementById("SAVEIDENTIFYBTN").setAttribute("onclick", "CHECK_IDENTITY('" + applicant.SAID + "_" + applicant.APPOINTID + "')");
+                    document.getElementById("SAVEPASSBTN").setAttribute("onclick", "SAVEPASS('" + applicant.SAID + "_" + applicant.APPLID + "_" + applicant.APPOINTID + "')");
+
+
+
+                    console.log("PASS==" + applicant.PASS);
+                    if (applicant.PASS == 0) {
+                        $('#passModal').modal('show');
+
+                    }
+                    else {
+                        $('#identityModal').modal('show');
+
+
+                    }
+                }
+            }
+        }
+        xhttp.open("GET", "./qrcode.jsp?action=VISIT_TODAY&QRCODE=" + qrcode + "&SID=" + SID, true);
+        xhttp.send();
+    }
+    
+    function confirmSubjectSAID(said) {
+        //if(qrcode==null) qrcode="";
+        
+         /*
+        input: QRCODE, SID
+        return: jsonobject
+        자원자가 방문하여 방문확인시 QRCODE를 가지고 신원 확인
+        1. 가입안된경우 {"RESULT":"error", "MSG":"회원아님"} 
+        2. 참여중인 연구가 없음  {"RESULT":"error", "MSG":"참여중 연구 없음", "SID":0} 
+        3. 참여중인 연구가 이 연구가 아님  {"RESULT":"error", "MSG":"다른 연구 참여중", "SID":[참여중 연구 sid], "TITLE" : [참여중 연구의 제목] } 
+        4. 본인확인과 관련없이 예약이 하나도 없는 경우 {"RESULT":"error", "MSG":"예약없음", "SAID":[said], "SID":[sid],"TITLE" : [참여중 연구의 제목], "APPOINTID":0} 
+        5. 연구에 대해 예약이 있음 (항상 1개임)
+            {"RESULT":"success", "MSG":"예약", "SAID":[said], "SID":[sid], "TITLE" : [참여중 연구의 제목], "APPOINTID":[appointid], "APPOINTDTC": [appointdtc], "IDENTIFYDTC":[identifydtc]} 
+            - javascript에서 오늘 예약인지 아닌지 보여준다.
+            -회원가입시 신분확인을 안한 경우 또는 한번도 실시기관에서 신분확인을 안한 경우
+        */
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                var data_eval = JSON.parse(data_pre);
+
+                if (data_eval.RESULT == "error") {
+                   // if (data_eval.MSG == "회원아님") {
+                   //     alert("회원정보가 존재하지 않는 대상자입니다. 회원가입을 하여주세요.");
+                  //  }
+                  //  else if (data_eval.MSG == "참여중 연구 없음") {
+                      //  alert("참여중인 연구가 없습니다. 연구에 참여하여 주세요.");
+                  //  }
+                   // else if (data_eval.MSG == "다른 연구 참여중") {
+                      //  alert(data_eval.APPLNAME + "님은 다른 연구에 참여중입니다.\n" + "참여중인 연구:" + data_eval.TITLE);
+                   // }
+                    //else 
+                    if (data_eval.MSG == "예약없음") {
+                        alert("예약정보가 없습니다. 예약을 하여주세요.");
+                    }
+
+                   // document.getElementById("qr_input").value = "";
+                   // document.getElementById("qr_input").focus();
+
+                }
+                else if (data_eval.RESULT == "success") {
+                    //var data_eval = eval(data_pre);
+                    var applicant = data_eval;
+                    var today = new Date();
+
+                    $(".APPLVISITDTC").text(applicant.APPOINTDTC);
+                    if (applicant.APPOINTDTC && (getDateFormat(applicant.APPOINTDTC) != getDateFormat(today))) {
+                        //$("#APPLVISITDTC").attr();
+                        //alert("예약일이 오늘이 아닙니다.");
+                        alert(data_eval.APPLNAME + "님은 " + applicant.APPOINTDTC + " 에 예약하셨습니다.");
+                    }
+
+                    console.log("data_eval.APPLNAME" + applicant.APPLNAME);
+                    $(".APPLNAME").text(applicant.APPLNAME);
+                    $(".APPLPHONENUM").text(applicant.APPLPHONENUM);
+                    $(".APPLBIRTHDTC").text(applicant.APPLBIRTH);
+                    if (applicant.APPLSEX == "2") $(".APPLSEX").text('여');
+                    else if (applicant.APPLSEX == "1") $(".APPLSEX").text('남');
+                    $(".MTITLE").text(applicant.TITLE);
+
+
+
+                    // $("#SAVEPASSBTN").click(function () {
+                    //     $('#passModal').modal('hide');
+                    //     SAVEPASS(applicant.SAID + "_" + applicant.APPLID + "_" + applicant.APPOINTID);
+
+                    // });
+                    // $("#SAVEIDENTIFYBTN").click(function () {
+                    //     $('#identityModal').modal('hide');
+                    //     console.log("clicked_saveidentity");
+                    //     CHECK_IDENTITY(applicant.SAID + "_" + applicant.APPOINTID);
+
+                    // });
+
+                    document.getElementById("SAVEIDENTIFYBTN").setAttribute("onclick", "CHECK_IDENTITY('" + applicant.SAID + "_" + applicant.APPOINTID + "')");
+                    document.getElementById("SAVEPASSBTN").setAttribute("onclick", "SAVEPASS('" + applicant.SAID + "_" + applicant.APPLID + "_" + applicant.APPOINTID + "')");
+
+
+
+                    console.log("PASS==" + applicant.PASS);
+                    if (applicant.PASS == 0) {
+                        $('#passModal').modal('show');
+
+                    }
+                    else {
+                        $('#identityModal').modal('show');
+
+
+                    }
+                }
+            }
+        }
+        xhttp.open("GET", "./qrcode.jsp?action=VISIT_TODAY_SAID&&SAID="+said, true);
+        xhttp.send();
+    }
+
+    // function SUBMIT_SAID(said){
+    //     //  close_modal();
+    //    // calICON.setAttribute("id", "VISIT_BTN_" + data_eval[i].SAID + "_" + data_eval[i].APPLNAME + "_" + visitstatus + "_" + appointid);
+       
+       
+    //    console.log("-confirmVisitBySAID--");
+
+    //     confirmSubjectSAID( said) ;
+
+
+    // }
+
+</script>
+
+
+
+<!-- <div class="row table-filters-container">
+        <div class="col-12 col-lg-12 col-xl-3">
+            <div class="row">
+                <div class="col-12 table-filters  m-3"><span class="table-filter-title">동의
+                        그룹</span>
+                    <div class="filter-container mr-5">
+                        <form>
+                            <select class="select2" id="appoint_list">
+                                <option value="All" selected>All</option>
+                                
+                  
+                            </select>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+                        var calICON = document.createElement("i");
+                        calICON.setAttribute("class", "fas fa-calendar-alt ml-2");
+                        calICON.setAttribute("data-toggle", "tooltip");
+                        calICON.setAttribute("title", "예약요청시간 : " + isPreVisit + "");
+                        calICON.setAttribute("style", "color: #28a745; font-size:large; cursor:pointer;");
+                        calICON.setAttribute("name", "VISIT_BTN_" + data_eval[i].SAID);
+                        calICON.setAttribute("id", "VISIT_BTN_" + data_eval[i].SAID + "_" + data_eval[i].APPLNAME + "_" + isPreVisit + "_" + data_eval[i].APPOINTID);
+                        calICON.setAttribute("onclick", "VISIT(id)");
+                        preReserveTD.appendChild(calICON);
+
+    </div> -->
+<div class="d-flex justify-content-start flex-row mb-3 ">
+    <div class="form-inline">
+        <input class="form-control" type="text" style="border-radius: 0px;width:200px" id="qr_input"
+            placeholder="핸드폰 또는 QR코드 입력" autofocus required>
+        <button class="btn btn-danger mr-3" style="border-radius: 0px;" onclick="SUBMIT_QR()">방문확인</button>
+        <button class="btn btn-secondary mr-3" data-toggle="modal" data-target="#newSubjectModal">대상자 추가</button>
+    </div>
+    <!-- <button class="btn btn-danger ml-4 mr-3" onclick="CLICK_IDENTITY()">방문 확인</button> -->
+</div>
+
+<div class="d-flex justify-content-between  flex-row" style="vertical-align:center">
+
+
+    <div class="filter-container ">
+        <span class="mt-1">예약일 필터:</span>
+        <select class="select2 ml-1 mr-3 h-100 " style="width: 200px; " id="appoint_list">
+
+            <option value="All">All</option>
+
+        </select>
+
+    </div>
+    <div>
+
+        <button class="btn-primary btn mr-3" onclick="view_appointment()"><i
+                class="fa fa-redo-alt mr-1"></i>새로고침</button>
+
+    </div>
+</div>
+
+
+
+<div class="table-responsive mt-3" style="text-align: right;">
+    <table class="table w-100 bg-white appoint_table" id="APPOINT_TABLE"
+        style="text-align: center; table-layout:fixed; ">
+        <thead>
+            <tr>
+
+                <th width="30px">번호</th>
+                <!-- <th width="80px">상태</th> -->
+                <th width="80px">이름</th>
+                <th width="30px">성별</th>
+                <th width="80px">생년월일</th>
+                <th width="100px">핸드폰번호</th>
+                <th width="120px">방문 예약</th>
+                <th width="100px">예약 상태</th>
+                <th width="80px">방문확인</th>
+            </tr>
+
+        </thead>
+        <tbody id="APPOINT_TABLE_BODY"></tbody>
+    </table>
+</div>
+<!-- <script>
+    $(function () {
+     $('[data-toggle="tooltip"]').tooltip()
+    });
+   </script> -->
+<script>
+    // $(document).ready(function(){
+    //   $('.mytooltip [data-toggle="tooltip"]').tooltip();
+
+    // });
+//         $(document).ready(function () {
+//     $('a[data-toggle="tooltip"]').tooltip({
+//     animated: 'fade',
+//     placement: 'top',
+//     trigger: 'click'
+// });
+//     });
+</script>

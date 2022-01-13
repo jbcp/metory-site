@@ -1,0 +1,1246 @@
+<style>
+   .consent_table.dataTable thead .sorting:before, 
+    .consent_table.dataTable thead .sorting:after,
+.consent_table.dataTable thead .sorting_asc:before,
+.consent_table.dataTable thead .sorting_asc:after,
+.consent_table.dataTable thead .sorting_desc:before,
+.consent_table.dataTable thead .sorting_desc:after,
+.consent_table.dataTable thead .sorting_asc_disabled:before,
+.consent_table.dataTable thead .sorting_asc_disabled:after,
+.consent_table.dataTable thead .sorting_desc_disabled:before,
+ .consent_table.dataTable thead .sorting_desc_disabled:after {
+position: absolute;
+bottom: 1.5em !important;
+display: block;
+opacity: 0.3;
+} 
+</style>
+<script type="text/javascript">
+    var STARTDTC;
+    var SAID_CLICKED;
+    var APPLNAME_CLICKED;
+    var APPLVISIT_CLICKED;
+    //var resignflag;
+    var DAPPIP;
+    // var check_all;
+    var rowspan_value = 1;
+    var COLUMN = [
+        { 'data': 'id' },
+        { 'data': 'name' },
+        { 'data': 'birth' },
+
+    ];
+    var consent_table = null;
+    var setNumEntries = -1;
+    //var data_table = null;
+
+    //var lastValue;
+    // $(document).on('focus click', 'select', function (e) {
+
+    //         lastValue = e.target.value;
+    //     console.log("000000000000000000000000000000000appl_consent_table");
+    //         //console.log("focused on " + e.target.id +"  "+lastValue);
+    //     });
+
+    $(document).ready(function () {
+        //resignflag = false;
+       
+        document.getElementById("inv_name").innerHTML = document.getElementById("user_name");
+        console.log("ROLE_RESERVE=" + ROLE_IDENTITY + "  ROLE_IDENTITY=" + ROLE_IDENTITY + "  ROLE_CONSENT=" + ROLE_CONSENT + "  ROLE_SIGN=" + ROLE_SIGN);
+
+
+        //var SECOND_TR = document.createElement("tr");
+        var header_tr = document.getElementById('APPL_TABLE_HEAD_TR');
+        //  document.getElementById("APPL_TABLE_HEAD").appendChild(SECOND_TR);
+        // rowspan_value = 2;
+        // document.getElementById("NUMTH").setAttribute("rowspan", rowspan_value);
+        // // document.getElementById("status_th").setAttribute("rowspan", rowspan_value);
+        // document.getElementById("NAMETH").setAttribute("rowspan", rowspan_value);
+        // document.getElementById("sex_th").setAttribute("rowspan", rowspan_value);
+        // document.getElementById("bday_th").setAttribute("rowspan", rowspan_value);
+
+        // var CONSENT_TD = document.createElement("th");
+        // CONSENT_TD.appendChild(document.createTextNode("동의설명"));
+
+        if (contact_coption == 1) {//대면
+            var CONSENT_REQUEST_TH = document.createElement("th");
+    
+
+            CONSENT_REQUEST_TH.appendChild(document.createTextNode("동의요청"));
+            CONSENT_REQUEST_TH.setAttribute("width", "80px");
+            header_tr.appendChild(CONSENT_REQUEST_TH);
+            var REQ_COLUMN = new Object();
+            REQ_COLUMN.data = "req";
+            COLUMN.push(REQ_COLUMN);
+        }
+
+        var CONSENT_START_TD = document.createElement("th");
+        
+        CONSENT_START_TD.appendChild(document.createTextNode("동의시작"));
+        
+        CONSENT_START_TD.setAttribute("width", "120px");
+        CONSENT_START_TD.setAttribute("id", "consent_start_th");
+        header_tr.appendChild(CONSENT_START_TD);
+        var START_COLUMN = new Object();
+        START_COLUMN.data = "start";
+        COLUMN.push(START_COLUMN);
+
+        var CONSENT_END_TD = document.createElement("th");
+        CONSENT_END_TD.appendChild(document.createTextNode("동의종료"));
+        CONSENT_END_TD.setAttribute("width", "120px");
+        header_tr.appendChild(CONSENT_END_TD);
+        CONSENT_END_TD.setAttribute("id", "consent_end_th");
+        var ENd_COLUMN = new Object();
+        ENd_COLUMN.data = "end";
+        COLUMN.push(ENd_COLUMN);
+
+        var SUBJ_SIGN_TD = document.createElement("th");
+
+        var p1 = document.createElement("p");
+        p1.setAttribute("class", "p-0  m-0");       
+        p1.innerText = "자원자 서명";
+        var p2 = document.createElement("p");
+        p2.setAttribute("class", "p-0  m-0");
+        p2.setAttribute("style", "font-weight:bold; font-size:smaller");
+        p2.innerText = "(상태정보)";
+
+        SUBJ_SIGN_TD.appendChild(p1);
+        SUBJ_SIGN_TD.appendChild(p2);
+        SUBJ_SIGN_TD.setAttribute("width", "120px");
+        header_tr.appendChild(SUBJ_SIGN_TD);
+        var SUBJ_SIGN_COLUMN = new Object();
+        SUBJ_SIGN_COLUMN.data = "subj_sign";
+        COLUMN.push(SUBJ_SIGN_COLUMN);
+
+
+        if (inv_sign_coption == 1) { //연구자서명
+            var INV_SIGN_TD = document.createElement("th");
+            INV_SIGN_TD.appendChild(document.createTextNode("연구자 서명"));
+            INV_SIGN_TD.setAttribute("width", "120px");
+            header_tr.appendChild(INV_SIGN_TD);
+            var INV_SIGN_COLUMN = new Object();
+            INV_SIGN_COLUMN.data = "inv_sign";
+            COLUMN.push(INV_SIGN_COLUMN);
+        }
+
+        set_consent_start_end_btn();
+
+
+
+
+        // var CONSENT_STARTTD = document.createElement("th");
+        // CONSENT_STARTTD.appendChild(document.createTextNode("시작"));
+        // // CONSENT_STARTTD.setAttribute( "width","60px");
+        // SECOND_TR.appendChild(CONSENT_STARTTD);
+        // var START_COLUMN = new Object();
+        // START_COLUMN.data = "start";
+        // COLUMN.push(START_COLUMN);
+
+        // var CONSENT_ENDTD = document.createElement("th");
+        // CONSENT_ENDTD.appendChild(document.createTextNode("종료"));
+        // //CONSENT_ENDTD.setAttribute( "width","60px");
+        // SECOND_TR.appendChild(CONSENT_ENDTD);
+        // var END_COLUMN = new Object();
+        // END_COLUMN.data = "end";
+        // COLUMN.push(END_COLUMN);
+
+
+
+
+
+        // var SIGN_TD = document.createElement("th");
+        // SIGN_TD.appendChild(document.createTextNode("서명"));
+        // SIGN_TD.setAttribute("width", "240px");
+
+        // document.getElementById("APPL_TABLE_TR").appendChild(SIGN_TD);
+
+        // var APPL_SIGNTD = document.createElement("th");
+        // APPL_SIGNTD.appendChild(document.createTextNode("자원자"));
+        // // APPL_SIGNTD.setAttribute( "width","100px");
+        // SECOND_TR.appendChild(APPL_SIGNTD);
+        // var APPLSIGN_COLUMN = new Object();
+        // APPLSIGN_COLUMN.data = "appl_sign";
+        // COLUMN.push(APPLSIGN_COLUMN);
+
+        // if (inv_sign_coption == 1) { //연구자서명
+        //     var INV_SIGNTD = document.createElement("th");
+        //     INV_SIGNTD.appendChild(document.createTextNode("연구자"));
+        //     INV_SIGNTD.setAttribute("width", "150px");
+        //     SECOND_TR.appendChild(INV_SIGNTD);
+        //     var INVSIGN_COLUMN = new Object();
+        //     INVSIGN_COLUMN.data = "inv_sign";
+        //     COLUMN.push(INVSIGN_COLUMN);
+        //     SIGN_TD.setAttribute("colspan", "2");
+
+        // }
+
+        init_table();
+
+
+
+
+        $('#qnaModal').on('hidden.bs.modal', function () {
+            clearInterval(intervals[SAID_CLICKED]);
+            intervals[SAID_CLICKED] = null;
+            ismodify = false;
+            console.log("close")
+        });
+
+        console.log("=====================>풀어주세요 init_table");
+        // setInterval(function () {
+        //     if (!ismodify) {
+        //           //init_table();
+
+
+        //     }
+        // }, 10000)
+
+
+        //request cancel
+        $('#request_cancel_modal').on('shown.bs.modal', function (event) {
+            var reference_tag = $(event.relatedTarget);
+            var id = reference_tag.data('id');
+            console.log("ref id-" + id);
+            $(this).attr('data-id', id);
+            console.log("ref id2=" + $(this).data('id'));
+        });
+        $('#confirm_request_cancel_modal').click(function (event) {
+            var reference_tag = $(event.relatedTarget);
+            var id = $('#request_cancel_modal').data('id');
+            console.log("close ref id-" + id);
+            $('#request_cancel_modal').modal('hide');
+            // $('#request_cancel_modal').on('hidden.bs.modal', function() {
+            //     close_modal();
+            // } );
+            confirm_cancel_request(id);
+        });
+
+        //start cancel
+        $('#start_cancel_modal').on('shown.bs.modal', function (event) {
+            var reference_tag = $(event.relatedTarget);
+            var id = reference_tag.data('id');
+
+            $(this).attr('data-id', id);
+            console.log($(this).data('id') + "ref id-" + id);
+
+            $('#confirm_start_cancel_modal').off('click').click(function () {
+                $('#start_cancel_modal').modal('hide');
+                confirm_cancel_start(id);
+            });
+        });
+        
+        //end cancel
+        $('#end_cancel_modal').on('shown.bs.modal', function (event) {
+            var reference_tag = $(event.relatedTarget);
+            var id = reference_tag.data('id');
+
+            $(this).attr('data-id', id);
+            console.log($(this).data('id') + "ref id-" + id);
+
+            $('#confirm_end_cancel_modal').off('click').click(function () {
+                $('#end_cancel_modal').modal('hide');
+                confirm_cancel_end(id);
+            });
+        });
+
+        //sign cancel
+        $('#sign_cancel_modal').on('shown.bs.modal', function (event) {
+            var reference_tag = $(event.relatedTarget);
+            var id = reference_tag.data('id');
+
+            $(this).attr('data-id', id);
+            console.log($(this).data('id') + "ref id-" + id);
+
+            $('#confirm_sign_cancel_modal').off('click').click(function () {
+                $('#sign_cancel_modal').modal('hide');
+                confirm_cancel_sign(id);
+            });
+        });
+        
+
+        //invsign cancel
+        $('#invsign_cancel_modal').on('shown.bs.modal', function (event) {
+            var reference_tag = $(event.relatedTarget);
+            var id = reference_tag.data('id');
+
+            $(this).attr('data-id', id);
+            console.log($(this).data('id') + "ref id-" + id);
+
+            $('#confirm_invsign_cancel_modal').off('click').click(function () {
+                $('#invsign_cancel_modal').modal('hide');
+                confirm_cancel_invsign(id);
+            });
+        });
+        
+    });
+
+    var Clock = {
+        start: function () {
+            if (!this.interval) {
+                var self = this;
+                function pad(val) { return val > 9 ? val : "0" + val; }
+
+                this.interval = setInterval(function () {
+                    let today = new Date();
+                    var date = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
+                    var time = pad(today.getHours()) + ":" + pad(today.getMinutes()) + ":" + pad(today.getSeconds());
+                    var dateTime = date + ' ' + time;
+
+                    document.getElementById("inv_sign_time").innerHTML = dateTime;
+                }, 1000);
+            }
+        },
+        reset: function () {
+            Clock.totalSeconds = null;
+            clearInterval(this.interval);
+            document.getElementById("inv_sign_time").innerHTML = "00:00";
+
+            delete this.interval;
+        },
+        pause: function () {
+            clearInterval(this.interval);
+            delete this.interval;
+        }
+    };
+
+    function set_consent_start_end_btn() {
+        //요청중 버튼
+        var requestAllBtn = document.createElement("button");
+        requestAllBtn.setAttribute("class", "btn btn-secondary btn-sm ml-2");
+        requestAllBtn.appendChild(document.createTextNode("A"));
+        requestAllBtn.setAttribute("data-toggle", "modal");
+        requestAllBtn.setAttribute("onclick", "SHOW_REQUEST_LIST_BTN_CLICKED()");
+        requestAllBtn.setAttribute("data-target", "#on_request_list_Modal");
+  
+        document.getElementById("consent_start_th").appendChild(requestAllBtn);
+        //설명중 버튼
+        var presentAllBtn = document.createElement("button");
+        presentAllBtn.setAttribute("class", "btn btn-secondary btn-sm ml-2");
+
+        presentAllBtn.appendChild(document.createTextNode("A"));
+        presentAllBtn.setAttribute("data-toggle", "modal");
+        presentAllBtn.setAttribute("data-target", "#on_explain_list_Modal");
+
+        presentAllBtn.setAttribute("onclick", "SHOW_EXPLAIN_LIST_BTN_CLICKED()");
+
+        document.getElementById("consent_end_th").appendChild(presentAllBtn);
+
+    }
+    function request_toggle(source) {
+        var checkboxes = document.getElementsByName('requests_chx');
+        //document.getElementById("request_all").setAttibute("checked","");
+        for (var i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].checked = source.checked;
+
+        }
+    }
+    function explain_toggle(source) {
+
+        var checkboxes = document.getElementsByName('explained_chx');
+
+        for (var i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].checked = source.checked;
+
+        }
+    }
+    function init_table() {
+        console.log("consent_init_table: contact_coption(대면1: 비대면0)=" +contact_coption + "   연구자서명(필요1:불필요:0)="+ inv_sign_coption );
+        var table_source = [];
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                var data_eval = eval(data_pre);
+
+
+                var SASTAGE_ARR = ["신청", "예약", "본인확인", "스크리닝", "선정", "연구종료", "탈락", "동의철회", "신청취소"];
+
+
+                for (var i = 0; i < data_eval.length; i++) {
+                    var createTR = document.createElement("tr");
+                    createTR.setAttribute("class", "accordion-toggle collapsed");
+                    createTR.setAttribute("id", "accordion_" + data_eval[i].SAID);
+                    createTR.setAttribute("data-toggle", "collapse");
+                    createTR.setAttribute("dtat-parent", "#accordion_" + data_eval[i].SAID);
+                    createTR.setAttribute("href", "#collapse_" + data_eval[i].SAID);
+                    //document.getElementById("APPL_TABLE_BODY").appendChild(createTR);
+                    //번호
+                    var numTD = document.createElement("td");
+                    numTD.appendChild(document.createTextNode(i + 1));
+                    createTR.appendChild(numTD);
+                    //상태
+                    // var statusTD = document.createElement("td");
+                    // createTR.appendChild(statusTD);
+                    // var statusSELECT = document.createElement("select");
+                    // statusSELECT.setAttribute("class", "form-control selectpicker");
+                    // statusSELECT.setAttribute("onchange", "SELECTED(id)");                    
+
+                    // statusSELECT.setAttribute("id", "status_SELECT_" + data_eval[i].SAID);
+                    // statusSELECT.setAttribute("style", "border-radius:0rem;");
+                    // statusTD.appendChild(statusSELECT);
+                    // var selectedvalue=1;
+                    // if(data_eval[i].SASTAGE>=5) selectedvalue=data_eval[i].SASTAGE;
+                    // for (var j = 0; j < SASTAGE_ARR.length; j++) {
+                    //     if(j>=1 && j<=3){ 
+
+                    //         continue;
+                    //     }
+
+                    //     var option = document.createElement("option");
+                    //     option.setAttribute("value", j + 1);
+                    //     if (j + 1 == selectedvalue) option.setAttribute("selected", "");
+
+
+                    //     option.appendChild(document.createTextNode(SASTAGE_ARR[j]));
+                    //     statusSELECT.appendChild(option);
+
+                    // }
+
+                    // if(data_eval[i].SASTAGE>=7){//탈락, 동의철회, 신청취소
+                    //         createTR.setAttribute("style","background:#aaa");
+                    //     }
+
+
+                    //이름
+                    var nameTD = document.createElement("td");
+                    var a = document.createElement('a');
+
+                    var name = document.createTextNode(data_eval[i].APPLNAME);
+                    a.appendChild(name);
+                    a.title = "my consent history";
+                    a.href = "./appl_consent_history.html?SAID=" + data_eval[i].SAID + "&SID=" + SID;
+                    nameTD.appendChild(a);
+                    //qna
+                    var qnaICON = document.createElement("i");
+                    qnaICON.setAttribute("class", "far fa-comment-dots ml-2");
+                    qnaICON.setAttribute("style", "cursor:pointer; font-size:20px")
+                    qnaICON.setAttribute("name", "qnaICON_" + data_eval[i].SAID);
+                    qnaICON.setAttribute("id", "qnaICON_" + data_eval[i].SAID + "_" + data_eval[i].APPLNAME);
+                    qnaICON.setAttribute("onclick", "SHOW_QNA(id)");
+                    nameTD.appendChild(qnaICON);
+                    createTR.appendChild(nameTD);
+                    //성별
+                    //  var genderTD = document.createElement("td");
+
+                    // switch (data_eval[i].APPLSEX) {
+                    //     case 1:
+                    //         genderTD.appendChild(document.createTextNode("남성"));
+                    //         break;
+                    //     case 2:
+                    //         genderTD.appendChild(document.createTextNode("여성"));
+                    //         break;
+                    // }
+                    // createTR.appendChild(genderTD);
+                    //생년월일
+                    var gender = (data_eval[i].APPLSEX == 1) ? "남성" : "여성";
+                    var birthTD = document.createElement("td");
+                    birthTD.appendChild(document.createTextNode(data_eval[i].APPLBIRTH));
+                    birthTD.appendChild(document.createElement("br"));
+                    birthTD.appendChild(document.createTextNode("(만 " + getAge(data_eval[i].APPLBIRTH) + "세, " + gender + ")"));
+                    createTR.appendChild(birthTD);
+                    //대면시 
+                    if (contact_coption == 1) {//대면
+                        var requestTD = document.createElement("td");
+                        requestTD.setAttribute("id", "request_td_" + data_eval[i].SAID);
+                        if (data_eval[i].CSREQUEST == null && data_eval[i].CSVISITDTC == null) {
+                            var noICON = document.createElement("i");
+                            noICON.setAttribute("class", "fas fa-times");
+                            noICON.setAttribute("style", "color: #6c757d; font-size:large;");
+                            requestTD.appendChild(noICON);
+                        }
+                        else if (data_eval[i].CSVISITDTC != null && data_eval[i].CSREQUEST == null) {
+                            if (data_eval[i].SAACTIVE == 1) {
+                                var startBTN = document.createElement("button");
+                                startBTN.setAttribute("class", "btn btn-outline-danger btn-sm");
+
+                                startBTN.setAttribute("id", "REQUEST_BTN_" + data_eval[i].SAID);
+                                startBTN.setAttribute("onclick", "request(id)");
+                                startBTN.appendChild(document.createTextNode("요청"));
+                                requestTD.appendChild(startBTN);
+                            }
+                            else {
+                                var noICON = document.createElement("i");
+                                noICON.setAttribute("class", "fas fa-times");
+                                noICON.setAttribute("style", "color: #6c757d; font-size:large;");
+                                requestTD.appendChild(noICON);
+
+                            }
+                        }
+                        else {
+                            var p = document.createElement("span");
+                            p.innerText = data_eval[i].CSREQUEST;
+                            requestTD.appendChild(p);
+                            if (data_eval[i].CSSTART == null && data_eval[i].SAACTIVE == 1) {
+                                var cancelBTN = document.createElement("button");
+                                cancelBTN.setAttribute("class", "btn btn-outline-danger btn-sm ml-3 ");
+
+                                cancelBTN.setAttribute("id", "request_cancel_modal_popup_btn");
+                                cancelBTN.setAttribute("data-toggle", "modal");
+                                cancelBTN.setAttribute("data-target", "#request_cancel_modal");
+                                cancelBTN.setAttribute("data-id", data_eval[i].SAID);
+                                cancelBTN.appendChild(document.createTextNode("취소"));
+                                requestTD.appendChild(cancelBTN);
+                            }
+
+
+                        }
+                        createTR.appendChild(requestTD);
+                    }//대면 종료
+                    //시작
+                    var startTD = document.createElement("td");
+                    startTD.setAttribute("id", "start_td_" + data_eval[i].SAID);
+                    if (data_eval[i].CSREQUEST == null && data_eval[i].CSSTART == null) {
+                        var noICON = document.createElement("i");
+                        noICON.setAttribute("class", "fas fa-times");
+                        noICON.setAttribute("style", "color: #6c757d; font-size:large;");
+                        startTD.appendChild(noICON);
+                    }
+                    else if (data_eval[i].CSREQUEST != null && data_eval[i].CSSTART == null) {
+                        if (data_eval[i].SAACTIVE == 1) {
+                            var startBTN = document.createElement("button");
+                            startBTN.setAttribute("class", "btn btn-primary btn-sm");
+
+                            startBTN.setAttribute("id", "START_BTN_" + data_eval[i].SAID);
+                            startBTN.setAttribute("onclick", "SAVE_STARTDTC(id)");
+                            startBTN.appendChild(document.createTextNode("시작"));
+                            startTD.appendChild(startBTN);
+                        } else {
+                            var noICON = document.createElement("i");
+                            noICON.setAttribute("class", "fas fa-times");
+                            noICON.setAttribute("style", "color: #6c757d; font-size:large;");
+                            requestTD.appendChild(noICON);
+
+                        }
+
+                    }
+                    else {
+                        // var checkICON = document.createElement("i");
+                        // checkICON.setAttribute("class", "fas fa-check");
+                        // checkICON.setAttribute("data-toggle", "tooltip");
+                        // checkICON.setAttribute("title", "시작시간 : " + data_eval[i].CSSTART + "");
+                        // checkICON.setAttribute("style", "color: #28a745; font-size:large;");
+                        // startTD.appendChild(checkICON);
+
+
+                        var p = document.createElement("span");
+                        p.innerText = data_eval[i].CSSTART;
+                        startTD.appendChild(p);
+                        if (data_eval[i].CSEND == null && data_eval[i].SAACTIVE == 1) {
+                            var cancelBTN = document.createElement("button");
+                            cancelBTN.setAttribute("class", "btn btn-outline-danger btn-sm ml-3");
+
+                            cancelBTN.setAttribute("id", "start_cancel_modal_popup_btn");
+                            cancelBTN.setAttribute("data-toggle", "modal");
+                            cancelBTN.setAttribute("data-target", "#start_cancel_modal");
+                            cancelBTN.setAttribute("data-id", data_eval[i].SAID);
+                            cancelBTN.appendChild(document.createTextNode("취소"));
+                            startTD.appendChild(cancelBTN);
+                        }
+
+                    }
+                    createTR.appendChild(startTD);
+                    //종료
+                    var endTD = document.createElement("td");
+                    endTD.setAttribute("id", "end_td_" + data_eval[i].SAID);
+                    console.log("csstart=" + data_eval[i].CSSTART);
+                    console.log("CSEND=" + data_eval[i].CSEND);
+                    if (data_eval[i].CSSTART == null && data_eval[i].CSEND == null) {
+                        var noICON = document.createElement("i");
+                        noICON.setAttribute("class", "fas fa-times");
+                        noICON.setAttribute("style", "color: #6c757d; font-size:large;");
+                        endTD.appendChild(noICON);
+                    }
+                    else if (data_eval[i].CSSTART != null && data_eval[i].CSEND == null) {
+                        if (data_eval[i].SAACTIVE == 1) {
+                            var endBTN = document.createElement("button");
+                            endBTN.setAttribute("class", "btn btn-primary btn-sm");
+
+                            endBTN.setAttribute("id", "END_BTN_" + data_eval[i].SAID);
+                            endBTN.setAttribute("onclick", "SAVE_ENDDTC(id)");
+                            endBTN.appendChild(document.createTextNode("종료"));
+                            //endBTN.disabled=true;
+                            endTD.appendChild(endBTN)
+
+                        }
+                        else {
+                            var noICON = document.createElement("i");
+                            noICON.setAttribute("class", "fas fa-times");
+                            noICON.setAttribute("style", "color: #6c757d; font-size:large;");
+                            endTD.appendChild(noICON);
+
+                        }
+                    }
+                    else {
+                        // var checkICON = document.createElement("i");
+                        // checkICON.setAttribute("class", "fas fa-check");
+                        // checkICON.setAttribute("data-toggle", "tooltip");
+                        // checkICON.setAttribute("title", "종료시간 : " + data_eval[i].CSEND + "");
+                        // checkICON.setAttribute("style", "color: #28a745; font-size:large;");
+                        // endTD.appendChild(checkICON);
+                        var p = document.createElement("span");
+                        p.innerText = data_eval[i].CSEND;
+                        endTD.appendChild(p);
+                        if (data_eval[i].SIGN == null && data_eval[i].SAACTIVE == 1) {
+                            var cancelBTN = document.createElement("button");
+                            cancelBTN.setAttribute("class", "btn btn-outline-danger btn-sm  ml-3");
+
+                            cancelBTN.setAttribute("id", "end_cancel_modal_popup_btn");
+                            cancelBTN.setAttribute("data-toggle", "modal");
+                            cancelBTN.setAttribute("data-target", "#end_cancel_modal");
+                            cancelBTN.setAttribute("data-id", data_eval[i].SAID);
+                            cancelBTN.appendChild(document.createTextNode("취소"));
+                            endTD.appendChild(cancelBTN);
+                        }
+
+                    }
+                    createTR.appendChild(endTD);
+
+                    //자원자 서명
+                    var signTD = document.createElement("td");
+                    signTD.setAttribute("id", "sign_td_" + data_eval[i].SAID);
+                    if (data_eval[i].SIGN == null && data_eval[i].SAACTIVE == 1) {
+                        var noICON = document.createElement("i");
+                        noICON.setAttribute("class", "fas fa-times");
+                        noICON.setAttribute("style", "color: #6c757d; font-size:large;");
+                        signTD.appendChild(noICON);
+                    }
+                    else {
+                        //check 연구종료
+
+                        // var checkICON = document.createElement("i");
+                        // checkICON.setAttribute("class", "fas fa-check");
+                        // checkICON.setAttribute("data-toggle", "tooltip");
+                        // checkICON.setAttribute("title", "서명시간 : " + data_eval[i].SIGN + "");
+                        // checkICON.setAttribute("style", "color: #28a745; font-size:large;");
+                        // signTD.appendChild(checkICON);
+                        var p_subjsitntime = document.createElement("span");
+                        p_subjsitntime.innerText = data_eval[i].SIGN;
+                        signTD.appendChild(p_subjsitntime);
+                        if (data_eval[i].INV_SIGN == null && data_eval[i].SAACTIVE == 1) {
+                            var cancelBTN = document.createElement("button");
+                            cancelBTN.setAttribute("class", "btn btn-outline-danger btn-sm ml-3 ");
+
+                            cancelBTN.setAttribute("id", "sign_cancel_modal_popup_btn");
+                            cancelBTN.setAttribute("data-toggle", "modal");
+                            cancelBTN.setAttribute("data-target", "#sign_cancel_modal");
+                            cancelBTN.setAttribute("data-id", data_eval[i].SAID);
+                            cancelBTN.appendChild(document.createTextNode("취소"));
+                            signTD.appendChild(cancelBTN);
+                        }
+                    }
+                    if (data_eval[i].SAACTIVE == 0) {
+                        var p = document.createElement("p");
+                        p.setAttribute("class", "p-0  m-0");
+                        p.setAttribute("style", "font-weight:bold; font-size:smaller");
+                        p.innerText = "(" + SASTAGE_ARR[data_eval[i].SASTAGE - 1] + "  " + data_eval[i].SACLOSEDTC + ")";
+                        signTD.appendChild(p);
+                        //var allbtns_in_row=createTR.getElementsByTagName('button');
+                        // var trid="accordion_" + data_eval[i].SAID;
+                        // $('#'+trid+' :button').prop('disabled', true); 
+
+                    }
+
+
+                    createTR.appendChild(signTD);
+                    //연구자 서명
+                    if (inv_sign_coption == 1) {
+                        var inv_signTD = document.createElement("td");
+                        inv_signTD.setAttribute("id", "inv_signTD_" + data_eval[i].SAID);
+                        if (data_eval[i].SIGN == null && data_eval[i].INV_SIGN == null) {
+                            var noICON = document.createElement("i");
+                            noICON.setAttribute("class", "fas fa-times");
+                            noICON.setAttribute("style", "color: #6c757d; font-size:large;");
+                            inv_signTD.appendChild(noICON);
+                        }
+                        else if (data_eval[i].SIGN != null && data_eval[i].INV_SIGN == null) {
+                            if (data_eval[i].SAACTIVE == 1) {
+                                var INVSIGN_BTN = document.createElement("button");
+                                INVSIGN_BTN.setAttribute("class", "btn btn-primary btn-sm");
+
+                                INVSIGN_BTN.setAttribute("id", "INVSIGN_BTN_" + data_eval[i].SAID);
+                                INVSIGN_BTN.setAttribute("onclick", "VIEW_CONCENT(id,0)");
+                                INVSIGN_BTN.appendChild(document.createTextNode("서명"));
+                                inv_signTD.appendChild(INVSIGN_BTN)
+                            }
+                            else {
+                                var noICON = document.createElement("i");
+                                noICON.setAttribute("class", "fas fa-times");
+                                noICON.setAttribute("style", "color: #6c757d; font-size:large;");
+                                inv_signTD.appendChild(noICON);
+
+                            }
+                        }
+                        else {
+
+
+                            var p_inv_signdtc = document.createElement("p");
+                            p_inv_signdtc.setAttribute("class", "p-0  m-0");
+                            p_inv_signdtc.innerText = data_eval[i].INV_SIGN;
+                            inv_signTD.appendChild(p_inv_signdtc);
+
+                            var INVSIGN_BTN = document.createElement("button");
+                            INVSIGN_BTN.setAttribute("class", "ml-3 btn btn-outline-danger btn-sm");
+
+                            INVSIGN_BTN.setAttribute("id", "INVSIGN_BTN_" + data_eval[i].SAID);
+                            INVSIGN_BTN.setAttribute("onclick", "VIEW_CONCENT(id,1)");
+                            INVSIGN_BTN.appendChild(document.createTextNode("재서명"));
+                            if (data_eval[i].SAACTIVE == 1) inv_signTD.appendChild(INVSIGN_BTN);
+
+
+
+
+                        }
+                        createTR.appendChild(inv_signTD);
+
+
+                    }
+
+                    table_source.push(createTR);
+
+                }
+
+                if (consent_table != null) consent_table.destroy();
+                $('#APPL_TABLE_BODY').empty();
+                //  $('#APPLS_TABLE').destory();
+                $('#APPL_TABLE_BODY').html(table_source);
+
+                CHECK_QNA();
+
+                // $('.selectpicker').on('focus', function (e) {
+                //     ismodify = true;
+                // })
+
+                // $('.selectpicker').on('blur', function (e) {
+                //     ismodify = false;
+                // })
+                // table = $('#APPLS_TABLE').DataTable({
+                //     'columns': COLUMN,
+                //     'order': [[1, 'asc']]
+                // });
+
+                consent_table = $('#APPLS_TABLE').DataTable({
+                    "aLengthMenu": [[10, 50, 100, -1], [10, 50, 100, "All"]],
+                    "iDisplayLength": setNumEntries,
+                    "columnDefs": [{
+                        // targets: [5,6, 7],
+                        // orderable: false
+                    }]
+                });
+                $('#APPLS_TABLE_length select').on('change', function () {
+                    setNumEntries = this.value;
+                    console.log(this.value + "-----------" + setNumEntries);
+                });
+                $('#APPLS_TABLE_filter input')[0].placeholder = "검색 단어 입력";
+                //     targets: [1],
+                //     render: function (data, type, full, meta) {
+                //         if (type === 'filter' || type === 'sort') {
+                //             var api = new $.fn.dataTable.Api(meta.settings);
+                //             var td = api.cell({ row: meta.row, column: meta.col }).node();
+                //            // var $input = $('select, input', td);
+                //             //if ($input.length && $input.is('select')) {
+                //             //    data = $('option:selected', $input).val();
+                //            // } else {
+                //                 data = $input.val();
+                //            // }
+                //         }
+
+                //         return data;
+                //     }
+                // }
+                // ]
+
+                // });
+
+            }
+        }
+        xhttp.open("POST", "./applicant.jsp?action=LOAD_CONSENT_APPLICANT&SID=" + SID + "&CONSENTID=" + CONSENTID, true);
+        xhttp.send();
+    }
+
+
+
+    // function SELECTED(id) {
+
+
+    //     if (lastValue>=8){
+    //         alert("변경하실 수 없습니다. 동의취소 및 선택취소 후에는 대상자가 참여신청을 다시 하여야합니다.");
+    //         $('#' + id).val(lastValue);
+    //         return;
+    //     }
+    //     var selectedvalue = $('#' + id + " option:selected").val();
+    //     var message_notchanged="동의취소 및 선택취소 후에는 대상자가 참여신청을 다시 하여야합니다.";
+    //     var message_confirm=" 변경하시겠습니까?";
+    //     var message=message_confirm;
+    //     if(selectedvalue>=8){
+    //         message=message_notchanged +message_confirm;
+    //     }
+    //     var r = confirm(message);
+    //     if (r == true) {
+    //         var SAID = id.split("_")[2];
+
+    //         CHANGE_STATUS(SAID, selectedvalue);
+    //         // console.log('Thing was saved to the database.');
+    //     } else {
+    //         // Do nothing!
+    //         $('#' + id).val(lastValue);
+    //         // console.log('confirm not '+lastValue);
+    //     }
+    // }
+
+
+
+    function now() {
+        let today = new Date();
+        let year = today.getFullYear(); // 년도
+        let month = today.getMonth() + 1;  // 월
+        let date = today.getDate();  // 날짜
+        let hours = today.getHours(); // 시
+        let minutes = today.getMinutes();  // 분
+
+        var NOW = year + "-" + month + "-" + date + " " + hours + ":" + minutes;
+        return NOW;
+    }
+
+
+    // function CLICK_IDENTITY() {
+    //     window.open("identity.html?SID=" + SID, "본인확인", 'location=no, directories=no, resizable=no, status=no, toolbar=no, menubar=no, location=no, width=1000, height=670, left=0, top=0, scrollbars=no');
+    // }
+    function SAVE_STARTDTC(id){
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data  = xhttp.responseText.trim();
+                console.log(data);
+                if(data=="4"){
+                  console.log("블록체인에 연결되어있습니다.");
+                  checkBCSTAGE(id);
+                }
+                else alert("블록체인에 연결되지 않았습니다.")
+                //  view_consent();
+                
+                // $.ajax({
+                //     type: 'post',
+                //     url: "appl_table.html",
+                //     dataType: 'html',
+                //     success: function (data) {
+                //         $(".content").html(data);
+                //     }
+                // })
+            }
+        }
+        xhttp.open("GET", "./applicant.jsp?action=GETBCSTAGE&SID=" + SID , true);
+        xhttp.send();
+
+
+    }
+    function checkBCSTAGE(id) {
+        console.log("checkBCSTAGE");
+     
+        var SAID = id.split("_")[2];
+        $('#spinnerModal').modal('show');
+        $('#spinnerModal').on('shown.bs.modal', function () {
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                var data  = xhttp.responseText.trim();
+                var data_parse= JSON.parse(data);
+                $('#spinnerModal').modal('hide');
+                if(data_parse.BCERROR==0){
+                        STARTDTC = data_parse.DTC;
+                        init_table();
+                }
+                else {
+                    alert("블록체인 저장이 안됐습니다. 관리자에게 문의하세요. "+data_parse.BCRESULT);
+                    console.log(data_parse.BCRESULT);
+                }
+                    //  view_consent();
+                    
+                    // $.ajax({
+                    //     type: 'post',
+                    //     url: "appl_table.html",
+                    //     dataType: 'html',
+                    //     success: function (data) {
+                    //         $(".content").html(data);
+                    //     }
+                    // })
+                }
+            }
+            xhttp.open("GET", "./applicant.jsp?action=START_EXPLAIN&SAID=" + SAID + "&SID=" + SID + "&CONSENTID=" + CONSENTID+"&COPTION="+contact_coption, true);
+            xhttp.send();
+        });
+    }
+
+    function SAVE_ENDDTC(id) {
+        
+        var SAID = id.split("_")[2];
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                //view_consent();
+                init_table();
+            }
+        }
+        xhttp.open("GET", "./applicant.jsp?action=END_EXPLAIN&SAID=" + SAID + "&SID=" + SID + "&CONSENTID=" + CONSENTID, true);
+        xhttp.send();
+    }
+
+    function request(id) {
+        var SAID = id.split("_")[2];
+        var nowdtc = now();
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var response = xhttp.responseText.trim();
+                console.log("response=" + response + "    SAID=" + SAID);
+
+                if (response == SAID) {
+                    // view_consent();
+                    // var td = document.getElementById("request_td_" + SAID);
+                    // td.innerHTML = "<p>" + nowdtc + "</p>";
+
+                    // var cancelBTN = document.createElement("button");
+                    // cancelBTN.setAttribute("class", "btn btn-outline-danger btn-sm");
+                    // cancelBTN.setAttribute("id", "request_cancel_modal_popup_btn");
+                    // cancelBTN.setAttribute("data-toggle", "modal");
+                    // cancelBTN.setAttribute("data-target", "#request_cancel_modal");
+                    // cancelBTN.setAttribute("data-id", SAID);
+                    // // cancelBTN.setAttribute("onclick", "request_cancel(id)");
+                    // cancelBTN.appendChild(document.createTextNode("취소"));
+                    // td.appendChild(cancelBTN);
+
+                    // var startTd = document.getElementById("start_td_" + SAID);
+                    // $('#start_td_' + SAID).empty();
+                    // var startBTN = document.createElement("button");
+                    // startBTN.setAttribute("class", "btn btn-outline-danger btn-sm");
+
+                    // startBTN.setAttribute("id", "START_BTN_" + SAID);
+                    // startBTN.setAttribute("onclick", "SAVE_STARTDTC(id)");
+                    // startBTN.appendChild(document.createTextNode("시작"));
+                    // startTd.appendChild(startBTN);
+                    init_table();
+
+                }
+                else console.log("에러: request");
+            }
+        }
+        xhttp.open("GET", "./applicant.jsp?action=add_request&SAID=" + SAID + "&SID=" + SID + "&CONSENTID=" + CONSENTID + "&NOWDTC=" + nowdtc, true);
+        xhttp.send();
+    }
+
+    // function request_cancel(id) {
+    //     var SAID = id.split("_")[3];
+    //     $('#request_cancel_modal').modal('show');
+
+    // }
+    function VIEW_CONCENT(id, flag) {
+
+        //  resignflag = (flag == 0) ? false : true;
+        Clock.start();
+       
+        // document.getElementById("inv_sign").value="" ;
+
+        var SAID = id.split("_")[2];
+        var CONSENTID = document.getElementById("consent_version_list").value;//get consentid
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                var data_eval = eval(data_pre);
+                var consent = data_eval[0];
+                var consent_detail = data_eval[1];
+                var subj_consent = data_eval[2];
+                console.log(consent);
+                console.log(consent_detail);
+
+                if (consent.BCSTAGE != 4) {
+            console.log("");
+            alert("블록체인 채널이 연결되지 않았습니다. 블록체인 관리자에게 문의하세요.");
+            return;
+        }
+        $('#view_consent_Modal').modal('show');
+
+                //document.getElementById("view_consent_tbody").clear();
+                $("#view_consent_tbody").empty();
+                $("#consent_TITLE").empty();
+                document.getElementById("inv_name").innerHTML = consent.INVNAME;
+                document.getElementById("inv_sign").innerHTML = consent.INVNAME;
+
+                document.getElementById("consent_TITLE").appendChild(document.createTextNode("동의서 버전" + consent.CVERSION));
+                for (var i = 0; i < consent_detail.length; i++) {
+
+                    var createTR = document.createElement("tr");
+                    createTR.setAttribute("id", "consent_" + consent_detail.length);
+
+                    var numTD = document.createElement("td");
+                    numTD.setAttribute("style", "text-align: center;");
+                    numTD.setAttribute("id", "consent_id_" + consent_detail[i].CDIDNUM);
+                    numTD.appendChild(document.createTextNode(consent_detail[i].CDTITLE));
+                    createTR.appendChild(numTD);
+
+
+                    // document.getElementById("extra_content_"+extra_content_count).value = (data_eval[i].CONTENT).split('<br/>').join('\r\n');
+
+
+                    var contentTD = document.createElement("td");
+                    contentTD.setAttribute("id", "consent_ver_" + consent_detail[i].CDIDNUM);
+                    contentTD.appendChild(document.createTextNode((consent_detail[i].CDCONTENT).split('<br/>').join('\r\n')));
+                    createTR.appendChild(contentTD);
+
+                    var selectionTD = document.createElement("td");
+                    selectionTD.setAttribute("style", "text-align: center;");
+                    var checkbox = document.createElement("INPUT");
+                    checkbox.setAttribute("type", "checkbox");
+
+                    checkbox.setAttribute("id", "CONSENT_CHECKBOX_" + consent_detail[i].CDIDNUM);
+                    checkbox.setAttribute("class", "consent_checkbox-checked");
+                    checkbox.setAttribute("value", consent_detail[i].CDIDNUM);
+                    checkbox.checked = true;
+                    checkbox.disabled = true;
+                    selectionTD.appendChild(checkbox);
+                    selectionTD.setAttribute("id", "CONSENTCHECKBOX_TD_" + consent_detail[i].CDIDNUM);
+
+                    createTR.appendChild(selectionTD);
+
+                    document.getElementById("view_consent_tbody").appendChild(createTR);
+
+
+                }
+                document.getElementById("subj_name").innerHTML = subj_consent.SIGN_NAME;
+                document.getElementById("subj_sign").innerHTML = subj_consent.SIGN_NAME;
+                document.getElementById("subj_sign").setAttribute("class", "mysign");
+                document.getElementById("subj_sign_time").innerHTML = subj_consent.SIGNDTC;
+
+                // document.getElementById("lar_name").innerHTML = subj_consent.LAR_SIGN_NAME;
+                // document.getElementById("lar_sign").innerHTML = subj_consent.LAR_SIGN;
+                // document.getElementById("lar_sign_time").innerHTML = subj_consent.LAR_SIGNDTC;
+
+                document.getElementsByClassName('consent-modal-footer')[0].getElementsByClassName('btn')[0].setAttribute("id", "sign_" + SAID);
+
+            }
+        }
+        xhttp.open("GET", "./applicant.jsp?action=VIEW_CONSENT&SAID=" + SAID + "&SID=" + SID + "&CONSENTID=" + CONSENTID);
+        xhttp.send();
+    }
+
+    function validate() {
+        var validation = true;
+
+        // if (document.getElementById("inv_name").value == "") {
+        //     //document.getElementById("subj_name").setAttribute("class", "was-validated");
+        //     document.getElementById("inv_name").setAttribute("class", "form-control  is-invalid ");
+        //     document.getElementById("inv_name").setAttribute("placeholder", "이름을 입력하여주세요 ");
+        //     validation = false;
+        // }
+        // else {
+        //     //document.getElementById("subj_name").setAttribute("class", "was-validated");
+        //     document.getElementById("inv_name").setAttribute("class", "form-control is-valid");
+        // }
+        // if (document.getElementById("inv_sign").value == "") {
+        //     //document.getElementById("subj_name").setAttribute("class", "was-validated");
+        //     document.getElementById("inv_sign").setAttribute("class", "form-control  is-invalid ");
+        //     document.getElementById("inv_sign").setAttribute("placeholder", "서명을 입력하여주세요 ");
+        //     validation = false;
+        // }
+        // else {
+        //     //document.getElementById("subj_name").setAttribute("class", "was-validated");
+        //     document.getElementById("inv_sign").setAttribute("class", "form-control is-valid");
+        // }
+
+        return validation;
+    }
+   
+    function SAVE_INV_SIGN(id) {
+
+        if (validate()) {
+
+
+            $('#view_consent_Modal').modal('hide');
+            var name = document.getElementById("inv_name").innerHTML;
+            var sign = document.getElementById("inv_sign").innerHTML;
+            var nowDTC = document.getElementById("inv_sign_time").innerHTML;
+            var CONSENTID = document.getElementById("consent_version_list").value;//get consentid
+            var saveToBlock = 0;
+
+            var SAID = id.split("_")[1];
+
+            var params = "action=INV_SIGN" +
+                "&SAID=" + escape(encodeURIComponent(SAID)) +
+                "&SID=" + escape(encodeURIComponent(SID)) +
+                "&CONSENTID=" + escape(encodeURIComponent(CONSENTID)) +
+                "&CSNAME=" + escape(encodeURIComponent(name), "UTF-8") +
+                "&CSSIGN=" + escape(encodeURIComponent(sign), "UTF-8") +
+                "&CSDTC=" + escape(encodeURIComponent(nowDTC), "UTF-8");
+
+            $('#spinnerModal').modal('show');
+            $('#spinnerModal').on('shown.bs.modal', function () {
+
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (this.readyState == this.DONE && this.status == 200) {
+                        var data_pre = xhttp.responseText.trim();
+                        var data_eval = eval(data_pre);
+                        $('#spinnerModal').modal('hide');
+                        var message =  (msg_arr.length==0)? "[임상연구 안내]\n" :msg_arr.AFTER_COUNTER_SIGN;
+                        console.log("data_eval.RESULT=" + data_eval.RESULT);
+                        if (data_eval[0].RESULT == "ok") {
+                            alert("블록체인에 저장되었습니다.");
+                            showMsgModal("invsign_" + data_eval[0].APPLPHONENUM + "_" + data_eval[0].APPLNAME, message);
+                        }
+                        else {
+                            alert("블록체인에 저장되지 않았습니다. 관리자에게 문의하여 주십시오.");
+                            console.log("data_pre=" + data_pre);
+
+                        }
+
+
+
+                    }
+
+                }
+                xhttp.open("POST", "./applicant.jsp", true);
+                xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                xhttp.send(params);
+            });
+
+
+
+        }
+    }
+  
+    //연구자 서명 취소
+    function confirm_cancel_request(id) {
+        var SAID = id;
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var response = xhttp.responseText.trim();
+                console.log("response=" + response + "    SAID=" + SAID);
+
+                if (response == SAID) {
+                    var td = document.getElementById("request_td_" + SAID);
+
+                    $('#request_td_' + SAID).empty();
+                    var BTN = document.createElement("button");
+                    BTN.setAttribute("class", "btn btn-outline-danger btn-sm");
+                    BTN.setAttribute("id", "REQUEST_BTN_" + SAID);
+                    BTN.setAttribute("onclick", "request(id)");
+                    BTN.appendChild(document.createTextNode("요청"));
+                    td.appendChild(BTN);
+                    var startTd = document.getElementById("start_td_" + SAID);
+                    $('#start_td_' + SAID).empty();
+                    var noICON = document.createElement("i");
+                    noICON.setAttribute("class", "fas fa-times");
+                    noICON.setAttribute("style", "color: #6c757d; font-size:large;");
+                    startTd.appendChild(noICON);
+
+
+                }
+                else console.log("에러: request");
+            }
+        }
+        xhttp.open("GET", "./applicant.jsp?action=cancel_request&SAID=" + SAID + "&SID=" + SID + "&CONSENTID=" + CONSENTID + "&CONTACT_COPTION=" + contact_coption + "&INV_SIGN_COPTION=" + inv_sign_coption, true);
+        xhttp.send();
+    }
+
+    function confirm_cancel_start(id) {
+        alert(id);
+        var SAID = id;
+        $('#start_cancel_modal').modal('hide');
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var response = xhttp.responseText.trim();
+                console.log("response=" + response + "    SAID=" + SAID);
+                //  view_consent();
+                init_table();
+            }
+        }
+        xhttp.open("GET", "./applicant.jsp?action=cancel_start&SAID=" + SAID + "&SID=" + SID + "&CONSENTID=" + CONSENTID + "&CONTACT_COPTION=" + contact_coption, true);
+        xhttp.send();
+    }
+    function confirm_cancel_end(id) {
+        var SAID = id;
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var response = xhttp.responseText.trim();
+                console.log("종료 response=" + response + "    SAID=" + SAID);
+                // view_consent();
+                init_table();
+            }
+        }
+        xhttp.open("GET", "./applicant.jsp?action=cancel_end&SAID=" + SAID + "&SID=" + SID + "&CONSENTID=" + CONSENTID + "&CONTACT_COPTION=" + contact_coption, true);
+        xhttp.send();
+    }
+    function confirm_cancel_sign(id) {
+        var SAID = id;
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var response = xhttp.responseText.trim();
+                console.log("response=" + response + "    SAID=" + SAID);
+
+                init_table();
+            }
+        }
+        xhttp.open("GET", "./applicant.jsp?action=cancel_sign&SAID=" + SAID + "&SID=" + SID + "&CONSENTID=" + CONSENTID + "&CONTACT_COPTION=" + contact_coption, true);
+        xhttp.send();
+    }
+    function confirm_cancel_invsign(id) {
+        var SAID = id;
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var response = xhttp.responseText.trim();
+                console.log("response=" + response + "    SAID=" + SAID);
+
+                init_table();
+            }
+        }
+        xhttp.open("GET", "./applicant.jsp?action=cancel_invsign&SAID=" + SAID + "&SID=" + SID + "&CONSENTID=" + CONSENTID, true);
+        xhttp.send();
+    }
+</script>
+
+<div class="mt-4 pt-3 mb-0 pb-0 d-flex justify-content-end">
+    <h5 class="myinfo "> ※ 아래 테이블의 모든 데이터를 검색할 수 있습니다. </h5>
+</div>
+
+
+<div class="table-responsive" id="modifyBTNDIV">
+    <table class="table w-100 bg-white consent_table" id="APPLS_TABLE"
+        style="text-align: center; table-layout:fixed; min-width: 850px;">
+        <thead>
+            <tr id="APPL_TABLE_HEAD_TR">
+                <th id="NUMTH" width="60px">번호</th>
+                <!-- <th id="status_th" width="120px">상태</th> -->
+                <th id="NAMETH" width="100px">이름</th>
+                <th id="bday_th" width="80px">생년월일</th>
+                <!-- <th id="consent_th" width="140px">동의서</th> -->
+
+            </tr>
+        </thead>
+        <tbody id="APPL_TABLE_BODY"></tbody>
+    </table>
+</div>
+<div class="modal fade " tabindex="-1" role="dialog" id="spinnerModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content" style="height: 300px; vertical-align: middle; text-align: center;">
+            <h4 class="w-100 mt-5">블록체인에 저장중입니다. 잠시만 기다려주세요.</h4>
+            <div class="modal-body d-flex justify-content-center">
+
+                <div class="overlay lds-dual-ring " id="loading-image"></div>
+
+            </div>
+
+        </div>
+    </div>
+</div>

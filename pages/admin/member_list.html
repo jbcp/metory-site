@@ -1,0 +1,79 @@
+
+<script type="text/javascript">
+    var members;
+    var roles;
+    $(document).ready(function(){
+
+        localStorage.removeItem("MODIFY_INVID");
+        localStorage.removeItem("MODIFY_ROLEID");
+   
+       
+        load_role();
+        sleep(500).then(() => {//사용자 관리 테이블에 권한 드랍다운을 읽기 위해 load_role 을 먼저 읽고 얼마 지나야한다.    
+            load_mem();
+        });
+        if(localStorage.getItem('page')=='role'){
+            console.log("localstorage is role")
+            $('#role-tab').trigger('click');
+            localStorage.removeItem('page');
+        }
+       
+      
+    })
+
+    function load_mem(){
+        $.ajax({
+            type: 'post',
+            url : "member.html",
+            dataType: 'html',
+            success: function(data){
+                $("#member").html(data);
+            }
+        })
+    }   
+
+    function load_role(){
+        $.ajax({
+            type: 'post',
+            url : "role.html",
+            dataType: 'html',
+            success: function(data){
+                $("#role").html(data);
+            }
+        })
+    } 
+    function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+</script>
+<div class="mt-1  w-100">
+    <nav aria-label="breadcrumb" class= " bg-white">
+        <ol class="breadcrumb" style="background-color:transparent; margin-bottom:0rem;">
+          <!-- <li class="breadcrumb-item  primary-color "><a href="./../index.html">Home</a></li>             -->
+          <li class="breadcrumb-item active" aria-current="page">관리자</li>
+          <li class="breadcrumb-item " aria-current="page"></li>
+        </ol>           
+      </nav>
+</div>
+
+<div class="card">
+    <div class="card-body" id="tabs">
+        <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="member-tab" data-toggle="tab" href="#member" role="tab" aria-controls="member" aria-selected="true">사용자</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="role-tab" data-toggle="tab" href="#role" role="tab" aria-controls="role" aria-selected="false">그룹별 사용권한</a>
+            </li>
+        </ul>
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="member" role="tabpanel" aria-labelledby="member-tab" style="border-color: gray;">
+            </div>
+            <div class="tab-pane fade" id="role" role="tabpanel" aria-labelledby="role-tab">
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+  

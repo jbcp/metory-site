@@ -1,0 +1,1896 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+    <link rel="stylesheet" href="../../assets/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../assets/css/app.css">
+    <link rel="stylesheet" href="../../assets/css/modern.css">
+
+    <link rel="stylesheet" type="text/css" href="../../assets/lib/DataTables/datatables.min.css" />
+    <link rel="stylesheet" href="../../assets/css/custom.css">
+    <link rel="stylesheet" type="text/css" href="../../assets/lib/font-awesome/css/all.css">
+    <script src="../../assets/lib/jquery/jquery.min.js" type="text/javascript"></script>
+    <script type="text/javascript" language="javascript" src="../../assets/js/sha256.min.js"></script>
+    <title>METORY (연구자용)</title>
+
+    <script type="text/javascript">
+
+        var SID;
+        var PRTNO;
+        ///////////동의서 정보////////////
+        var CONSENTID;
+        var contact_coption = 0;
+        var inv_sign_coption = 0;
+        ////////// 연구에 참여하는 참여자의 권한 /////////////////
+        var ROLE_RESERVE = 0;
+        var ROLE_IDENTITY = 0;
+        var ROLE_CONSENT = 0;
+        var ROLE_SIGN = 0;
+        ////////////////////////////////////
+        var SAID_CLICKED;//QNA 사용
+        var APPLNAME_CLICKED;//QNA 사용
+        // var APPLVISIT_CLICKED;
+        var intervals = [];;//QNA 사용
+        var ismodify = false;//QNA 사용
+        var HIGHLIGHTED_SAID = 0; // appointment 에서 본인확인후 하이라이트된 said 저장하기위해 사용.
+        var USE_APPOINTMENT = 0;
+        var lastValue;
+        /////////////////init_table interval////////
+        var init_table_intervals = [];;//init_table
+
+        //  var table;
+        var SASTAGE_ARR = ["신청", "예약", "본인확인", "스크리닝", "선정", "연구종료", "탈락", "동의철회", "신청취소"];
+
+        var msg_arr = [];
+
+        $(document).ready(function () {
+            SID = localStorage.getItem("study_SID");
+            // var MEMBERROLE;
+            $('#navbar').load(getContextPath() + '/pages/navbar.html').ready(function () {
+                $('.main').css('padding-top', $('.navbar').outerHeight());
+            });
+            $('#footer').load('../footer.html');
+
+
+            // $.ajax({
+            // type: 'GET',
+            // url: "../asset/message/sms_message.json",
+            // dataType: 'json',
+            // success: function(data) { 
+            //     console.log(data);
+            //     msg_arr = data;},
+            // async: false
+            // });
+
+
+
+            $.ajax({
+                type: 'post',
+                url: "../study/study_info_view.html",
+                dataType: 'html',
+                success: function (data) {
+                    console.log("success");
+                    $(".title").html(data);
+                }
+            });
+            //          console.log(PRTNO)
+            //document.getElementById("prtno_bread").innerText=PRTNO;
+
+
+
+            //연구 참여자 role 읽기
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttp.responseText.trim();
+                    var data_eval = eval(data_pre);
+
+                    ROLE_RESERVE = data_eval[0].SIRESERVE;
+                    ROLE_IDENTITY = data_eval[0].SIIDENTITY;
+                    ROLE_CONSENT = data_eval[0].SICONSENT;
+                    ROLE_SIGN = data_eval[0].SISIGN;
+                    var STUDYADMIN = data_eval[0].STUDYADMIN;
+                    var show_page_number = 0;
+
+                    // console.log("ROLE_RESERVE=" + ROLE_IDENTITY + "  ROLE_IDENTITY=" + ROLE_IDENTITY + "  ROLE_CONSENT=" + ROLE_CONSENT + "  ROLE_SIGN=" + ROLE_SIGN);
+
+                    if (ROLE_CONSENT == "1" || ROLE_SIGN == "1" || STUDYADMIN == "1") {
+                        show_page_number = show_page_number + 3;
+
+                    }
+                    else $('#consent_btn').hide();
+
+                    if (ROLE_RESERVE == "1" || ROLE_IDENTITY == "1" || STUDYADMIN == "1") {
+                        show_page_number = show_page_number + 1;
+                    }
+                    else {
+                        $('#appointment_btn').hide();
+                    }
+
+                    // view_appointment();
+
+                    // if (show_page_number >= 3) view_consent();
+                    // else if (show_page_number == 1 ) view_appointment();
+                    //else view_dashboard();
+                    view_dashboard();
+
+
+                }
+            }
+            xhttp.open("GET", "../study/study.jsp?action=LOAD_STUDY_ROLE&SID=" + SID, true);
+            xhttp.send();
+         //   getAppointFix();
+
+            // var xhttps = new XMLHttpRequest();
+            // xhttps.onreadystatechange = function () {
+            //     if (this.readyState == this.DONE && this.status == 200) {
+            //         var data_pre = xhttps.responseText.trim();
+            //         //  var div = document.getElementById("appoint_fix_list");
+            //         var data_eval = eval(data_pre);
+            //         console.log(data_pre);
+            //         console.log(data_eval);
+            //         // console.log(data_eval[0].USE_APPOINTMENT + "dddd   ");
+
+
+
+            //         // // if(data_eval[0].USE_APPOINTMENT) {
+            //         // USE_APPOINTMENT = data_eval[0].USE_APPOINTMENT;
+            //         // if (USE_APPOINTMENT == 0) $('#appointment_btn').hide();
+            //         // else getAppointFix();
+            //         // // }
+
+            //     }
+            // }
+            // xhttps.open("GET", "../study/study.jsp?action=LOAD_STUDY_INFO&SID=" + SID);
+            // xhttps.send();
+
+
+            $('#qnaModal').on('hidden.bs.modal', function () {
+                clearInterval(intervals[SAID_CLICKED]);
+                intervals[SAID_CLICKED] = null;
+                ismodify = false;
+                console.log("close")
+            });
+
+
+
+
+            $('#msgModal').on('hidden.bs.modal', function () {
+                console.log("====" + document.getElementById("sms_type").value);
+                if (document.getElementById("sms_type").value == "inv_sign") view_consent();
+
+                // else location.reload();
+            });
+
+
+            $('#newSubjectModal').on('show.bs.modal', function () {
+
+
+                $.ajax({
+                    type: 'post',
+                    url: "./add_subject.html",
+                    dataType: 'html',
+                    success: function (data) {
+                        // console.log("success");
+                        $("#newSubjectModal_body").html(data);
+                    }
+                });
+            })
+            //          $('#newSubjectModal').on('hidden.bs.modal', function () {
+            //            document.getElementById("applicant_name").value="";
+            //    document.getElementById("applicant_birth").value="";
+            //    //$('input[name=genderRadio]:checked').val()=1;
+            //      document.getElementById("applicant_mail").value="";
+            //      document.getElementById("applicant_phone").value="";
+            //     document.getElementById("APPLPASSWORD").value="";
+
+            //            console.log("clear");
+            //         })
+
+
+
+
+
+
+            // var email_check_btn = document.getElementById("email_check_btn");
+            // var checker = document.getElementById('passcheck');
+
+            // checker.onchange = function () {
+            //     email_check_btn.disabled = !this.checked;
+            // };
+
+
+            // $('#checker').onclick(function () {
+            //     if ($(this).is(':checked')) {
+            //         email_check_btn.disabled = false;
+            //     } else {
+            //         email_check_btn.disabled = true;
+            //     }
+            // });
+
+
+
+            readJson();
+        });//document.ready close
+
+
+        //var url= "http://localhost:8080/site/asset/message/sms_message.json";
+        var url = "../../assets/message/sms_message.json";
+        function readJson() {
+            console.log(url)
+            // http://localhost:8080
+            fetch(url).then(response => {
+                return response.json();
+            }).then(data => {  // Work with JSON data here 
+                msg_arr = data;
+                //console.log(msg_arr.BASIC);
+            }).catch(err => {
+                // Do something for an error here
+            });
+        }
+
+
+
+        function getAge(birthday) {
+            const today = new Date();
+            const birthDate = new Date(birthday); // 2000년 8월 10일
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        }
+
+        // function getAppointFix() {
+        //     var xhttps = new XMLHttpRequest();
+        //     xhttps.onreadystatechange = function () {
+        //         if (this.readyState == this.DONE && this.status == 200) {
+        //             var data_pre = xhttps.responseText.trim();
+        //             var div = document.getElementById("appoint_fix_list");
+        //             var data_eval = eval(data_pre);
+        //             appoint_fix_arr = data_eval;
+        //             if (data_eval.length > 0) {
+        //                 var title = document.createElement("h4");
+        //                 title.innerText = "설정된 방문일"
+        //                 div.appendChild(title);
+        //             }
+
+        //             var ul = document.createElement("ul");
+        //             div.appendChild(ul);
+        //             for (var i = 0; i < data_eval.length; i++) {
+        //                 var li = document.createElement("li");
+        //                 ul.appendChild(li);
+        //                 li.innerText = data_eval[i].DATE + "  " + getDay(data_eval[i].AFDAY) + "   " + data_eval[i].TIME;
+        //             }
+
+        //         }
+        //     }
+        //     xhttps.open("GET", "../study/study.jsp?action=LOAD_APPOINT_FIX&SID=" + SID);
+        //     xhttps.send();
+        // }
+
+        function CHECK_IDENTITY(said_appointid) {//방문시    
+            //console.log("본인확인 appointid=" + applicant.APPOINTID);
+            $('#identityModal').modal('hide');
+            var SAID = said_appointid.split("_")[0];
+
+            var APPOINTID = said_appointid.split("_")[1];
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+
+                    var data = xhttp.responseText.trim();
+                    console.log("data" + data);
+
+                    //입력된 값이 날짜로 변경되는지 체크하여 변경되면 모달에 값을 지정해준다.
+                    var timestamp = Date.parse(data);
+
+
+                    if (isNaN(timestamp) == false) {  //날짜로 변경됨
+                        alert("방문 확인되었습니다.");
+                    } else {
+                        alert("방문확인이 되지 않았습니다.\n관리자에게 문의하세요");
+                    }
+
+
+                    
+                      // var visitdtc_btn = document.createElement("button");
+                      var visitICON = document.createElement("i");
+                        visitICON.setAttribute("class", "fas fa-check ");
+                        visitICON.setAttribute("style", "color: #28a745; font-size:large;  cursor:pointer;");
+                        // identityTD.appendChild(visitdtc_btn);
+                        visitICON.setAttribute("data-toggle", "tooltip");
+                        visitICON.setAttribute("title", data);
+                       // document.getElementById("CONFIRM_VISIT_" + SAID).remove(); 
+                         document.getElementById("CONFIRM_VISIT_" + SAID).innerHTML="";
+                         document.getElementById("CONFIRM_VISIT_" + SAID).appendChild(visitICON); 
+
+                    document.getElementById("qr_input").value = "";
+                    document.getElementById("qr_input").focus();
+                    if (HIGHLIGHTED_SAID > 0) document.getElementById("TR_" + HIGHLIGHTED_SAID).setAttribute("class", ""); //3960211981
+                    document.getElementById("TR_" + SAID).setAttribute("class", "my-row-highlight");
+                    HIGHLIGHTED_SAID = SAID;
+
+
+                }
+            }
+            //xhttp.open("GET", "./qrcode.jsp?action=identity&SAID=" + applicant.SAI"&SID="+SID+"&APPLID="+applicant.APPLID+"&CONSENTID="+CONSENTID+"&APPOINTID="+appointid, true);
+            xhttp.open("GET", "./qrcode.jsp?action=identity&SAID=" + SAID + "&APPOINTID=" + APPOINTID + "&SID=" + SID, true);
+            xhttp.send();
+        }
+        // var passcheckbox=document.getElementByID("defaultChecked2");
+        //     var email_check_btn=document.getElementByID("email_check_btn");
+        //     passcheckbox.addEventListener('change', (event) => {
+        //         if (event.target.checked) {
+        //             email_check_btn.disabled=false;
+        //         } else {
+        //             email_check_btn.disabled=true;
+        //         }
+        //     });
+
+        function SAVEPASS(said_applid_appointid) {
+            var result = window.confirm("신분증을 확인하셨습니까?");
+            if (result) {
+                $('#passModal').modal('hide');
+                var SAID = said_applid_appointid.split("_")[0];
+                var APPLID = said_applid_appointid.split("_")[1];
+                var APPOINTID = said_applid_appointid.split("_")[2];
+                var xhttp = new XMLHttpRequest();
+                //console.log(said_applid_appointid);
+                xhttp.onreadystatechange = function () {
+
+                    if (this.readyState == this.DONE && this.status == 200) {
+
+
+
+                        var data = xhttp.responseText.trim();
+                        console.log("data" + data);
+
+                        //입력된 값이 날짜로 변경되는지 체크하여 변경되면 모달에 값을 지정해준다.
+                        var timestamp = Date.parse(data);
+
+
+                        if (isNaN(timestamp) == false) {  //날짜로 변경됨
+                            alert("신분 및 방문 확인되었습니다.");
+                        } else {
+                            alert("신분 및 방문확인이 되지 않았습니다.\n관리자에게 문의하세요");
+                        }
+
+                        // document.getElementById("CONFIRM_VISIT_" + SAID).innerHTML = data;
+                        // document.getElementById("qr_input").value = "";
+                        // document.getElementById("qr_input").focus();
+                        // if (HIGHLIGHTED_SAID > 0) document.getElementById("TR_" + HIGHLIGHTED_SAID).setAttribute("class", ""); //3960211981
+                        // document.getElementById("TR_" + SAID).setAttribute("class", "my-row-highlight");
+                        // HIGHLIGHTED_SAID = SAID;
+
+                        var visitICON = document.createElement("i");
+                        visitICON.setAttribute("class", "fas fa-check ");
+                        visitICON.setAttribute("style", "color: #28a745; font-size:large;  cursor:pointer;");
+                        // identityTD.appendChild(visitdtc_btn);
+                        visitICON.setAttribute("data-toggle", "tooltip");
+                        visitICON.setAttribute("title", data);
+                       // document.getElementById("CONFIRM_VISIT_" + SAID).remove(); 
+                         document.getElementById("CONFIRM_VISIT_" + SAID).innerHTML="";
+                         document.getElementById("CONFIRM_VISIT_" + SAID).appendChild(visitICON); 
+
+                    document.getElementById("qr_input").value = "";
+                    document.getElementById("qr_input").focus();
+                    if (HIGHLIGHTED_SAID > 0) document.getElementById("TR_" + HIGHLIGHTED_SAID).setAttribute("class", ""); //3960211981
+                    document.getElementById("TR_" + SAID).setAttribute("class", "my-row-highlight");
+                    HIGHLIGHTED_SAID = SAID;
+
+
+
+                    }
+                }
+                xhttp.open("GET", "./qrcode.jsp?action=save_pass&APPLID=" + APPLID + "&SAID=" + SAID + "&APPOINTID=" + APPOINTID + "&SID=" + SID); // APPLID, SAID, QRCODE
+                xhttp.send();
+            }
+
+        }
+
+        function getDay(AFDAY) {
+            var day = "";
+            switch (AFDAY) {
+                case 0: day = "일요일"; break;
+                case 1: day = "월요일"; break;
+                case 2: day = "화요일"; break;
+                case 3: day = "수요일"; break;
+                case 4: day = "목요일"; break;
+                case 5: day = "금요일"; break;
+                case 6: day = "토요일"; break;
+            }
+            return "(" + day + ")";
+        }
+        function getContextPath() {
+            var hostIndex = location.href.indexOf(location.host) + location.host.length;
+            // return location.href.substring(hostIndex, location.href.indexOf('/', hostIndex + 1));
+            return location.origin;
+        }
+        function view_dashboard() {
+            setMenuBTN_CLICKED(1);
+            clearInterval(init_table_intervals[2]); //1은 대시보드, 2는 동의서 init_table interval
+            init_table_intervals[2] = null;
+            // ismodify = false;
+
+
+            console.log("////dashboard");
+            $.ajax({
+                type: 'post',
+                url: "dashboard.html",
+                dataType: 'html',
+                success: function (data) {
+                    $(".mycontent").html(data);
+                }
+            })
+            console.log("=====================>풀어주세요 init_table in applicants.html view_dashboard()");
+            // init_table_intervals[1] = setInterval(function () {
+            //     if (!ismodify) {
+            //         init_table();
+
+
+            //     }
+            // }, 10000)
+
+        }
+
+        function setMenuBTN_CLICKED(whichone) {
+            switch (whichone) {
+                case 1:
+                    document.getElementById("dashboard_btn").setAttribute("class", "btn btn-primary m-2");
+                    document.getElementById("appointment_btn").setAttribute("class", " btn-outline-primary btn m-2");
+                    document.getElementById("consent_btn").setAttribute("class", "btn  btn-outline-primary m-2");
+                    break;
+                case 2:
+                    document.getElementById("dashboard_btn").setAttribute("class", "btn btn-outline-primary  m-2");
+                    document.getElementById("appointment_btn").setAttribute("class", "btn-primary btn m-2");
+                    document.getElementById("consent_btn").setAttribute("class", "btn  btn-outline-primary m-2");
+                    break;
+                case 3:
+                    document.getElementById("dashboard_btn").setAttribute("class", "btn  btn-outline-primary m-2");
+                    document.getElementById("appointment_btn").setAttribute("class", "btn-outline-primary btn m-2");
+                    document.getElementById("consent_btn").setAttribute("class", "btn btn-primary m-2");
+                    break;
+                default:
+                    document.getElementById("dashboard_btn").setAttribute("class", "btn btn-primary m-2");
+                    document.getElementById("appointment_btn").setAttribute("class", " btn-outline-primary btn m-2");
+                    document.getElementById("consent_btn").setAttribute("class", "btn  btn-outline-primary m-2");
+                    break;
+            }
+        }
+        function view_appointment() {
+            setMenuBTN_CLICKED(2);
+            clearInterval(init_table_intervals[1]);
+            init_table_intervals[1] = null;
+            //   ismodify = false;
+            clearInterval(init_table_intervals[2]);
+            init_table_intervals[2] = null;
+
+
+            console.log("////예약");
+            $.ajax({
+                type: 'post',
+                url: "appointments.html",
+                dataType: 'html',
+                success: function (data) {
+                    $(".mycontent").html(data);
+                }
+            })
+        }
+        function view_consent() {
+            setMenuBTN_CLICKED(3);
+            clearInterval(init_table_intervals[1]);
+            init_table_intervals[1] = null;
+            // ismodify = false;
+
+            console.log("////동의서");
+            $.ajax({
+                type: 'post',
+                url: "consents.html",
+                dataType: 'html',
+                success: function (data) {
+                    $(".mycontent").html(data);
+                }
+            })
+            console.log(" applicants.html view_consent()  10초마다 새로고침 막음.")
+            // init_table_intervals[2] = setInterval(function () {
+            //     if (!ismodify) {
+            //         init_table();
+
+
+            //     }
+            // }, 10000)
+        }
+        // function close_modal() {
+        //     console.log("close");
+
+        //     $('.modal').modal('hide');
+        //     $('.modal-backdrop').remove();
+
+        // }
+
+        function CHECK_QNA() {
+            console.log("CHECK_QNA")
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttp.responseText.trim();
+                    var data_eval = eval(data_pre);
+                    for (var i = 0; i < data_eval.length; i++) {
+
+                        //if ((document.getElementById("accordion_" + data_eval[i].SAID)) != null) {
+                        var qna_ICON = document.getElementsByName("qnaICON_" + data_eval[i].SAID)[0];
+                        console.log("cgecj_qna said=" + data_eval[i].SAID);
+                        qna_ICON.setAttribute("class", "fas fa-comment-dots ml-1")
+                        qna_ICON.setAttribute("style", "cursor:pointer; color:#ffc107; font-size:20px");
+                        //}
+                    }
+                }
+            }
+            xhttp.open("GET", "./applicant.jsp?action=CHECK_QNA&SID=" + SID + "&CONSENTID=" + CONSENTID, true);
+            xhttp.send();
+        }
+        function SHOW_QNA(id) {
+            ismodify = true;
+            SAID_CLICKED = id.split("_")[1];
+            APPLNAME_CLICKED = id.split("_")[2];
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    console.log("update_flag");
+                    document.getElementById(id).setAttribute("class", "far fa-comment-dots ml-1");
+                    document.getElementById(id).setAttribute("style", "cursor:pointer; font-size:20px;");
+                }
+            }
+            xhttp.open("GET", "./applicant.jsp?action=UPDATE_READ_FLAG&SAID=" + SAID_CLICKED);
+            xhttp.send();
+
+            $('#qna_body').html(format());
+            $('#qnaTITLE').empty();
+            document.getElementById("qnaTITLE").appendChild(document.createTextNode(APPLNAME_CLICKED + " Q&A"));
+
+            setTimeout(function () {
+                load_memo(SAID_CLICKED, APPLNAME_CLICKED);
+            }, 200);
+            intervals[SAID_CLICKED] = setInterval(function () {
+                load_memo(SAID_CLICKED, APPLNAME_CLICKED);
+            }, 10000);
+
+            $('#qnaModal').modal('show');
+
+            //
+        }
+
+
+        function load_memo(SAID, APPLNAME) {
+            clear_memo_div(SAID);
+            var xhttp1 = new XMLHttpRequest();
+            xhttp1.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttp1.responseText.trim();
+                    var data_eval = eval(data_pre);
+                    for (var i = 0; i < data_eval.length; i++) {
+                        var memo_info = new Object();
+                        memo_info.MYMEMO = data_eval[i].MYMEMO;
+                        if (data_eval[i].MYMEMO == "true") memo_info.NAME = data_eval[i].INVNAME;
+                        else memo_info.NAME = APPLNAME;
+                        memo_info.QNADTC = data_eval[i].QNADTC;
+                        memo_info.QNACONTENT = data_eval[i].QNACONTENT;
+
+                        add_memo_div(memo_info, SAID);
+                    }
+                }
+            }
+            xhttp1.open("GET", "./applicant.jsp?action=LOAD_CONSENT_QNA&SID=" + SID + "&SAID=" + SAID, true);
+            xhttp1.send();
+        }
+
+        function clear_memo_div(SAID) {
+            $('#memo_div_' + SAID).empty();
+        }
+
+        function add_memo_div(d, SAID) {
+            var memo_content_div = document.getElementById("memo_div_" + SAID);
+            var memo_input_div = document.getElementById("memo_input_div_" + SAID);
+
+            var createDiv = document.createElement("div");
+            if (d.MYMEMO == "false") {
+                createDiv.setAttribute("class", "card card-body p-1 mb-2");
+                createDiv.setAttribute("style", "display:inline-table; min-height:fit-content; max-height:fit-content; max-width:fit-content; border-radius:0px")
+            }
+            else if (d.MYMEMO == "true") {
+                createDiv.setAttribute("class", "card card-body p-1 mb-2 ml-auto");
+                createDiv.setAttribute("style", "display:inline-table; text-align:right; min-height:fit-content; max-height:fit-content; max-width:fit-content; border-radius:0px; background-color:rgb(255,234,167)")
+            }
+            memo_content_div.appendChild(createDiv);
+
+            if (d.MYMEMO == "false") {
+                var timeP = document.createElement("p");
+                timeP.setAttribute("class", "text m-1");
+                timeP.setAttribute("style", "font-size: 10px;");
+                timeP.appendChild(document.createTextNode("  " + d.NAME));
+                var nameSPAN = document.createElement("span");
+                nameSPAN.setAttribute("class", "text m-1");
+                nameSPAN.setAttribute("style", "font-size: 10px;");
+                nameSPAN.appendChild(document.createTextNode(d.QNADTC));
+            }
+            else if (d.MYMEMO == "true") {
+                var timeP = document.createElement("p");
+                timeP.setAttribute("class", "text m-1");
+                timeP.setAttribute("style", "font-size: 10px;");
+                timeP.appendChild(document.createTextNode("  " + d.QNADTC));
+                var nameSPAN = document.createElement("span");
+                nameSPAN.setAttribute("class", "text m-1");
+                nameSPAN.setAttribute("style", "font-size: 10px;");
+                nameSPAN.appendChild(document.createTextNode(d.NAME));
+            }
+
+            timeP.appendChild(nameSPAN);
+
+            var memoP = document.createElement("p");
+            memoP.setAttribute("class", "text m-1");
+            memoP.setAttribute("style", "font-size:15px;");
+            memoP.appendChild(document.createTextNode(d.QNACONTENT));
+            createDiv.appendChild(memoP);
+            createDiv.appendChild(timeP);
+            $("#memo_div_" + SAID).scrollTop($("#memo_div_" + SAID).prop("scrollHeight"));
+        }
+
+        function ADD_MEMO(id, from = "list", status_text = "") {
+            var SAID = id.split("_")[2];
+            console.log(id);
+            var memo_content = document.getElementById("listmemo_content_" + SAID).value;
+
+            if (memo_content != "") {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (this.readyState == this.DONE && this.status == 200) {
+                        var data = JSON.parse(xhttp.responseText.trim());
+                        document.getElementById("listmemo_content_" + SAID).value = "";
+                        var memo_info = new Object();
+                        memo_info.MYMEMO = "true";
+                        memo_info.NAME = data.INVNAME;
+                        memo_info.QNADTC = data.today;
+                        memo_info.QNACONTENT = memo_content;
+                        add_memo_div(memo_info, SAID);
+
+                    }
+                }
+                xhttp.open("GET", "./applicant.jsp?action=ADD_QNA&SAID=" + SAID + "&memo=" + memo_content);
+                xhttp.send();
+            }
+            //else alert("메모 내용을 입력해주세요.");
+        }
+        function format() {
+            return '<div>' +
+                '<div id="memo_flex_' + SAID_CLICKED + '" style="text-align:left;">' +
+                '<div id="memo_div_' + SAID_CLICKED + '" class="card card-body mb-0 border" style="height: 500px; border-radius:0px; text-align:left; min-width:500px; overflow-y:scroll; border-bottom:transparent !important;">' +
+                '</div>' +
+                '<div id="memo_input_div_' + SAID_CLICKED + '" class="input-group" style="min-width:500px">' +
+                '<textarea class="form-control form-control-sm" rows="3" type="text" placeholder = "대답을 입력하세요." aria-describedby="add_memo_' + SAID_CLICKED + '" id="listmemo_content_' + SAID_CLICKED + '" style="border-radius:0px; resize:none"></textarea>' +
+                '<div class="input-group-append">' +
+                '<button class="btn btn-primary btn-lg p-3" type="button" id="add_memo_' + SAID_CLICKED + '" style="border-radius:0px; font-weight:bold;" onclick="ADD_MEMO(id);">등록</button>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>'
+        }
+
+
+
+        function SHOW_REQUEST_LIST_BTN_CLICKED() {
+            console.log("SHOW_REQUEST_LIST_BTN_CLICKED");
+            //  document.getElementById("on_request_list_Modal").getElementsByTagNameNS.getElementsByTagName("c");
+            var all = document.getElementById("on_request_list_Modal").querySelectorAll('input[type=checkbox]')[0];
+            all.checked = false;
+            $("#on_request_tbody tr").remove();
+
+            // $("#on_request_list_Modal checkbox").attr("checked", false);
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttp.responseText.trim();
+                    var data_eval = eval(data_pre);
+                    console.log("data_eval.length == 0" + data_eval.length);
+                    if (data_eval.length == 0) {
+                        //var tbody= $('#on_request_list_Modal .modal-body');
+                        var createTR = document.createElement("tr");
+                        var createTD = document.createElement("td");
+                        createTD.setAttribute("colspan", 4);
+                        createTD.innerText = "요청을 신청한 대상자가 없습니다.";
+                        createTR.appendChild(createTD);
+                        document.getElementById("on_request_tbody").appendChild(createTR);
+                        document.getElementById("on_request_list_Modal").getElementsByClassName("btn-primary")[0].disabled = true;
+                        // $('#on_request_tbody .btn-primary').prop('disabled', true);
+                        return;
+
+                    }
+                    else {
+
+                        document.getElementById("on_request_list_Modal").getElementsByClassName("btn-primary")[0].disabled = false;
+                    }
+                    for (var i = 0; i < data_eval.length; i++) {
+                        //번호 
+
+                        var createTR = document.createElement("tr");
+                        //createTR.setAttribute("id", "consent_" + consent_detail.length);
+
+                        var numTD = document.createElement("td");
+                        // numTD.setAttribute("style", "text-align: center;");
+
+                        numTD.appendChild(document.createTextNode((i + 1)));
+                        createTR.appendChild(numTD);
+
+
+                        // document.getElementById("extra_content_"+extra_content_count).value = (data_eval[i].CONTENT).split('<br/>').join('\r\n');
+
+                        //이름   
+                        var nameTD = document.createElement("td");
+                        //   contentTD.setAttribute("id", "consent_ver_" + consent_detail[i].CDIDNUM);
+                        nameTD.appendChild(document.createTextNode(data_eval[i].APPLNAME));
+                        createTR.appendChild(nameTD);
+                        //설명요청 시간   
+                        var requestdtcTD = document.createElement("td");
+                        //   contentTD.setAttribute("id", "consent_ver_" + consent_detail[i].CDIDNUM);
+                        requestdtcTD.appendChild(document.createTextNode(data_eval[i].REQUESTDTC));
+                        createTR.appendChild(requestdtcTD);
+                        //시작 체크박스   
+                        var selectionTD = document.createElement("td");
+                        //  selectionTD.setAttribute("style", "text-align: center;");
+                        var checkbox = document.createElement("INPUT");
+                        checkbox.setAttribute("type", "checkbox");
+                        checkbox.setAttribute("value", "requested_" + data_eval[i].CSID);
+                        checkbox.setAttribute("name", "requests_chx");
+                        // checkbox.checked=true;
+                        // checkbox.setAttribute("name", "on_request_chebox");
+
+                        selectionTD.appendChild(checkbox);
+                        //  selectionTD.setAttribute("id", "CONSENTCHECKBOX_TD_" + consent_detail[i].CDIDNUM);
+
+                        createTR.appendChild(selectionTD);
+
+                        document.getElementById("on_request_tbody").appendChild(createTR);
+
+
+                    }
+
+                }
+            }
+            xhttp.open("GET", "./applicant.jsp?action=GET_REQUEST_LIST&SID=" + SID + "&CONSENTID=" + CONSENTID, false);
+            xhttp.send();
+
+
+        }
+
+        function end_explain_all() {
+            var checkboxes = document.getElementsByName('explained_chx');
+
+            var csidarr = [];
+            for (var i = 0; i < checkboxes.length; i++) {
+
+                csidarr.push(checkboxes[i].value.split("_")[1]);
+                //  console.log(checkboxes[i].value);
+            }
+            if (checkboxes.length == 0) {
+
+                return;
+            }
+            if (csidarr.length == 0) {
+                alert("적어도 한명을 선택하여 주십시오.");
+                return;
+            }
+            //save the csid to start all
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttp.responseText.trim();
+                    console.log(data_pre.split("_")[0]);
+                    if (data_pre.split("_")[0] == "success") {
+                        alert("저장되었습니다.");
+                        console.log(data_pre);
+                        $('#on_explain_list_Modal').modal('hide');
+                        init_table();
+                    }
+                }
+            }
+            xhttp.open("POST", "./applicant.jsp?action=end_explain_all&CSIDARR=" + csidarr.toString() + "&CONSENTID=" + CONSENTID, true);
+            xhttp.send();
+        }
+        function SHOW_EXPLAIN_LIST_BTN_CLICKED() {
+
+            //document.getElementById("on_request_tbody").empty();
+            $("#on_explain_tbody tr").remove();
+            var all = document.getElementById("on_explain_list_Modal").querySelectorAll('input[type=checkbox]')[0].checked = false;
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttp.responseText.trim();
+                    var data_eval = eval(data_pre);
+                    if (data_eval.length == 0) {
+                        //var tbody= $('#on_request_list_Modal .modal-body');
+                        var createTR = document.createElement("tr");
+                        var createTD = document.createElement("td");
+                        createTD.setAttribute("colspan", 4);
+                        createTD.innerText = "설명을 시작한 대상자가 없습니다.";
+                        createTR.appendChild(createTD);
+                        document.getElementById("on_explain_tbody").appendChild(createTR);
+                        document.getElementById("on_explain_list_Modal").getElementsByClassName("btn-primary")[0].disabled = true;
+
+                        return;
+
+                    }
+                    else document.getElementById("on_explain_list_Modal").getElementsByClassName("btn-primary")[0].disabled = false;
+                    for (var i = 0; i < data_eval.length; i++) {
+                        //번호 
+
+                        var createTR = document.createElement("tr");
+                        //createTR.setAttribute("id", "consent_" + consent_detail.length);
+
+                        var numTD = document.createElement("td");
+                        // numTD.setAttribute("style", "text-align: center;");
+
+                        numTD.appendChild(document.createTextNode((i + 1)));
+                        createTR.appendChild(numTD);
+
+
+                        // document.getElementById("extra_content_"+extra_content_count).value = (data_eval[i].CONTENT).split('<br/>').join('\r\n');
+
+                        //이름   
+                        var nameTD = document.createElement("td");
+                        //   contentTD.setAttribute("id", "consent_ver_" + consent_detail[i].CDIDNUM);
+                        nameTD.appendChild(document.createTextNode(data_eval[i].APPLNAME));
+                        createTR.appendChild(nameTD);
+                        //설명요청 시간   
+                        var requestdtcTD = document.createElement("td");
+                        //   contentTD.setAttribute("id", "consent_ver_" + consent_detail[i].CDIDNUM);
+                        requestdtcTD.appendChild(document.createTextNode(data_eval[i].CSSTARTDTC));
+                        createTR.appendChild(requestdtcTD);
+                        //시작 체크박스   
+                        var selectionTD = document.createElement("td");
+                        //  selectionTD.setAttribute("style", "text-align: center;");
+                        var checkbox = document.createElement("INPUT");
+                        checkbox.setAttribute("type", "checkbox");
+                        checkbox.setAttribute("value", "explained_" + data_eval[i].CSID);
+                        checkbox.setAttribute("name", "explained_chx");
+                        // checkbox.checked=true;
+                        // checkbox.setAttribute("name", "on_request_chebox");
+
+                        selectionTD.appendChild(checkbox);
+                        //  selectionTD.setAttribute("id", "CONSENTCHECKBOX_TD_" + consent_detail[i].CDIDNUM);
+
+                        createTR.appendChild(selectionTD);
+
+                        document.getElementById("on_explain_tbody").appendChild(createTR);
+
+
+                    }
+
+                }
+            }
+            xhttp.open("GET", "./applicant.jsp?action=GET_START_LIST&SID=" + SID + "&CONSENTID=" + CONSENTID, false);
+            xhttp.send();
+
+
+        }
+        var csidarr = [];
+        function start_explain_all() {
+            var checkboxes = document.getElementsByName('requests_chx');
+           // console.log("12345");
+           
+            for (var i = 0; i < checkboxes.length; i++) {
+
+                csidarr.push(checkboxes[i].value.split("_")[1]);
+                //  console.log(checkboxes[i].value);
+            }
+            if (checkboxes.length == 0) {
+
+                return;
+            }
+            if (csidarr.length == 0) {
+                alert("적어도 한명을 선택하여 주십시오.");
+                return;
+            }
+            var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+               var data  = xhttp.responseText.trim();
+              console.log(data);
+              if(data=="4"){
+                  console.log("블록체인에 연결되어있습니다.");
+                  save_startdtc_all_bc_crcp();
+              }
+              else alert("블록체인에 연결되지 않았습니다.")
+                //  view_consent();
+                
+                // $.ajax({
+                //     type: 'post',
+                //     url: "appl_table.html",
+                //     dataType: 'html',
+                //     success: function (data) {
+                //         $(".content").html(data);
+                //     }
+                // })
+            }
+        }
+        xhttp.open("GET", "./applicant.jsp?action=GETBCSTAGE&SID=" + SID , true);
+        xhttp.send();
+
+           
+        }
+        function save_startdtc_all_bc_crcp(){
+
+          
+            
+       // var SAID = id.split("_")[2];
+        $('#on_request_list_Modal').modal('hide');
+        $('#spinnerModal').modal('show');
+
+        $('#spinnerModal').on('shown.bs.modal', function () {
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                var data  = xhttp.responseText.trim();
+                var data_parse= JSON.parse(data);
+                $('#spinnerModal').modal('hide');
+              
+                if(data_parse.BCERROR==0){
+                       // STARTDTC = data_parse.DTC;
+                    
+                        init_table();
+                }
+                else {
+                    alert("블록체인 저장이 안됐습니다. 관리자에게 문의하세요. "+data_parse.BCRESULT);
+                    console.log(data_parse.BCRESULT);
+                }
+                    //  view_consent();
+                    
+                    // $.ajax({
+                    //     type: 'post',
+                    //     url: "appl_table.html",
+                    //     dataType: 'html',
+                    //     success: function (data) {
+                    //         $(".content").html(data);
+                    //     }
+                    // })
+                }
+            }
+            xhttp.open("POST", "./applicant.jsp?action=start_explain_all&CSIDARR=" + csidarr.toString() + "&CONSENTID=" + CONSENTID+"&SID="+SID, true);
+       xhttp.send();
+        });
+    }
+
+
+        //      //save the csid to start all
+        //      var xhttp = new XMLHttpRequest();
+        //     xhttp.onreadystatechange = function () {
+        //         if (this.readyState == this.DONE && this.status == 200) {
+        //             var data_pre = xhttp.responseText.trim();
+        //             console.log(data_pre.split("_")[0]);
+        //             if (data_pre.split("_")[0] == "success") {
+        //                 alert("저장되었습니다.");
+        //                 console.log(data_pre);
+        //                 $('#on_request_list_Modal').modal('hide');
+        //                 init_table();
+        //             }
+        //         }
+        //     }
+        //     xhttp.open("POST", "./applicant.jsp?action=start_explain_all&CSIDARR=" + csidarr.toString() + "&CONSENTID=" + CONSENTID, true);
+        //     xhttp.send();
+        // }
+        function CHANGE_STATUS(SAID, SASTAGE) {
+            if (SASTAGE >= 2 && SASTAGE <= 5) {
+                alert("신청, 연구종료, 탈락, 동의철회, 신청취소 만 가능합니다.");
+                return;
+            }
+
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    $('#status_SELECT_' + SAID).val(SASTAGE).attr("selected", "selected");
+                    var data_pre = xhttp.responseText.trim();
+                    var data_eval = JSON.parse(data_pre);
+                    console.log(data_eval);
+                    console.log("SASTAGE:" + SASTAGE);
+
+                    var message = "";
+                    if (SASTAGE == 6) {//연구종료
+                        message = (msg_arr.length == 0) ? "[임상연구 안내]\n" : msg_arr.SASTAGE_6;
+                        showMsgModal("sms_" + data_eval.APPLPHONENUM + "_" + data_eval.APPLNAME, message);
+                    }
+                    else if (SASTAGE == 7) {//탈락
+                        message = (msg_arr.length == 0) ? "[임상연구 안내]\n" : msg_arr.SASTAGE_7;
+                        showMsgModal("sms_" + data_eval.APPLPHONENUM + "_" + data_eval.APPLNAME, message);
+                    }
+                    else if (SASTAGE == 8) {//동의철회
+                        message = (msg_arr.length == 0) ? "[임상연구 안내]\n" : msg_arr.SASTAGE_8;
+                        WITHDRAW(SAID, SASTAGE);
+                      }
+                    else if (SASTAGE == 9) {//신청취소
+                        message = (msg_arr.length == 0) ? "[임상연구 안내]\n" : msg_arr.SASTAGE_9;
+                        showMsgModal("sms_" + data_eval.APPLPHONENUM + "_" + data_eval.APPLNAME, message);
+                    }
+                }
+            }
+            xhttp.open("POST", "./applicant.jsp", true);
+            xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhttp.send("action=CHANGE_STATUS&SAID=" + SAID + "&status=" + SASTAGE + "&CONSENTID=" + CONSENTID);
+
+
+
+        }
+        function WITHDRAW(SAID, SASTAGE) {
+
+            $('#stageSpinnerModal').modal('show');
+
+
+
+            $('#stageSpinnerModal').on('shown.bs.modal', function () {
+                var xhttps = new XMLHttpRequest();
+                xhttps.onreadystatechange = function () {
+                    if (this.readyState == this.DONE && this.status == 200) {
+                        var data_pre = xhttps.responseText.trim();
+                        var data_eval = eval(data_pre);
+                        $('#stageSpinnerModal').modal('hide');
+                        var message = (msg_arr.length == 0) ? "[임상연구 안내]\n" : msg_arr.SASTAGE_8;
+                        console.log("data_eval.RESULT=" + data_eval.RESULT);
+
+
+                        if (data_eval[0].RESULT == "ok") {
+                            alert("블록체인에 저장되었습니다.");
+                            showMsgModal("invsign_" + data_eval[0].APPLPHONENUM + "_" + data_eval[0].APPLNAME, message);
+                        }
+                        else {
+                            alert("블록체인에 저장되지 않았습니다.\n관리자에게 문의하여 주십시오.");
+                            console.log("data_pre=" + data_pre);
+                        }
+                    }
+
+                }
+
+                xhttps.open("POST", "./applicant.jsp", false);
+                xhttps.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                xhttps.send("action=WITHDRAW&SAID=" + SAID + "&status=" + SASTAGE + "&CONSENTID=" + CONSENTID);
+            });
+
+        }
+
+        function send_msg() {
+
+            $('#msgModal').modal('hide');
+            $('#msgModal').on('hidden.bs.modal', function () {
+
+                document.getElementById("phonenum").value = "";
+                document.getElementById("message").value = "";
+                document.getElementById("msgModal_receiver").value = "";
+                //modalclose_();
+            });
+            var phonenum = document.getElementById("phonenum").value.trim();
+            var message = document.getElementById("message").value.trim();
+            console.log(phonenum);
+            console.log(message)
+            if (message == null || message == "" || phonenum == null || phonenum == "") {
+                console.log("not validateing of message or phone number");
+                alert("전화번호 또는 메시지를 입력하여 주십시오.");
+                return;
+            }
+
+            var params = "phonenum2=" + phonenum +
+                "&message=" + escape(encodeURIComponent(message)) +"&title="+ escape(encodeURIComponent("[임상시험 관련 안내사항]"));
+
+            var xhttps = new XMLHttpRequest();
+            xhttps.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttps.responseText.trim();
+                    var data = JSON.parse(data_pre);
+                    if (data.RESULT == "SUCCESS")
+                        alert("발송되었습니다.");//. 발송번호:" + data.RECEIPTNUM);
+                    else alert("오류가 발생하였습니다. \n관리자에게 문의하세요. 에러코드:" + data.ERRORCODE + "  " + data.MSG);
+                    //  if( document.getElementById("sms_type").value=="inv_sign")view_consent();
+
+                    // location.reload();
+                }
+            }
+            xhttps.open("POST", "../sendMsg/sendXMS.jsp", true);
+            xhttps.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhttps.send(params);
+        }
+
+        function showMsgModal(id, message) {  //id="smsICON_" +APPLPHONE + "_" + APPLNAME;
+            var idarr = id.split("_");
+            document.getElementById("phonenum").value = idarr[1];//
+            document.getElementById("msgModal_receiver").value = idarr[2]; //applname
+            var basic = (msg_arr.length == 0) ? "[임상연구 안내]\n ▣ 메시지를 입력하세요." : msg_arr.BASIC;
+            document.getElementById("message").value = (message) ? message : basic;
+            // "http://203.254.143.66:8080/site/pages/qr.html?applid="+data_eval.APPLID+";";
+
+            $('#msgModal').modal('show');
+            // $('#msgModal').on('hidden.bs.modal', function() {
+            //   console.log("hi1");
+            // });
+            if (idarr[0] == "invsign") document.getElementById("sms_type").value = "inv_sign";
+            else document.getElementById("sms_type").value = "etc";
+
+        }
+
+
+        function changeStudyDepth(depth) {
+            // console.log(consent_tab_page_number);
+            switch (depth) {
+                case 1:  //연구페이지   
+                    location.href = "../study/study.html";
+                    break;
+
+                case 2:  //대상자관리 
+                    location.href = "./applicants.html";
+
+
+                    break;
+
+                default: location.reload();
+                    break;
+            }
+        }
+    </script>
+
+
+</head>
+
+<body>
+    <div id="navbar"></div>
+    <div class="container mt-3">
+
+        <div class="d-flex justify-content-between ">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb p-0 m-0 " style="background-color:transparent;">
+                        <li class="breadcrumb-item   primary-color" aria-current="page"><a
+                                href="javascript:changeStudyDepth(1);">연구</a></li>
+                        <li class="breadcrumb-item active " aria-current="page" id="prtno_bread"></li>
+                        <li class="breadcrumb-item  primary-color "></li>
+                    </ol>
+
+                </nav>
+
+            </div>
+
+
+        </div>
+        <div class="card card-body mb-1 mt-3">
+            <!-- <h3>연구 기본정보</h3> -->
+            <div class="title"></div>
+        </div>
+        <div class="card card-body mt-3">
+            <h3>대상자 관리</h3>
+            <div id="appl_menu_groups" class="d-flex flex-row m-2 w-100 ">
+                <button class="btn btn-primary  m-2" style="width:150px; font-weight:bold; " id="dashboard_btn"
+                    onclick="view_dashboard()">
+                    기본
+                </button>
+                <button class="btn btn-primary  m-2" style="width:150px;font-weight:bold; " id="appointment_btn"
+                    onclick="view_appointment()">
+                    예약
+                </button>
+                <button class="btn btn-primary m-2" style="width:150px;font-weight:bold; " id="consent_btn"
+                    onclick="view_consent()">
+                    동의
+                </button>
+            </div>
+            <hr>
+
+            <div class="mycontent">
+
+            </div>
+        </div>
+    </div>
+    <div id="footer" class="container mt-5 pt-5"></div>
+    <script src="../../assets/js/app.js"></script>
+    <script type="text/javascript" src="../../assets/lib/DataTables/datatables.min.js"></script>
+    <script type="text/javascript" src="../../assets/js/sha256.js"></script>
+    <script src="../../assets/lib/moment/moment-with-locales.js" type="text/javascript"></script>
+    <script src="../../assets/lib/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"
+        type="text/javascript"></script>
+    <script src="../../assets/js/table-filter.js"></script>
+    <script type="text/javascript" src="../../assets/lib/DataTables/datatables.min.js"></script>
+</body>
+
+</html>
+
+
+
+
+
+<!----------------------------- MODAL ------------------------------------>
+<div class="modal fade" tabindex="-1" role="dialog" id="request_cancel_modal" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+
+                <h4 class="modal-title">설명요청 취소</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+
+                동의 설명 요청을 취소하시겠습니까?
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" style="width:120px" class="btn btn-primary" id="confirm_request_cancel_modal">
+                    설명요청 취소</button>
+
+                <button type="button" style="width:120px" class="btn btn-default" data-dismiss="modal">닫기</button>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" tabindex="-1" role="dialog" id="start_cancel_modal" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+
+                <h4 class="modal-title">동의 설명 시작 취소</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+
+                동의설명 시작을 취소하시겠습니까?
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" style="width:120px" id="confirm_start_cancel_modal"> 설명시작
+                    취소</button>
+
+                <button type="button" class="btn btn-default" style="width:120px" data-dismiss="modal">닫기</button>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" tabindex="-1" role="dialog" id="end_cancel_modal" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+
+                <h4 class="modal-title">설명종료 취소</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+
+                동의 설명 종료를 취소하시겠습니까?
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" style="width:120px" class="btn btn-primary" id="confirm_end_cancel_modal"> 설명종료
+                    취소</button>
+
+                <button type="button" style="width:120px" class="btn btn-default" data-dismiss="modal">닫기</button>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+<!-- <div class="modal fade" tabindex="-1" role="dialog" id="invsign_cancel_modal" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+
+                <h4 class="modal-title">동의서 연구자 서명 취소</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+
+                연구자 동의서 확인 서명을 다시 취소하시겠습니까?
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">닫기</button>
+
+                <button type="button" class="btn btn-primary" id="confirm_invsign_cancel_modal">서명 취소</button>
+
+            </div>
+        </div>
+    </div>
+</div> -->
+<div class="modal fade" tabindex="-1" role="dialog" id="sign_cancel_modal" aria-labelledby="modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+
+                <h4 class="modal-title">동의서 서명 취소</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+
+                자원자 동의 서명을 취소하시겠습니까?
+
+            </div>
+            <div class="modal-footer">
+
+                <button type="button" class="btn btn-primary" style="width:100px" id="confirm_sign_cancel_modal"> 서명
+                    취소</button>
+
+                <button type="button" class="btn btn-default" style="width:100px" data-dismiss="modal">닫기</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" id="view_consent_Modal" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content view_consent_modal ">
+            <div class="modal-header">
+                <h3 class="modal-title" id="consent_TITLE"></h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="row m-2">
+                        <table class="table table-borderless">
+                            <thead style="background-color: rgb(234, 234, 234);">
+                                <tr style="text-align: center; font-weight: bold;">
+                                    <th width="120px">소제목</th>
+                                    <th>내용</th>
+                                    <th width="60px">확인</th>
+                                </tr>
+                            </thead>
+                            <tbody id="view_consent_tbody"></tbody>
+                        </table>
+                    </div>
+                    <div class="  m-2 ">
+                        <table class="table table-borderless w-100  p-0 m-0 "
+                            style="background-color: rgb(248,248,248);">
+                            <tbody>
+                                <tr>
+                                    <td style="text-align:right; font-weight: bold; width:120px; ">■ 시험대상자</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: right; font-weight: bold;  ">성명:</td>
+                                    <td id="subj_name"></td>
+                                </tr>
+
+                                <tr>
+                                    <td style="text-align: right; font-weight: bold; ">서명일시: </td>
+                                    <td id="subj_sign_time"></td>
+                                </tr>
+
+                                <tr>
+                                    <td style="text-align: right; font-weight: bold; ">서명: </td>
+                                    <td id="subj_sign"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+
+                    <div class="row m-2 mt-5">
+                        <h5>시험 책임자(위임받은 연구자)</h5>
+                    </div>
+                    <table class="table w-100 table-borderless p-0 m-0" style="table-layout:fixed;">
+                        <tbody>
+                            <!-- <tr>
+                                <td style="text-align:right; font-weight: bold; width:120px; ">■ 시험대상자</td>
+                                <td></td>
+                            </tr> -->
+                            <tr>
+                                <td style="text-align: right; font-weight: bold;  width:120px; ">성명:</td>
+                                <td id="inv_name"></td>
+                            </tr>
+
+                            <tr>
+                                <td style="text-align: right; font-weight: bold; ">서명일시: </td>
+                                <td id="inv_sign_time"></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: right; font-weight: bold; ">서명: </td>
+                                <td id="inv_sign_td">
+
+                                    <label class="pl-2 pr-2 pt-1 pb-1 mysign " style=" font-weight: bold;"
+                                        id="inv_sign"></label>
+
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+
+                </div>
+            </div>
+            <div class="modal-footer consent-modal-footer">
+                <button type="button" style="width:100px" class="btn btn-primary" onclick="SAVE_INV_SIGN(id)"
+                    type="submit">서명</button>
+                <button type="button" style="width:100px" class="btn btn-default" data-dismiss="modal">취소</button>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="qnaModal" tabindex="-1" role="dialog" aria-labelledby="qnaTITLE" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="qnaTITLE"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0" id="qna_body"></div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="dateModal" tabindex="-1" role="dialog" aria-labelledby="dateTitle" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dateTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0">
+                <table class="table">
+                    <tbody>
+                        <tr>
+
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer consent-modal-footer">
+                <button type="button" style="width:100px" class="btn btn-primary" onclick="SAVE_INV_SIGN(id)"
+                    type="submit">서명</button>
+                <button type="button" style="width:100px" class="btn btn-default" data-dismiss="modal"
+                    onclick="SIGN_CANCEL()">취소</button>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<div class="modal fade bd-example-modal-lg" id="on_explain_list_Modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">현재 동의 설명에 참여중인 대상자 리스트</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-2">
+                <table class="table" style="text-align:center;">
+                    <thead>
+                        <tr>
+                            <th>번호</th>
+                            <th>이름</th>
+                            <th> 설명 시작</th>
+                            <th>
+                                선택 <input class="ml-2 " type="checkbox" onClick="explain_toggle(this)"> All</input>
+                            </th>
+                        </tr>
+
+                    </thead>
+                    <tbody id="on_explain_tbody">
+
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer consent-modal-footer">
+                <button type="button" style="width:100px" class="btn btn-primary" onclick="end_explain_all()"
+                    type="submit">설명 종료</button>
+                <button type="button" style="width:100px" class="btn btn-default" data-dismiss="modal">취소</button>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade bd-example-modal-lg" id="on_request_list_Modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">현재 설명 요청중인 대상자 리스트</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body m-2 p-2">
+                <table class="table" style="text-align:center;">
+                    <thead>
+                        <tr>
+                            <th>번호</th>
+                            <th>이름</th>
+                            <th>설명요청</th>
+                            <th>
+                                선택 <input class="ml-2" type="checkbox" id="request_all" onChange="request_toggle(this)">
+                                All</input>
+                            </th>
+                        </tr>
+
+                    </thead>
+                    <tbody id="on_request_tbody">
+
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer consent-modal-footer">
+                <button type="button" style="width:100px" class="btn btn-primary" onclick="start_explain_all()"
+                    type="submit">시작</button>
+                <button type="button" style="width:100px" class="btn btn-default" data-dismiss="modal">취소</button>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" id="visitModal" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="visitModal_TITLE"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="row m-2">
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <td class="pr-0 pt-0"
+                                        style="width:110px; font-size: larger; font-weight: bold; vertical-align: middle;">
+                                        예약일시 :</td>
+                                    <td class="pl-0"><input type="text" class="form-control p-0 mb-2"
+                                            style="border-radius: 0px;" id="visitdtcinput" readonly /></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" style="font-size: large; font-weight: bold;">예약일자 설정하기</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="col-md">
+                            <div id="visitdtc">
+                            </div>
+                        </div>
+                        <script type="text/javascript">
+                            $(function () {
+                                $('#visitdtc').datetimepicker({
+                                    inline: true,
+                                    sideBySide: true,
+                                    format: 'DD/MM/YYYY, HH:mm'
+                                });
+                            });
+                            $('#visitdtc').on("change.datetimepicker", function (e) {
+                                document.getElementById("visitdtcinput").value = (moment(e.date).format('YYYY-MM-DD HH:mm'));
+                                console.log(moment(e.date).format('YYYY-MM-DD HH:mm'));
+                            });
+                        </script>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" id="SAVEVISITBTN"
+                    onclick="SAVEVISITDTC(value)" style="border-radius: 0px;">저장</button>
+            </div>
+        </div>
+    </div>
+</div> -->
+<div class="modal fade bd-example-modal" tabindex="-1" role="dialog" id="visitModal" aria-hidden="true">
+    <div class="modal-dialog modal modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="visitModal_TITLE"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group m-2">
+                    <div >
+                       
+                          
+                         <h5>예약 상태</h5>
+    
+                         <div class="w-100 mb-3" id="subj_current_appoint"></div>  
+                        <div class="w-100 mb-3" id="subj_request_appoint" ></div>
+                        
+                        <div class="w-100 mb-3" id="subject_preappoint"></div>
+                        
+                    </div>
+                    <hr  class="mt-3">
+                    <div class="mt-3" >
+                        <table class="table table-borderless ">
+                            <h5>예약 설정</h5>
+
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <input type="date" id="datePicker"
+                                            class="form-control form-control-lg short inputs">
+                                    </td>
+                                    <td>
+                                        <input type="time" id="timePicker"
+                                            class="form-control form-control-lg short inputs">
+                                    </td>
+
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" style="width:100px" class="btn btn-primary" data-dismiss="modal" id="SAVEVISITBTN"
+                    onclick="SAVEVISITDTC(value)">예약 확정</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade bd-example-modal" tabindex="-1" role="dialog" id="msgModal" aria-hidden="true">
+    <div class="modal-dialog modal modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">문자메시지 발송</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group">
+
+                    <form method="POST" id="msg_form" action="../sendMsg/sendXMS.jsp">
+                        <label class="form-check form-check-inline">수신자</label>
+                        <input type="text" id="msgModal_receiver" disabled> </input>
+                        <label class="form-check form-check-inline">핸드폰 번호</label>
+                        <input type="text" id="phonenum" name="phonenum"></input>
+                        <br>
+
+                        <label class="form-check form-check-inline mt-3">메시지</label>
+                        <textarea class="form-control" type="text" id="message" name="message" rows="9"
+                            cols="50"></textarea>
+
+                    </form>
+                    <label id="sms_type" hidden></label>
+
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" style="width:100px" onclick="send_msg()">발송</button>
+                    <button type="button" class="btn btn-default" style="width:100px" data-dismiss="modal">취소</button>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" id="identityModal" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"> 접수</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+
+                <div class="form-group">
+                    <div class="row m-2">
+                        <table class="table table-borderless">
+                            <tbody>
+
+                                <tr>
+                                    <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">
+                                        이름</td>
+
+                                    <td><span id="MYAPPLNAME" class="APPLNAME"></span><span id="show_pass"></span></td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">
+                                        휴대폰 번호</td>
+                                    <td class="APPLPHONENUM"></td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">
+                                        생년월일</td>
+                                    <td class="APPLBIRTHDTC"></td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">
+                                        성별</td>
+                                    <td class="APPLSEX"></td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">
+                                        연구제목</td>
+                                    <td class="MTITLE"></td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">
+                                        예약시간</td>
+                                    <td class="APPLVISITDTC"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="SAVEIDENTIFYBTN" style="width:100px">확인</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" id="passModal" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">신분증 확인 및 접수</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div class="form-group">
+                    <div class="row m-2">
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <td colspan=2 id="passtd"></td>
+
+                                </tr>
+                                <tr>
+                                    <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">
+                                        이름</td>
+                                    <td><span id="MYAPPLNAME" class="APPLNAME"></span><span id="show_pass"></span></td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">
+                                        휴대폰 번호</td>
+                                    <td class="APPLPHONENUM"></td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">
+                                        생년월일</td>
+                                    <td class="APPLBIRTHDTC"></td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">
+                                        성별</td>
+                                    <td class="APPLSEX"></td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">
+                                        연구제목</td>
+                                    <td class="MTITLE"></td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 200px; text-align: right; font-size: large; font-weight: bold;">
+                                        예약시간</td>
+                                    <td class="APPLVISITDTC"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="SAVEPASSBTN">신분증확인 및 접수</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 
+<div class="modal fade " tabindex="-1" role="dialog" id="passModal" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" ></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">             
+                   
+                        <div class="" id="passTitle"></div>
+                        <div class="" id="passMsg"></div>
+                        
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" id="SAVEPASSBTN"
+                    onclick="SAVEPASS()">신분 확인</button>
+            </div>
+        </div>
+    </div>
+</div> -->
+
+
+<div class="modal fade " tabindex="-1" role="dialog" id="newSubjectModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">대상자 추가</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            
+            <div class="modal-body" id="newSubjectModal_body">
+                
+
+            </div>
+            <div class="modal-footer">
+
+                <button class="btn btn-primary ml-3 mt-1" id="joinBTN" href="#" onclick="add_new_subject()"
+                    style="width:100px;"> 대상자 추가</button>
+
+                <button class="btn  btn-default mr-4 mt-1" data-dismiss="modal" style="width:100px;" href="#">
+                    취소
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade " tabindex="-1" role="dialog" id="stageSpinnerModal" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content" style="height: 300px; vertical-align: middle; text-align: center;">
+            <h4 class="w-100 mt-5">블록체인에 저장중입니다. 잠시만 기다려주세요.</h4>
+            <div class="modal-body d-flex justify-content-center">
+
+                <div class="overlay lds-dual-ring " id="loading-image"></div>
+
+            </div>
+
+        </div>
+    </div>
+</div>

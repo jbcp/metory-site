@@ -1,0 +1,601 @@
+<script type="text/javascript">
+    // var STARTDTC;
+
+    // var check_all;
+
+    var COLUMN = [
+        { 'data': 'id' },
+        { 'data': 'status' },
+        { 'data': 'name' },
+        { 'data': 'birthdtc' },
+        { 'data': 'startdtc' },
+        { 'data': 'enddtc' },
+        { 'data': 'subj_signdtc' }
+    ];
+    var table = null;
+    var setNumEntries = -1;
+    $(document).on('focus click', 'select', function (e) {
+
+        lastValue = e.target.value;
+        // console.log("000000000000000000000000000000000appl_consent_table");
+        //console.log("focused on " + e.target.id +"  "+lastValue);
+    });
+
+
+
+    $(document).ready(function () {
+        console.log({ contact_coption: contact_coption });
+        console.log({ inv_sign_coption: inv_sign_coption });
+
+
+
+
+        var HEAD_TR = document.getElementById("APPL_TABLE_HEAD_TR");
+        // if (contact_coption == 1) { //대면
+
+        //     var RESERVETD = document.createElement("th");
+        //     RESERVETD.setAttribute("rowspan", 2);
+        //     RESERVETD.setAttribute("width", "120px");
+        //     RESERVETD.appendChild(document.createTextNode("최신 예약"));
+        //     document.getElementById("APPL_TABLE_TR").appendChild(RESERVETD);
+        //     var RESERVE_COLUMN = new Object();
+        //     RESERVE_COLUMN.data = "reserve";
+        //     COLUMN.push(RESERVE_COLUMN);
+
+        //     var IDENTITYTD = document.createElement("th");
+        //     IDENTITYTD.setAttribute("rowspan", 2);
+        //     IDENTITYTD.setAttribute("width", "120px");
+        //     IDENTITYTD.appendChild(document.createTextNode("방문 확인"));
+        //     document.getElementById("APPL_TABLE_TR").appendChild(IDENTITYTD);
+        //     var IDENTITY_COLUMN = new Object();
+        //     IDENTITY_COLUMN.data = "identity";
+        //     COLUMN.push(IDENTITY_COLUMN);
+
+        //     var CONSENT_TD = document.createElement("th");
+        //     CONSENT_TD.appendChild(document.createTextNode("동의설명"));
+        //     CONSENT_TD.setAttribute("width", "360px");
+        //     CONSENT_TD.setAttribute("colspan", "3");
+        //     document.getElementById("APPL_TABLE_TR").appendChild(CONSENT_TD);
+
+        //     var CONSENT_ENDTD = document.createElement("th");
+        //     CONSENT_ENDTD.appendChild(document.createTextNode("요청"));
+        //     //CONSENT_ENDTD.setAttribute( "width","60px");
+        //     SECOND_TR.appendChild(CONSENT_ENDTD);
+        //     var END_COLUMN = new Object();
+        //     END_COLUMN.data = "end";
+        //     COLUMN.push(END_COLUMN);
+
+        // }
+        // else {//비대면
+        //     var CONSENT_TD = document.createElement("th");
+        //     CONSENT_TD.appendChild(document.createTextNode("동의설명"));
+        //     CONSENT_TD.setAttribute("width", "220px");
+        //     CONSENT_TD.setAttribute("colspan", "2");
+        //     document.getElementById("APPL_TABLE_TR").appendChild(CONSENT_TD);
+
+        // }
+
+        // var CONSENT_STARTTD = document.createElement("th");
+        // CONSENT_STARTTD.appendChild(document.createTextNode("시작"));
+        // // CONSENT_STARTTD.setAttribute( "width","60px");
+        // SECOND_TR.appendChild(CONSENT_STARTTD);
+        // var START_COLUMN = new Object();
+        // START_COLUMN.data = "start";
+        // COLUMN.push(START_COLUMN);
+
+        // var CONSENT_ENDTD = document.createElement("th");
+        // CONSENT_ENDTD.appendChild(document.createTextNode("종료"));     
+        // SECOND_TR.appendChild(CONSENT_ENDTD);
+        // var END_COLUMN = new Object();
+        // END_COLUMN.data = "end";
+        // COLUMN.push(END_COLUMN);
+
+        // var SIGN_TD = document.createElement("th");
+
+        // SIGN_TD.appendChild(document.createTextNode("서명"));
+        // SIGN_TD.setAttribute("width", "220px");
+
+        // document.getElementById("APPL_TABLE_TR").appendChild(SIGN_TD);
+
+        // var APPL_SIGNTD = document.createElement("th");
+        // APPL_SIGNTD.appendChild(document.createTextNode("자원자"));
+
+        // // APPL_SIGNTD.setAttribute( "width","100px");
+        // SECOND_TR.appendChild(APPL_SIGNTD);
+        // var APPLSIGN_COLUMN = new Object();
+        // APPLSIGN_COLUMN.data = "appl_sign";
+        // COLUMN.push(APPLSIGN_COLUMN);
+
+        if (inv_sign_coption == 1) { //연구자서명
+            var INV_SIGNTD = document.createElement("th");
+            INV_SIGNTD.appendChild(document.createTextNode("연구자 서명"));
+            INV_SIGNTD.setAttribute("width", "100px");
+            HEAD_TR.appendChild(INV_SIGNTD);
+            var INVSIGN_COLUMN = new Object();
+            INVSIGN_COLUMN.data = "inv_sign_th";
+            COLUMN.push(INVSIGN_COLUMN);
+        }
+        var SURVEYTD = document.createElement("th");
+        SURVEYTD.appendChild(document.createTextNode("체크리스트"));
+        SURVEYTD.setAttribute("width", "70px");
+        HEAD_TR.appendChild(SURVEYTD);
+        var SURVEY_COLUMN = new Object();
+        SURVEY_COLUMN.data = "survey_th";
+        COLUMN.push(SURVEY_COLUMN);
+
+
+        // //설문
+        // var SCREENING_TD = document.createElement("th");
+        // SCREENING_TD.appendChild(document.createTextNode("설문"));
+        // SCREENING_TD.setAttribute("width", "100px");
+        // SCREENING_TD.setAttribute("rowspan", "2");
+        //  document.getElementById("APPL_TABLE_TR").appendChild(SCREENING_TD);
+
+
+        init_table();
+
+        // $(".selectpicker").on('focus', function() {
+        //               // Store the current value on focus and on change
+        //               lastValue = this.value;
+
+        //             });
+
+        // $('.selectpicker').on("focus", function(e) {
+        //             lastValue = $(this).val();
+        //             console.log('1confirm not --'+lastValue);
+        //          }).change( function (e){
+
+        //             var r=confirm('변경하시겠습니까?');
+        //         if (r==true){
+        //             var SAID = id.split("_")[2];
+        //             var selectedvalue = $('#' + id + " option:selected").val();
+        //           //  SELECTED(e.id);
+        //             console.log('Thing was saved to the database.');
+        //         } else {
+        //           //  $('#' + id + " option:selected").val()=lasgValue      ;
+        //             console.log('Thing was not saved to the database.');
+        //         }
+        //         });
+        //request cancel
+
+
+    });
+
+    // function callback() {
+    //       //here use previous variable to select previous option
+    //       $(".selectpicker").val(lastValue);
+    //     }
+
+    function SELECTED(id) {
+        var SAID = id.split("_")[2];
+        console.log('22confirm not --' + lastValue);
+        if (lastValue >= 8) {
+            alert("변경하실 수 없습니다. 동의철회 및 선택취소 후에는 대상자가 참여신청을 다시 하여야합니다.");
+            $('#' + id).val(lastValue);
+            return;
+        }
+        var selectedvalue = $('#' + id + " option:selected").val();
+
+        var message_notchanged = "동의철회 및 신청취소 후에는 대상자가 참여신청을 다시 하여야합니다.";
+        var message_confirm = " 변경하시겠습니까?";
+        var message = "";
+
+        if (selectedvalue >= 8) {
+            console.log('confirm not1 --' + lastValue);
+            check_status_for_withdraw(id, selectedvalue);
+            console.log('confirm not2 --' + lastValue);
+            // console.log("to_be_status="+to_be_status+"  selectedvalue="+selectedvalue);
+
+        }
+        else {
+            console.log('3confirm not --' + lastValue);
+            message = ($('#' + id + " option:selected").text()) + "로 변경하시겠습니까?";
+
+
+            var r = confirm(message);
+            if (r == true) {
+                CHANGE_STATUS(SAID, selectedvalue);
+                // console.log('Thing was saved to the database.');
+            } else {
+                console.log('confirm not 4--' + lastValue);
+                // Do nothing!
+                $('#' + id).val(lastValue);
+                console.log('confirm not --' + lastValue);
+            }
+        }
+
+    }
+
+    function check_status_for_withdraw(id, selectedvalue) {
+
+        //   var selectedvalue = $('#' + id + " option:selected").val();
+        var SAID = id.split("_")[2];
+        console.log('confirm not3 --' + lastValue);
+        var message_notchanged = "*동의철회 및 신청취소 후에는 대상자가 참여신청을 다시 하여야합니다.";
+        var xhttps = new XMLHttpRequest();
+        xhttps.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttps.responseText.trim();
+                console.log(data_pre);
+                var data = JSON.parse(data_pre);
+                // console.log('confirm not4 --'+lastValue);
+                var previous_sastage = data.SASTAGE;
+                var to_be_sastage_val = 9;
+                var count_csid = data.COUNT_CSID;
+                if (count_csid == 1) {//said로 검색하여 매치한 csid 가 있음. 
+                    if (data.CSCLOSED == 1) {//이미 동의서가 있으므로 
+                        to_be_sastage_val = 8; //동의철회
+                    }
+                    else {
+                        if (data.CS_UNCONTACT_STAGE > 4 || data.CS_CONTACT_STAGE > 6) { // 비대면 과정에서 대상자 서명단계가 4이므로 5 또는 6인 경우 동의철회
+                            to_be_sastage_val = 8;
+                        }
+                        // else if (data.CS_CONTACT_STAGE > 6) { //대면 과정에서 대상자 서명단계가 6이므로 7과 8인 경우 동의철회
+                        //     to_be_sastage_val = 8;
+                        // }
+                        else to_be_sastage_val = 9;  // 신청취소=9
+                    }
+
+                }
+             
+                console.log("이전 단계:"+previous_sastage + " -------------이전 동의기록 개수() 0이면 신청취소 그외 동의철회)=  " + count_csid)
+             
+                // var to_be_status = parseInt(to_be_status, 10);
+                //var to_be_sastage_val=(count_csid==0)? 9:8; //신청취소: 동의철회
+                if (previous_sastage)
+                    if (to_be_sastage_val != selectedvalue) {
+
+
+                        //  console.log(to_be_status + typeof (to_be_status)+ selectedvalue)
+                        console.log('변경할 단계 --' + to_be_sastage_val);
+
+                        var to_be_sastage = $('#' + id + " option[value='" + to_be_sastage_val + "']").text();
+                        // console.log(test);
+                        message = "선택하신 " + ($('#' + id + " option:selected").text()) + "는 " + to_be_sastage + "로 변경할 수 있습니다. 변경하시겠습니까?\n" + message_notchanged;
+
+                        //if (to_be_status==8)? 
+                        //"선택하신 대상자는 동의서를 제출한 적이 있습니다. 동의철회로 ": "선택하신 대상자는 동의서를 제출한 적이 없습니다. 신청철회로 " )+ "계속 진행하시겠습니까?" +"\n"+message_notchanged  ;
+                    }
+                    else message = ($('#' + id + " option:selected").text()) + "로 변경하시겠습니까? \n" + message_notchanged;
+                var r = confirm(message);
+                console.log('변경확인됨 변경할 단계=' + to_be_sastage_val);
+                if (r == true) {
+                    if(to_be_sastage_val==9) CHANGE_STATUS(SAID, to_be_sastage_val); 
+                    else WITHDRAW(SAID, to_be_sastage_val);
+                    // console.log('Thing was saved to the database.');
+                } else {
+                    // Do nothing!
+                    $('#' + id).val(previous_sastage);
+                    // $('#' + id).val(lastValue).prop("selected",true);
+                    console.log('변경안함: 이전단계로 돌아감=' +previous_sastage + ', 저장된 이전단계= ' + lastValue);
+                }
+            }
+        }
+        xhttps.open("GET", "./applicant.jsp?action=GET_STATUS_WITHDRAW_OR_CANCEL&SAID=" + SAID, true);
+        xhttps.send();
+    }
+
+    function init_table() {
+        console.log("init_table");
+        var table_source = [];
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                var data_eval = eval(data_pre);
+
+                for (var i = 0; i < data_eval.length; i++) {
+                    var createTR = document.createElement("tr");
+                    createTR.setAttribute("class", "accordion-toggle collapsed");
+                    createTR.setAttribute("id", "accordion_" + data_eval[i].SAID);
+                    createTR.setAttribute("data-toggle", "collapse");
+                    createTR.setAttribute("dtat-parent", "#accordion_" + data_eval[i].SAID);
+                    createTR.setAttribute("href", "#collapse_" + data_eval[i].SAID);
+                    //document.getElementById("APPL_TABLE_BODY").appendChild(createTR);
+
+                    var numTD = document.createElement("td");
+                    numTD.appendChild(document.createTextNode(i + 1));
+                    createTR.appendChild(numTD);
+
+                    //상태
+                    var statusTD = document.createElement("td");
+                    createTR.appendChild(statusTD);
+                    var statusSELECT = document.createElement("select");
+                    statusSELECT.setAttribute("class", "form-control selectpicker");
+                    statusSELECT.setAttribute("onchange", "SELECTED(id)");
+
+
+                    statusSELECT.setAttribute("id", "status_SELECT_" + data_eval[i].SAID);
+                    statusSELECT.setAttribute("style", "border-radius:0rem;");
+                    statusTD.appendChild(statusSELECT);
+                    var selectedvalue = 1;
+                    if (data_eval[i].SASTAGE >= 5) selectedvalue = data_eval[i].SASTAGE;
+                    for (var j = 0; j < SASTAGE_ARR.length; j++) {
+                        if (j >= 1 && j <= 4) {
+                            continue;
+                        }
+
+                        var option = document.createElement("option");
+                        option.setAttribute("value", j + 1);
+                        if (j + 1 == selectedvalue) option.setAttribute("selected", "");
+
+
+                        option.appendChild(document.createTextNode(SASTAGE_ARR[j]));
+                        statusSELECT.appendChild(option);
+
+                    }
+
+                    if (data_eval[i].SASTAGE >= 7) {//탈락, 동의철회, 신청취소
+                        // createTR.setAttribute("class","out_of_study");
+
+                    }
+
+                    //이름
+                    var nameTD = document.createElement("td");
+                    var a = document.createElement('a');
+
+                    var name = document.createTextNode(data_eval[i].APPLNAME);
+                    a.appendChild(name);
+                    a.title = "my consent history";
+                    a.href = "./appl_consent_history.html?SAID=" + data_eval[i].SAID + "&SID=" + SID;
+                    nameTD.appendChild(a);
+
+                    var qnaICON = document.createElement("i");
+                    qnaICON.setAttribute("class", "far fa-comment-dots ml-2");
+                    qnaICON.setAttribute("style", "cursor:pointer; font-size:20px")
+                    qnaICON.setAttribute("name", "qnaICON_" + data_eval[i].SAID);
+                    qnaICON.setAttribute("id", "qnaICON_" + data_eval[i].SAID + "_" + data_eval[i].APPLNAME);
+                    qnaICON.setAttribute("onclick", "SHOW_QNA(id)");
+                    nameTD.appendChild(qnaICON);
+                    //문자발송
+                    var smsICON = document.createElement("i");
+                    smsICON.setAttribute("class", "fas fa-envelope ml-2");
+                    smsICON.setAttribute("style", "cursor:pointer; font-size:20px")
+                    // SMSICON.setAttribute("name", "qnaICON_" + data_eval[i].SAID);
+                    smsICON.setAttribute("id", "smsICON_" + data_eval[i].APPLPHONE + "_" + data_eval[i].APPLNAME);
+                    smsICON.setAttribute("onclick", "showMsgModal(id)");
+                    nameTD.appendChild(smsICON);
+
+                    createTR.appendChild(nameTD);
+                    //성별
+                    // var genderTD = document.createElement("td");
+                    // switch (data_eval[i].APPLSEX) {
+                    //     case 1:
+                    //         genderTD.appendChild(document.createTextNode("남성"));
+                    //         break;
+                    //     case 2:
+                    //         genderTD.appendChild(document.createTextNode("여성"));
+                    //         break;
+                    // }
+                    //  createTR.appendChild(genderTD);
+                    //생년월일
+                    var gender = (data_eval[i].APPLSEX == 1) ? "남성" : "여성";
+                    var birthTD = document.createElement("td");
+                    birthTD.appendChild(document.createTextNode(data_eval[i].APPLBIRTH));
+                    birthTD.appendChild(document.createElement("br"));
+                    birthTD.appendChild(document.createTextNode("(만 " + getAge(data_eval[i].APPLBIRTH) + "세, " + gender + ")"));
+                    createTR.appendChild(birthTD);
+                    //핸드폰번호
+                    //     var phoneTD = document.createElement("td");
+                    //   //  phoneTD.appendChild(document.createTextNode(data_eval[i].APPLPHONE));
+                    //     if (data_eval[i].APPLPHONE) phoneTD.appendChild(document.createTextNode(getCellPhoneFormat(data_eval[i].APPLPHONE)));
+                    //     createTR.appendChild(phoneTD);
+
+                    // if (contact_coption == 1) {//대면
+                    //     var reserveTD = document.createElement("td");
+                    //     if (data_eval[i].VISITDTC == null) {
+                    //         if(data_eval[i].AFID==0) reserveTD.innerText=data_eval[i].MEMO;
+                    //         else reserveTD.innerText="";
+
+                    //         // var noICON = document.createElement("i");
+                    //         // noICON.setAttribute("class", "fas fa-calendar-alt");
+                    //         // noICON.setAttribute("style", "color: #6c757d; font-size:large; cursor:pointer;");
+                    //         // noICON.setAttribute("name", "VISIT_BTN_" + data_eval[i].SAID);
+                    //         // noICON.setAttribute("id", "VISIT_BTN_" + data_eval[i].SAID + "_" + data_eval[i].APPLNAME + "_미정");
+                    //         // noICON.setAttribute("onclick", "VISIT(id)");
+                    //         // reserveTD.appendChild(noICON);
+                    //     }
+                    //     else {
+                    //         reserveTD.innerText=data_eval[i].VISITDTC;
+                    //         // var checkICON = document.createElement("i");
+                    //         // checkICON.setAttribute("class", "fas fa-calendar-alt");
+                    //         // checkICON.setAttribute("data-toggle", "tooltip");
+                    //         // checkICON.setAttribute("title", "예약시간 : " + data_eval[i].VISITDTC + "");
+                    //         // checkICON.setAttribute("style", "color: #28a745; font-size:large; cursor:pointer;");
+                    //         // checkICON.setAttribute("name", "VISIT_BTN_" + data_eval[i].SAID);
+                    //         // checkICON.setAttribute("id", "VISIT_BTN_" + data_eval[i].SAID + "_" + data_eval[i].APPLNAME + "_" + data_eval[i].VISITDTC);
+                    //         // checkICON.setAttribute("onclick", "VISIT(id)");
+                    //         // reserveTD.appendChild(checkICON);
+                    //     }
+                    //     createTR.appendChild(reserveTD);
+
+                    //     var identityTD = document.createElement("td");
+
+                    //     if (data_eval[i].CSPASS == null || data_eval[i].CSPASS == "") {
+                    //         identityTD.innerText="";
+                    //         // var noICON = document.createElement("i");
+                    //         // noICON.setAttribute("class", "fas fa-times");
+                    //         // noICON.setAttribute("style", "color: #6c757d; font-size:large;");
+                    //         // identityTD.appendChild(noICON);
+                    //     }
+                    //     else {
+                    //         identityTD.innerText= data_eval[i].CSPASS;
+                    //         // var checkICON = document.createElement("i");
+                    //         // checkICON.setAttribute("class", "fas fa-check");
+                    //         // checkICON.setAttribute("style", "color: #28a745; font-size:large;");
+                    //         // identityTD.appendChild(checkICON);
+                    //     }
+                    //     createTR.appendChild(identityTD)
+
+
+                    //     var requestTD = document.createElement("td");
+                    //    // requestTD.setAttribute("id", "request_td_" + data_eval[i].SAID);
+                    //     if (data_eval[i].CSREQUEST == null) {
+                    //         requestTD.innerText="";
+                    //         // var noICON = document.createElement("i");
+                    //         // noICON.setAttribute("class", "fas fa-times");
+                    //         // noICON.setAttribute("style", "color: #6c757d; font-size:large;");
+                    //         // requestTD.appendChild(noICON);
+                    //     }
+                    //     else {
+                    //         requestTD.innerText=data_eval[i].CSREQUEST;
+
+                    //     }
+                    //     createTR.appendChild(requestTD);
+
+                    // }//대면 종료
+
+                    //동의시작
+                    var startTD = document.createElement("td");
+
+                    if (data_eval[i].CSSTART != null) {
+                        startTD.innerText = data_eval[i].CSSTART;
+                    }
+                    createTR.appendChild(startTD);
+                    // //동의종료
+                    // var endTD = document.createElement("td");
+                    // if (data_eval[i].CSEND != null) {
+                    //      endTD.innerText=data_eval[i].CSEND ;    
+                    // }
+
+                    // createTR.appendChild(endTD);
+                    //자원자 서명
+                    var signTD = document.createElement("td");
+                    if (data_eval[i].SIGN != null) {
+                        signTD.innerText = data_eval[i].SIGN;
+                    }
+                    createTR.appendChild(signTD);
+                    //연구자 서명
+                    if (inv_sign_coption == 1) {
+                        var inv_signTD = document.createElement("td");
+
+                        if (data_eval[i].INV_SIGN != null) {
+                            inv_signTD.innerText = data_eval[i].INV_SIGN;
+                        }
+                        createTR.appendChild(inv_signTD);
+                    }
+
+                    //설문 결과 보기 버튼
+                    var screeningTD = document.createElement("td");
+                    var aa = document.createElement('a');
+                    aa.setAttribute("class", "btn btn-secondary btn-sm ml-2");
+                    // aa.setAttribute("class", "btn btn-disabled btn-sm ml-2");
+                    // aa.setAttribute("disabled","disabled");
+                    // aa.appendChild(document.createTextNode("결과보기"));
+
+                    // aa.setAttribute("class", "btn btn-success btn-sm ml-2");
+                    // aa.appendChild(document.createTextNode("결과보기"));
+                    if (data_eval[i].SUBMIT_SURVEY == 1) {
+                        aa.setAttribute("class", "btn btn-primary btn-sm ml-2");
+                        aa.appendChild(document.createTextNode("결과"));
+                        aa.href = "./prescreening.html?SAID=" + data_eval[i].SAID + "&SID=" + SID + "&SCREENING_ID="+ data_eval[i].SCREENING_ID+ "&SUBMIT_SURVEY=" + data_eval[i].SUBMIT_SURVEY;
+                  
+                    }
+                    else {
+                        aa.setAttribute("class", "btn btn-light btn-sm ml-2");
+                        aa.appendChild(document.createTextNode("미작성"));
+                        //aa.setAttribute("pointer-events","none");
+                        aa.href = "#";
+                      
+                        
+                    }
+   
+                    //a.title = "my consent history";
+                    screeningTD.appendChild(aa);
+
+                    createTR.appendChild(screeningTD);
+                    table_source.push(createTR);
+
+                }//end for
+
+                if (table != null) table.destroy();
+                $('#APPL_TABLE_BODY').empty();
+                $('#APPL_TABLE_BODY').html(table_source);
+                CHECK_QNA();
+
+                $('.selectpicker').on('focus', function (e) {
+                    ismodify = true;
+                })
+
+                $('.selectpicker').on('blur', function (e) {
+                    ismodify = false;
+                })
+
+                table = $('#APPLS_TABLE').DataTable({
+                    "aLengthMenu": [[10, 50, 100, -1], [10, 50, 100, "All"]],
+                    "iDisplayLength": setNumEntries,
+                    "columnDefs": [{
+                        targets: [1],
+                        render: function (data, type, full, meta) {
+                            if (type === 'filter' || type === 'sort') {
+                                var api = new $.fn.dataTable.Api(meta.settings);
+                                var td = api.cell({ row: meta.row, column: meta.col }).node();
+                                var $input = $('select, input', td);
+                                if ($input.length && $input.is('select')) {
+                                    data = $('option:selected', $input).text(); // 선택한 상택값의 보기(text) 로 정렬
+                                } else {
+                                    data = $input.val();// 선택한 상택값의 value 로 정렬
+                                }
+                            }
+                            return data;
+                        }
+                    }]
+                });
+
+                $('#APPLS_TABLE_length select').on('change', function () { // 표 row 개수 선택
+                    //setNumEntries=this.value;
+                    setNumEntries = this.value;
+                    console.log(this.value + "-----------" + setNumEntries);
+                });
+                $('#APPLS_TABLE_filter input')[0].placeholder = "검색 단어 입력";
+
+                // table = $('#APPLS_TABLE').DataTable({
+                //     'columns': COLUMN,
+                //     'order': [[1, 'asc']]
+                // });
+            }
+        }
+        xhttp.open("POST", "./applicant.jsp?action=LOAD_APPLICANT&SID=" + SID + "&CONSENTID=" + CONSENTID, true);
+        xhttp.send();
+    }
+</script>
+
+<div class="mt-4 pt-3 mb-0 pb-0 d-flex justify-content-end">
+    <h5 class="myinfo "> ※ 아래 테이블의 모든 데이터를 검색할 수 있습니다. </h5>
+</div>
+<div class="table-responsive " id="modifyBTNDIV">
+    <table class="table w-100 bg-white" id="APPLS_TABLE"
+        style="text-align: center; table-layout:fixed;  min-width: 900px;">
+        <thead>
+            <tr id="APPL_TABLE_HEAD_TR">
+                <th width="50px">번호</th>
+                <th width="90px">상태</th>
+                <th width="120px">이름</th>
+                <!-- <th  width="60px">성별</th> -->
+                <th width="100px">생년월일</th>
+                <!-- <th  width="140px">핸드폰번호</th> -->
+                <th width="100px">동의시작</th>
+                <!-- <th  width="100px">동의종료</th> -->
+                <th width="100px">자원자 서명</th>
+            </tr>
+        </thead>
+        <tbody id="APPL_TABLE_BODY"></tbody>
+    </table>
+</div>
+
+<!----------------------------- MODAL ------------------------------------>
+<!-- 
+<div class="modal fade" id="qnaModal" tabindex="-1" role="dialog" aria-labelledby="qnaTITLE" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="qnaTITLE"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0" id="qna_body"></div>
+        </div>
+    </div>
+</div> -->

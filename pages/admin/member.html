@@ -1,0 +1,289 @@
+<script type="text/javascript">
+    var ROLEID;
+
+    $(document).ready(function(){
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                var data_eval = eval(data_pre);
+                members = data_eval;
+                console.log(members);
+                for(var i = 0; i < data_eval.length; i++){
+                    var createTR = document.createElement("tr");
+                    document.getElementById("member_table").appendChild(createTR);
+
+                    var INVIDTD = document.createElement("td");
+                    INVIDTD.appendChild(document.createTextNode(i+1));
+                    createTR.appendChild(INVIDTD);
+
+                    var INVNAMETD = document.createElement("td");
+                    INVNAMETD.appendChild(document.createTextNode(data_eval[i].INVNAME));
+                    createTR.appendChild(INVNAMETD);
+
+                    var INVDEPARTMENTTD = document.createElement("td");
+                   if (data_eval[i].INVDEPARTMENT) INVDEPARTMENTTD.appendChild(document.createTextNode(data_eval[i].INVDEPARTMENT));
+                    createTR.appendChild(INVDEPARTMENTTD);
+
+                    var INVOFFICETD = document.createElement("td");
+                    if (data_eval[i].INVOFFICE) INVOFFICETD.appendChild(document.createTextNode(data_eval[i].INVOFFICE));
+                    createTR.appendChild(INVOFFICETD);
+
+                    var INVPOSITIONTD = document.createElement("td");
+                    if (data_eval[i].INVPOSITION) INVPOSITIONTD.appendChild(document.createTextNode(data_eval[i].INVPOSITION));
+                    createTR.appendChild(INVPOSITIONTD);
+
+                    var INVMAILTD = document.createElement("td");
+                    INVMAILTD.appendChild(document.createTextNode(data_eval[i].INVMAIL));
+                    createTR.appendChild(INVMAILTD);
+
+                    //전화번호
+                    var INVPHONETD = document.createElement("td");
+
+                    if (data_eval[i].INVPHONENUM)       
+                        INVPHONETD.appendChild(document.createTextNode(data_eval[i].INVPHONENUM));
+                                  
+                    createTR.appendChild(INVPHONETD);
+
+                    //핸드폰
+
+                    var INVCELLPHONETD = document.createElement("td");
+                  
+                    if (data_eval[i].INVCELLPHONENUM){         
+                      
+                            
+                            INVCELLPHONETD.appendChild(document.createTextNode(data_eval[i].INVCELLPHONENUM));
+
+                    } 
+              
+                    createTR.appendChild(INVCELLPHONETD);
+
+                    var ROLEIDTD = document.createElement("td");
+                    var selectDIV = document.createElement("div");
+                   // selectDIV.setAttribute("class", "form-group");
+                    var statusSELECT = document.createElement("select");
+                    statusSELECT.setAttribute("class", "form-control form-control-sm");
+                    statusSELECT.setAttribute("name", "statusSELECT");
+                    statusSELECT.setAttribute("id", "status_SELECT_"+data_eval[i].INVID);
+                    statusSELECT.setAttribute("onchange", "SELECTED(id)");
+
+                    for(var j = 0; j < roles.length; j++){
+                        var option = document.createElement("option");
+                        option.setAttribute("value", roles[j].ROLEID);
+                        option.appendChild(document.createTextNode(roles[j].ROLETITLE));
+                        if(data_eval[i].ROLEID == roles[j].ROLEID) option.setAttribute("selected", "");
+                        statusSELECT.appendChild(option);
+                    }
+
+                    selectDIV.appendChild(statusSELECT);
+                    ROLEIDTD.appendChild(selectDIV);
+                    createTR.appendChild(ROLEIDTD);
+                    if(i==0) statusSELECT.disabled=true;  //사이트 관리자인경우 다른 권한자로 수정 못한다.
+
+                    //ACTIVE, 재직
+                    var ACTIVETD = document.createElement("td");
+                    ACTIVETD.setAttribute("align", "center");
+                    var ACTIVESPAN = document.createElement("span");
+                    
+                    var active="재직";
+                    switch(data_eval[i].ACTIVE) {
+                        case 0:
+                            ACTIVESPAN.setAttribute("class", "badge badge-secondary");
+                            ACTIVESPAN.appendChild(document.createTextNode("퇴사"));
+                    
+                            break; 
+                        case 1:
+                            ACTIVESPAN.setAttribute("class", "badge badge-success");
+                            ACTIVESPAN.appendChild(document.createTextNode("승인"));
+             
+                            break;
+                        default: 
+                            ACTIVESPAN.setAttribute("class", "badge badge-danger");
+                            ACTIVESPAN.appendChild(document.createTextNode("승인대기"));
+                        break;
+                    }
+       
+                    ACTIVETD.appendChild(ACTIVESPAN);
+                    createTR.appendChild(ACTIVETD);
+
+                    var INVMODIFYTD = document.createElement("td");
+                    var modifyButton = document.createElement("button");
+                    modifyButton.setAttribute("class", "btn btn-outline-primary btn-sm");
+                    modifyButton.setAttribute("id", "DETAILBTN_" + data_eval[i].INVID);
+                    modifyButton.setAttribute("onclick", "MODIFY(id)");
+                    modifyButton.setAttribute("style", "font-weight: bold;");
+                    modifyButton.appendChild(document.createTextNode("수정"));
+                    INVMODIFYTD.appendChild(modifyButton);
+                    createTR.appendChild(INVMODIFYTD);
+
+                    // 패스워드 초기화
+                    var RESEETPSW = document.createElement("td");
+                    var resetButton = document.createElement("button");
+                    resetButton.setAttribute("class", "btn btn-outline-primary btn-sm");
+                    resetButton.setAttribute("id", data_eval[i].INVID + "_" + data_eval[i].INVNAME + "_" + data_eval[i].INVMAIL);
+                    resetButton.setAttribute("onclick", "RESETPSW_CHECK(id)");
+                    resetButton.setAttribute("style", "font-weight: bold;");
+                    resetButton.appendChild(document.createTextNode("초기화"));
+                    RESEETPSW.appendChild(resetButton);
+                    createTR.appendChild(RESEETPSW);
+
+                }
+                
+                $('#members_table').dataTable({
+                    columnDefs: [
+                        { 
+                            targets: [8], 
+                            render: function(data, type, full, meta){
+                                if(type === 'filter' || type === 'sort'){
+                                    var api = new $.fn.dataTable.Api(meta.settings);
+                                    var td = api.cell({row: meta.row, column: meta.col}).node();
+                                    var $input = $('select, input', td);
+                                    if($input.length && $input.is('select')){
+                                    data = $('option:selected', $input).val();
+                                    } else {                   
+                                    data = $input.val();
+                                    }
+                                }
+
+                                return data;
+                            }
+                        },
+                        {
+                            targets: [9,10,11],
+                            orderable: false
+                        }
+                    ]
+                });
+            }
+        }
+        xhttp.open("GET", "./member.jsp?action=load", false);
+        xhttp.send();
+    })
+
+    function RESETPSW_CHECK(id, name, email){
+        var INVID = id.split("_")[0];
+        var name = id.split("_")[1];
+        var email = id.split("_")[2];
+
+        var br = "\r\n"
+        var msg = "계정 비밀번호를 초기화 하시겠습니까?" + br + 
+        "[정보]" + br + 
+        "계정 : " + email + br + 
+        "이름 : " + name;
+
+        if (confirm(msg)){
+            RESETPSW(INVID);
+        }
+    }
+
+    function RESETPSW(id){
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function(){
+                if(this.readyState == this.DONE && this.status == 200){
+                    var responseString = xhttp.responseText.trim();
+                    alert(responseString);
+                }
+            }
+            xhttp.open("GET", "./member.jsp?action=reset_psw&INVID="+id);
+            xhttp.send();
+    }
+
+    function MODIFY(id){
+        var INVID = id.split("_")[1];
+      //  localStorage.setItem("MODIFY_TYPE", "INV");
+        localStorage.setItem("MODIFY_INVID", INVID);
+      //  location.href="modify.html";
+       // var INVID = localStorage.getItem("MODIFY_INVID");
+                    console.log(INVID);
+                    $.ajax({
+                        type: 'get',
+                        //url : "modify_member.html?INVID="+INVID,
+                        url : "modify_member.html",
+                        dataType: 'html',
+                        success: function(data){
+                            console.log("suceess");
+                            $("#member_content").html(data);
+                        }
+                    });
+
+    }
+
+    function CREATE(){
+        localStorage.setItem("ADD_TYPE", "INV");
+        // location.href="create.html";
+        $.ajax({
+                        type: 'post',
+                        url : "create_member.html",
+                        dataType: 'html',
+                        success: function(data){
+                            console.log("suceess");
+                            $("#member_content").html(data);
+                        }
+                    })
+
+    }
+
+    function SELECTED(id){
+        var INVID = id.split("_")[2];
+        var selectedvalue = $("#"+id+" option:selected").val();
+        changeState(INVID, selectedvalue);
+    }
+
+    function changeState(id, status){
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function(){
+            if(this.readyState == this.DONE && this.status == 200){
+
+            }
+        }
+        xhttp.open("GET", "./member.jsp?action=change_role&INVID="+id+"&status="+status);
+        xhttp.send();
+
+    }
+
+</script>
+<div id="member_content"   >
+<div class="tab-pane fade show active" id="member" role="tabpanel" aria-labelledby="member-tab" style="border-color: gray;">
+    <h5 class="myinfo mt-1 mb-4 ">※ 그룹별 사용권한을 이용하여 사용자 별 플랫폼 기능권한을 만들어 관리할 수 있습니다.
+        </h5>
+        <div class="d-flex justify-content-between ">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb p-0 m-0" style="background-color:transparent;">
+    
+                        <li class="breadcrumb-item active " aria-current="page">사용자 명단</li>
+                        <li class="breadcrumb-item  primary-color "></li>
+                    </ol>
+                </nav>
+            </div>
+            <button class="btn btn-danger" onclick="CREATE()" style="font-weight: bold; ">사용자 추가하기</button>
+    
+        </div>
+
+    <!-- <div class="mb-4" style="text-align: right;">
+        <button class="btn btn-danger" onclick="CREATE()" style="font-weight: bold; ">사용자 추가하기</button>
+    </div> -->
+    <div class="table-responsive mt-3">
+        <table class="table w-100 bg-white" id="members_table"   style="text-align: center;table-layout:fixed; min-width:800px">
+        
+            <thead style="background-color: rgb(235,235,235);">
+                <tr style="text-align: center; font-weight: bold;">
+                    <th width="30px">번호</th>
+                    <th width="40px">이름</th>
+                    <th width="80px">소속병원</th>
+                    <th width="50px">부서/팀</th>
+                    <th width="40px">직책</th>
+                    <th width="100px">이메일</th>
+                    <th width="80px">전화번호</th>
+                    <th width="90px">핸드폰번호</th>
+                    <th width="60px">기능권한</th>
+                    <th width="45px">활성화</th>
+                    <th width="45px">수정</th>
+                    <th width="60px">패스워드</th>
+                </tr>
+            </thead>
+            <tbody id="member_table" style="text-align: center; vertical-align: center;"></tbody>
+        </table>
+    </div>
+</div>
+</div>

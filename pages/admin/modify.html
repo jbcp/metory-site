@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+    <link rel="stylesheet" href="../../assets/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../../assets/lib/font-awesome/css/all.css">
+    <link rel="stylesheet" href="../../assets/css/app.css">
+    <link rel="stylesheet" href="../../assets/css/modern.css">
+    <link rel="stylesheet" href="../../assets/css/custom.css">
+    <script src="../../assets/lib/jquery/jquery.min.js" type="text/javascript"></script>
+
+    <title>METORY (연구자용)</title>
+    <script type="text/javascript">
+
+        $(document).ready(function(){
+            // $.ajax({
+            //     type: 'post',
+            //     url : getContextPath()+"/pages/navbar.html",
+            //     dataType: 'html',
+            //     success: function(data){
+            //         $(".navbar").html(data);
+            //     }
+            // })
+            $('#navbar').load(getContextPath() +'/pages/navbar.html').ready(function(){
+                    $('.main').css('padding-top', $('.navbar').outerHeight());
+
+                });
+            var type = localStorage.getItem("MODIFY_TYPE");
+            console.log(type);
+            switch(type){
+                case 'INV':
+                    var INVID = localStorage.getItem("MODIFY_INVID");
+                    console.log(INVID);
+                    $.ajax({
+                        type: 'get',
+                        url : "modify_member.html?INVID="+INVID,
+                        dataType: 'html',
+                        success: function(data){
+                            console.log("suceess");
+                            $("#mycontent").html(data);
+                        }
+                    })
+
+                break;
+
+                case 'ROLE':
+                    var ROLEID = localStorage.getItem("MODIFY_ROLEID");
+                    $.ajax({
+                        type: 'get',
+                        url : "modify_role.html?ROLEID="+ROLEID,
+                        dataType: 'html',
+                        success: function(data){
+                            console.log("suceess");
+                            $("#mycontent").html(data);
+                        }
+                    })
+
+                break;
+            }
+
+        })
+
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search);
+            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+        function getContextPath() {         
+                var hostIndex=location.href.indexOf(location.host)+ location.host.length;
+                // return location.href.substring(hostIndex, location.href.indexOf('/', hostIndex+1));
+                return location.origin;
+        }
+
+    </script>
+  </head>
+  <body>
+    <div id="navbar"></div>
+    <div class="container mt-3" id="mycontent" >
+    </div>
+    <script src="../../assets/js/app.js"></script>
+  </body>
+</html>

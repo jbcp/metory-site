@@ -1,0 +1,426 @@
+<script type="text/javascript">
+ // var study_active=1;
+    var last_pi_id=0;
+    $(document).ready(function () {
+       
+        $('.number_input').keypress(function (event) {
+            if (event.which && (event.which <= 47 || event.which >= 58) && event.which != 8) {
+                event.preventDefault();
+            }
+        });
+        $('.inputs').css('border-radius', '0rem');
+        $('.short').css("width", "250px");
+        // In your Javascript (external .js resource or <script> tag)
+
+ 
+
+
+        var xhttps = new XMLHttpRequest();
+        xhttps.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttps.responseText.trim();
+                var data_eval = eval(data_pre);
+                //var sponsors = data_eval;
+                for (var j = 0; j < data_eval.length; j++) {
+                    var option = document.createElement("option");
+                    option.setAttribute("value", data_eval[j].SPONSORID);
+                    option.appendChild(document.createTextNode(data_eval[j].SPONSORNAME));
+                    document.getElementById("selectSponsor").appendChild(option);
+                
+                }
+            }
+        }
+        xhttps.open("GET", "./study.jsp?action=load_sponsors", false);
+        xhttps.send();
+
+
+
+        $('#selectSponsor').select2({
+            placeholder: "의뢰자 선택",
+           
+            tags: true
+        });
+
+
+
+        // $('#selectPi').on("change",function() {
+        //     $('#selectPi2').val($(this).val()).trigger('change');           
+              
+        //    });
+
+ 
+// $('#selectPi').change(function(e) {
+//     $('#selectPi2').val(this.value); // "this" is the changed one selectPi2
+// console.log(this.value);
+//     // do whatever else you need to do
+// });
+
+         
+        if (action == "create") document.getElementById('modifytr').setAttribute("style", "display: none");
+
+        if (action == "modify") {
+            var modifyBTN = document.createElement("button");
+            document.getElementById("modifyBTNDIV").appendChild(modifyBTN);
+            modifyBTN.setAttribute("class", "btn btn-outline-danger ");
+         
+            modifyBTN.setAttribute("onclick", "check_pub()");
+            modifyBTN.appendChild(document.createTextNode("저장하기"));
+
+            $('#pitr').hide();
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttp.responseText.trim();
+                    var data_eval = eval(data_pre);
+                    console.log(data_eval)
+                
+               // switch(data_eval[0].SSTAT){
+                //     case 1:
+                //         $("#status_BTN1").attr("class", "btn btn-outline-primary active");
+                //         $("#status_BTN2").attr("class", "btn btn-outline-primary");
+                //         $("#status_BTN3").attr("class", "btn btn-outline-primary");
+                //         $("#status1").prop("checked", true);
+                //     break;
+                //     case 2:
+                //         $("#status_BTN1").attr("class", "btn btn-outline-primary");
+                //         $("#status_BTN2").attr("class", "btn btn-outline-primary active");
+                //         $("#status_BTN3").attr("class", "btn btn-outline-primary");
+                //         $("#status2").prop("checked", true);
+                //     break;
+                //     case 3:
+                //         $("#status_BTN1").attr("class", "btn btn-outline-primary");
+                //         $("#status_BTN2").attr("class", "btn btn-outline-primary");
+                //         $("#status_BTN3").attr("class", "btn btn-outline-primary active");
+                //         $("#status3").prop("checked", true);
+                //     break;
+                //     default:                      
+                //         $("#status1").prop("checked", true);
+                //     break;
+                // }
+
+                
+                if (data_eval[0].SACTIVE==1 ){                  
+                    $('#study_active').click();   
+                     study_active=1;                   
+                }                
+                else {                  
+                    $('#study_inactive').click();
+                   study_active=0;
+                }         
+
+
+                    $('#selectSponsor').val(data_eval[0].SPONSORID).trigger('change');
+
+                    document.getElementById("protocol_no").value = data_eval[0].PRTNO;
+                    if(typeof(data_eval[0].PRTNO)=='undefied' || data_eval[0].PRTNO=="" || data_eval[0].PRTNO==null || typeof(data_eval[0].SPONSORID)=='undefied' || data_eval[0].SPONSORID=="0" || data_eval[0].SPONSORID==null || data_eval[0].SPONSORID=="" )
+                        document.getElementById("TAB_ICON_1").setAttribute("class", "ml-1 tab_icon fas fa-ban ");
+                    else {
+                          document.getElementById("TAB_ICON_1").setAttribute("class", "ml-1 tab_icon fas fa-check");
+                         
+                          document.getElementById("TAB_ICON_1").setAttribute("style", "color: #28a745; font-size:large;");   
+                    }
+
+                    if (data_eval[0].TITLE) document.getElementById("study_title").value = data_eval[0].TITLE;
+                    document.getElementById("study_applicant_number").value = data_eval[0].SNUM;
+                    if (data_eval[0].STARGET) document.getElementById("study_target").value = data_eval[0].STARGET;
+
+
+                    switch (data_eval[0].SAPPL) {
+                        case '건강한 성인':
+                            //document.getElementById("applicantOption1").checked= true;   
+                            $('#applicantOption1').click();
+                            //    $('#applicantOption1').prop= true;          
+                            break;
+                        case '질환 자원자':
+                            //console.log("질환");
+                            //document.getElementById("applicantOption2").checked= true;                   
+                            $('#applicantOption2').click();
+                            break;
+                        default:
+                            $('#applicantOption1').click();
+                            break;
+                    }
+
+                    switch (data_eval[0].SSEX) {
+                        case 1:
+                            //document.getElementById("gender1").checked= true; 
+                            $('#gender1').click();
+                            break;
+                        case 2:
+                            //document.getElementById("gender2").checked= true; 
+                            $('#gender2').click();
+                            break;
+                        case 3:
+                            //document.getElementById("gender3").checked= true; 
+                            $('#gender3').click();
+                            break;
+                        default:
+                            //document.getElementById("gender1").checked= true; 
+                            $('#gender1').click();
+                            break;
+                    }
+                }
+            }
+            xhttp.open("GET", "./study.jsp?action=LOAD_STUDY_INFO&SID=" + SID, true);
+            xhttp.send();
+
+        }
+        else {
+            $('#applicantOption1').click();
+            $('#gender1').click();
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var data_pre = xhttp.responseText.trim();
+                    var pis = eval(data_pre);
+                     for (var j = 0; j < pis.length; j++) {
+                        if (pis[j].INVMAIL.substring(0,6)=="admin@")
+                        continue;
+                     
+                        var option = document.createElement("option");
+                        option.setAttribute("value", pis[j].INVID);
+                        option.appendChild(document.createTextNode(pis[j].INVNAME));
+                        document.getElementById("selectPi").appendChild(option);
+                    }
+                }
+            }        
+            xhttp.open("GET", "./study.jsp?action=LOAD_SITE_DOCTOR_LIST", false);
+            xhttp.send();
+
+            $('#selectPi').select2({
+                placeholder: "시험책임자 선택"               // allowClear: true
+            });
+
+            $('#selectPi').change(function (e) {
+                var pivalue = $("#selectPi option:selected").val();
+                if(pivalue!=last_pi_id){
+                    if(confirm( $("#selectPi option:selected").text()+" 님을 PI로 설정하시겠습니까?")==true){
+                        last_pi_id= $("#selectPi option:selected").val();
+                    }
+                    else{
+                        console.log(pivalue+"last_pi_id" + last_pi_id);
+                      if(last_pi_id==0)  $('#selectPi').val('').change();
+                      else $('#selectPi').val(last_pi_id).trigger('change');
+                    }                
+             }
+            });
+
+        }
+    });
+
+    function check_pub() {
+       // console.log($('input[name=study_options]:checked').val() +" study_active="+study_active);
+        if (action == "modify"){
+           var study_active_tosave= $('input[name=study_options]:checked').val();            
+            if(study_active==0 && study_active_tosave==0){
+                alert("종료된 연구는 수정할 수 없습니다.");
+                return;
+            }
+        }
+     
+        var PRTNO = document.getElementById("protocol_no").value.trim();
+        // var SPONSOR=document.getElementById("sponsor_id").text();
+        var SPONSORNAME = $("#selectSponsor option:selected").text().trim();
+        var SPONSORID = $("#selectSponsor option:selected").val().trim()
+        var  PIID = $("#selectPi option:selected").val();
+        console.log("action" + action);
+        if (PRTNO == "" || SPONSORID == "" ||( action!="modify" && PIID=="") ) {
+            
+            
+            alert("필수 입력사항을 확인해주세요.");
+             
+        }
+        else if(SPONSORID==SPONSORNAME &&!isNaN(SPONSORID) ){ //의뢰자가 사용자 입력값인 경우, 숫자가 들어와서는 안된다.
+            alert("입력하신 의뢰자는 숫자값입니다. 다시 의뢰자명을 입력하여 주세요.");
+        }
+        else {
+            publish_info();
+        }
+    }
+
+
+
+    function publish_info() {
+
+        var jspAction ="";
+
+
+        
+        var PRTNO = document.getElementById("protocol_no").value.trim();
+        // var SPONSOR=document.getElementById("sponsor_id").value;  
+        var SPONSORID = $("#selectSponsor option:selected").val();
+        var PIID = $("#selectPi option:selected").val();
+        // console.log("SPONSOR2="+SPONSOR2);   
+        var STITLE = document.getElementById("study_title").value.trim();
+        var SAPPLICANT = $('input[name=applicantOptions]:checked').val();
+        var SSEX = $('input[name=genderOptions]:checked').val();
+        var SNUM = document.getElementById("study_applicant_number").value.trim();
+        var STARGET = document.getElementById("study_target").value.trim();
+        if (action == "modify"){
+             jspAction = "MODIFY_INFO&SID=" + SID + "&SACTIVE="+  $('input[name=study_options]:checked').val();
+        }
+        else jspAction = action+"&PIID="+PIID;
+
+        // if(SAPPLICANT==undefined) SAPPLICANT='건강한 성인';
+        // if(SSEX==undefined) SSEX=1;
+
+        var params = "action=" + jspAction +
+            "&PRTNO=" + PRTNO +
+            "&SPONSORID=" + SPONSORID +           
+            "&STITLE=" + STITLE +
+            "&SAPPLICANT=" + SAPPLICANT +
+            "&SSEX=" + SSEX +
+            "&SNUM=" + SNUM +
+            "&STARGET=" + STARGET;
+
+
+        console.log("params=" + params);
+
+       
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                //   var data_eval = eval(data_pre);
+               
+                if (data_pre.startsWith("error")) {
+                    alert(data_pre);
+                }
+                else if (action == "modify") {
+                    alert("저장되었습니다.");
+                    // console.log("create in study_info.html");
+                     location.reload();
+                }
+               else if (action == "create") location.href = "./study.html";
+                //  location.href="./study.html";
+
+            }
+        }
+        xhttp.open("GET", "./study.jsp?" + params, true);
+        xhttp.send();
+
+
+    }
+
+
+</script>
+<div style="text-align: right;" id="modifyBTNDIV"></div>
+<div id="modifytr" class="ml-3 d-flex flex-inline">
+    
+            
+    <label style="font-weight: bold;width: 150px;">연구진행여부</label>
+         
+                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                    <label class="btn btn-outline-primary active" style="border-radius: 0rem;">
+                        <input type="radio" name="study_options" id="study_active" value="1" autocomplete="off" active> 진행중
+                    </label>
+                    <label class="btn btn-outline-primary" style="border-radius: 0rem;">
+                        <input type="radio" name="study_options" id="study_inactive" value="0" autocomplete="off"> 연구종료
+                    </label>
+              
+                </div>
+     
+     </div>
+        <hr>
+<table class="table table-borderless">
+    <tbody>
+        <!-- <tr   class="pb-3 mb-3" id="modifytr" >
+            
+            <td><label style="font-weight: bold;">연구상태</label></td>
+            <td>
+                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                    <label class="btn btn-outline-primary active" style="border-radius: 0rem;">
+                        <input type="radio" name="study_options" id="study_active" value="1" autocomplete="off" active> 진행중
+                    </label>
+                    <label class="btn btn-outline-primary" style="border-radius: 0rem;">
+                        <input type="radio" name="study_options" id="study_inactive" value="0" autocomplete="off"> 연구종료
+                    </label>
+              
+                </div>
+            </td>
+        </tr>
+         -->
+        <tr>
+            <td style="width: 150px;"><label style="font-weight: bold;">연구계획서 번호<span
+                        style="color: red;">*</span></label></td>
+            <td><input class="form-control form-control-lg inputs short pl-3" type="text" id="protocol_no"
+                    maxlength="200" required></td>
+        </tr>
+        <tr>
+            <td><label style="font-weight: bold;">의뢰자<span style="color: red;">*</span></label></td>
+            <!-- <td><input class="form-control form-control-lg inputs short" type="text" id="sponsor_id" required></td> -->
+            <td>
+               
+                <select class="js-example-basic-single form-control form-control-lg short" id="selectSponsor"
+                    name="sponsor">
+                    <option></option>
+                </select>
+                <h3 class="myinfo mt-1">※ 선택목록에서 의뢰자 이름을 입력하여 찾거나 추가하실 수 있습니다. 추가하시려면 의뢰자 이름을 입력하신 후 엔터키를 누르세요.</h3>
+            </td>
+        </tr>
+        <tr>
+            <td><label style="font-weight: bold;">연구명</label></td>
+            <td><input class="form-control form-control-lg inputs" type="text" id="study_title" maxlength="2000"
+                    placeholder="연구명을 입력하세요."></td>
+        </tr>
+        <tr id="pitr">
+            <td style="width: 150px;"><label style="font-weight: bold;">시험 책임자 (PI)<span
+                        style="color: red;">*</span></label></td>
+            <td>
+                <select class="js-example-basic-single form-control form-control-lg short " id="selectPi" name="pi">
+                    <option></option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td><label style="font-weight: bold;">대상자</label></td>
+            <td>
+                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                    <label class="btn btn-outline-primary active" style="border-radius: 0rem;">
+                        <input type="radio" name="applicantOptions" id="applicantOption1" value="건강한 성인"
+                            autocomplete="off"> 건강한 성인
+                    </label>
+                    <label class="btn btn-outline-primary" style="border-radius: 0rem;">
+                        <input type="radio" name="applicantOptions" id="applicantOption2" value="질환 자원자"
+                            autocomplete="off"> 질환 자원자
+                    </label>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td><label style="font-weight: bold;">성별</label></td>
+            <td>
+                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                    <label class="btn btn-outline-primary active" style="border-radius: 0rem;">
+                        <input type="radio" name="genderOptions" id="gender1" value="1" autocomplete="off"> 남자
+                    </label>
+                    <label class="btn btn-outline-primary" style="border-radius: 0rem;">
+                        <input type="radio" name="genderOptions" id="gender2" value="2" autocomplete="off"> 여자
+                    </label>
+                    <label class="btn btn-outline-primary" style="border-radius: 0rem;">
+                        <input type="radio" name="genderOptions" id="gender3" value="3" autocomplete="off"> 남녀모두
+                    </label>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td><label style="font-weight: bold;">목표 모집인원</label></td>
+            <td>
+                <form class="form-inline">
+
+                    <input class="form-control form-control-lg inputs short mr-2 number_input" type="number"
+                        id="study_applicant_number" placeholder="Ex) 64"
+                        oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+                        maxlength="9"><span>명</span>
+                </form>
+            </td>
+        </tr>
+        <tr>
+            <td><label style="font-weight: bold;">적응증</label></td>
+            <td><input class="form-control form-control-lg short inputs" type="text" id="study_target" maxlength="100">
+            </td>
+        </tr>
+        
+    </tbody>
+</table>

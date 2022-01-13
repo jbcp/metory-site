@@ -1,0 +1,337 @@
+<script type="text/javascript">
+ var existInformedConsentGroup=false;
+    $(document).ready(function () {
+        var SID = getParameterByName('SID');
+        var CSGRPID;
+        var consent_action;
+        var selected_consent_id;
+        var selected_consent_group;
+        var consent_group_type_array = ["", "Informed Consent", "기타"];
+       
+        var xhttp = new XMLHttpRequest();
+        console.log("study_consent_list.html");
+
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                var data_eval = eval(data_pre);
+                consents = data_eval;
+                $('#consent_list').empty();
+                if( data_eval.length==0){
+                       // console.log(" 없음");
+                        var createTR = document.createElement("tr");
+                         document.getElementById("consent_list").appendChild(createTR);
+                         var createTD = document.createElement("td");
+                         var span = document.createElement("span");
+                        span.innerText = "동의서가 없습니다.";                     
+                        createTD.appendChild(span);
+                        createTD.setAttribute("colspan", "6");
+                        createTR.appendChild(createTD);
+                      
+                    
+
+                    }
+                for (var i = 0; i < data_eval.length; i++) {
+                  
+
+                    var createTR = document.createElement("tr");
+                    document.getElementById("consent_list").appendChild(createTR);
+
+
+                    // var createTD = document.createElement("td");
+                    // // if ((typeof (nowConsentID) != 'undefined') && (data_eval[i].CSLASTVERSIONCONSENTID == nowConsentID)) {
+                    // //     // console.log("nowConsentID="+nowConsentID+" CSLASTVERSIONCONSENTID="+data_eval[i].CSLASTVERSIONCONSENTID);
+                    // //     var span = document.createElement("span");
+                    // //     span.innerText = "ACTIVE";
+                    // //     span.setAttribute("class", "badge badge-success mr-2");
+                    // //     createTD.appendChild(span);
+                    // // }
+                    // createTR.appendChild(createTD);
+                    var numTD = document.createElement("td");                  
+                    var num=i+1;
+                    numTD.appendChild(document.createTextNode(num));                  
+                  
+                    createTR.appendChild(numTD);
+      
+
+
+                    var groupnameTD = document.createElement("td");
+
+                    groupnameTD.appendChild(document.createTextNode(data_eval[i].CSGRPTITLE));
+                    createTR.appendChild(groupnameTD);
+
+    
+
+
+                    var typeTD = document.createElement("td");
+                    typeTD.appendChild(document.createTextNode(consent_group_type_array[data_eval[i].CSGRPTYPE]));
+                    if(data_eval[i].CSGRPTYPE==1)existInformedConsentGroup=true;
+                    createTR.appendChild(typeTD);
+
+                    var versionTD = document.createElement("td");
+                    if (data_eval[i].CSLASTVERSION == undefined) versionTD.appendChild(document.createTextNode("-"));
+                    else versionTD.appendChild(document.createTextNode(data_eval[i].CSLASTVERSION));
+                    createTR.appendChild(versionTD);
+
+                    var dateTD = document.createElement("td");
+                    if (data_eval[i].CSLASTVERSIONDATE == undefined) dateTD.appendChild(document.createTextNode("-"));
+                    else dateTD.appendChild(document.createTextNode(data_eval[i].CSLASTVERSIONDATE));
+                    createTR.appendChild(dateTD);
+
+                    var publishTD = document.createElement("td");
+                    if (typeof data_eval[i].CSLASTVERSIONCFILEHASH == 'undefined') publishTD.appendChild(document.createTextNode("-"));
+                    else if (data_eval[i].CSLASTVERSIONCFILEHASH == null) {
+                        publishTD.appendChild(document.createTextNode("-"));
+                    }
+                    else {
+                        publishTD.appendChild(document.createTextNode(data_eval[i].CSLASTVERSIONCFILEHASH));
+
+
+                        //active tag 
+                        numTD.appendChild(document.createElement("br"));
+                        var span = document.createElement("span");
+                        span.innerHTML = "ACTIVE";
+                        span.setAttribute("class", "badge badge-success");
+                        numTD.appendChild(span);
+                    }
+
+                    createTR.appendChild(publishTD);
+
+                    var actionTD = document.createElement("td");
+                    createTR.appendChild(actionTD);
+
+                    var groupdetailBTN = document.createElement("btn");
+                    groupdetailBTN.setAttribute("class", "btn btn-sm btn-outline-primary");
+                    groupdetailBTN.setAttribute("id", "group_detail_BTN_" + data_eval[i].CSGRPID+"_"+data_eval[i].CSGRPTITLE);
+                    groupdetailBTN.setAttribute("onclick", "SHOW_GROUP_DETAIL_BTN_CLICKED(id)")
+                    groupdetailBTN.appendChild(document.createTextNode("문서 관리"));
+                    actionTD.appendChild(groupdetailBTN);
+
+                }
+            }
+        }
+        xhttp.open("GET", "./study.jsp?action=LOAD_STUDY_GROUP&SID=" + SID, true);
+        xhttp.send();
+
+        history.pushState(null, null, location.href);
+        window.onpopstate = function (event) {
+            location.href = contextpath + "/pages/study/study.html"
+        };
+    })
+
+    function getParameterByName(name) {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(location.search);
+        return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+
+    function CREATE_CONSENT_GROUP_BTN_CLICKED() {
+        if(study_active==0) {
+            alert("종료된 연구는 동의그룹을 추가 수 없습니다.");
+                return;
+        }
+        $('#create_consent_group').modal('show');
+       // document.getElementById("group_title").value="";
+    }
+
+    function CREATE_GROUP() {
+        var group_title = document.getElementById("group_title").value.trim();
+        var group_type = $('#consent_group_type option:selected').val();
+        if(group_type==1 && existInformedConsentGroup){
+            alert('그룹 유형이 Informed Consent(동의서)인 그룹이 이미 있습니다');                
+            return;           
+        }
+        else if (group_type!=1 && !existInformedConsentGroup){
+            alert('그룹 유형이 Informed Consent(동의서)인 그룹부터 생성해주십시오. ');                
+            return;           
+        }
+        
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                $('#create_consent_group').modal('hide');
+                // location.reload();
+                changeConsentTab(1);
+            }
+        }
+        xhttp.open("GET", "./study.jsp?action=CREATE_CONSENT_GROUP&SID=" + SID + "&CSGRPTITLE=" + group_title + "&CSGRPTYPE=" + group_type, true);
+        xhttp.send();
+
+    }
+
+
+    function SHOW_GROUP_DETAIL_BTN_CLICKED(id) {
+        CSGRPID = id.split("_")[3];
+        var csgrptitle = id.split("_")[4];
+        
+       sessionStorage.CSGRPTITLE=id.split("_")[4];
+        //localStorage.setItem("CSGRPTITLE",id.split("_")[4]);
+        //console.log("./study_consent_group_detail.html?SID=" + SID)
+        $.ajax({
+            method: 'post',
+            url: "./study_consent_group_detail.html?SID=" + SID,
+            data: csgrptitle,
+            dataType: 'html',
+            success: function (reponse) {
+                $(".consent").html(reponse);
+            }
+        })
+
+    }
+    function changeConsentTab(consent_tab_page_number) {
+        console.log(consent_tab_page_number);
+        switch (consent_tab_page_number) {
+            case 1:  //동의그룹리스트      
+                $.ajax({
+                    type: 'post',
+                    url: "study_info_view.html",
+                    dataType: 'html',
+                    success: function (data) {
+                        $(".info_view").html(data);
+                    }
+                })
+                $.ajax({
+                    type: 'post',
+                    url: "./study_consent_list.html",
+                    dataType: 'html',
+                    success: function (data) {
+                        $(".consent").html(data);
+                    }
+                });
+                break;
+
+            case 2:  //문서관리                 
+
+                $.ajax({
+                    type: 'post',
+                    url: "study_info_view.html",
+                    dataType: 'html',
+                    success: function (data) {
+                        $(".info_view").html(data);
+                    }
+                })
+                $.ajax({
+                    type: 'post',
+                    url: "./study_consent_group_detail.html?SID=" + SID,
+                    dataType: 'html',
+                    success: function (data) {
+                        $(".consent").html(data);
+                    }
+                });
+                break;
+            case 3: //동의서
+                //var CONSENTID = id.split("_")[2];
+                //consent_action = "modify";
+                //selected_consent_id = CONSENTID;
+                $.ajax({
+                    type: 'post',
+                    url: "study_info_view.html",
+                    dataType: 'html',
+                    success: function (data) {
+                        $(".info_view").html(data);
+                    }
+                })
+                $.ajax({
+                    type: 'post',
+                    url: "./study_consent.html?CONSENTID=" + CONSENTID,
+                    dataType: 'html',
+                    success: function (data) {
+                        $(".consent").html(data);
+                    }
+                })
+                break;
+            default: location.reload();
+                break;
+        }
+    }
+
+</script>
+
+<div class="d-flex justify-content-between ">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb p-0 m-0 " style="background-color:transparent;">
+                <li class="breadcrumb-item active " aria-current="page">동의그룹리스트</li>
+                <li class="breadcrumb-item  primary-color "></li>
+            </ol>
+
+        </nav>
+
+    </div>
+
+    <!-- <div style="text-align: right;"> -->
+    <button class="btn btn-outline-danger" onclick="CREATE_CONSENT_GROUP_BTN_CLICKED()">새
+        동의그룹</button>
+    <!-- </div> -->
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover mt-4  w-100" style="table-layout:fixed; min-width: 800px">
+        <tbody id="consent_list_table">
+            <thead>
+                <tr style="text-align: center; font-weight: bold;">
+                    <!-- <th width="50px"></th> -->
+                    <th width="90px">번호</th>
+                    <th width="130px">동의 그룹명</th>
+                    <th width="120px">동의 그룹 타입</th>
+                    <th width="130px">현재 동의서 버전</th>
+                    <th width="130px">게시일</th>
+                    <th width="110px">파일 해시값</th>
+                    <th width="90px">문서보기</th>
+                </tr>
+            </thead>
+        <tbody id="consent_list" style="text-align: center;"></tbody>
+        </tbody>
+    </table>
+</div>
+<div  id="aftertable" ></div>
+<h3 class="myinfo">※ 본 창은 여러 종류 동의서 문서를 관리하는 창으로 각 동의서에 대한 그룹을 생성하여 대상자들이 사용할 문서를 관리합니다.
+</h3> 
+<h3 class="myinfo">※ 동의그룹이 없을 경우 "새 동의 그룹"을 눌러 새로 생성해주세요.</h3> 
+
+<div class="modal" tabindex="-1" role="dialog" id="create_consent_group">
+    <div class="modal-dialog modal-dialog-centered" role="document">   
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">동의 그룹 생성</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+               
+                         <table class="table table-borderless">
+                    <tbody id="consent_content_table">
+
+                      
+                        <tr>
+                            <td style="width: 150px; font-weight: bold;">동의 그룹 유형</td>
+                            <td>
+                                <h3 class="myinfo" for="consent_group_type">※ Informed Consent 문서의 경우 동의 그룹유형을 Informed Consent로 해주시고 나머지 다른 동의서는 기타로 선택해주시면 됩니다. </h3> 
+       
+                                <select class="form-control form-control-lg" style="border-radius: 0px;"
+                                    id="consent_group_type">
+                                    <option value="1" selected>Informed Consent</option>
+                                    <option value="2">기타</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                          
+                            <td style="width: 150px; font-weight: bold;">동의 그룹명</td>
+                            <td><h3 class="myinfo" for="group_title">※ 동의그룹명은 동의서 이름을 입력해주세요.(200자 이하)</h3>
+                                <input class="form-control form-control-lg inputs" type="text" maxlength="200"
+                                 autocomplete ="off" placeholder="동의서 그룹 이름을 입력해주세요." style="border-radius: 0px;" id="group_title"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+              
+                <button type="button" class="btn btn-primary" onclick="CREATE_GROUP()">생성</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">취소</button>
+            </div>
+        </div>
+    </div>
+</div>

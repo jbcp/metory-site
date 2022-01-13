@@ -1,0 +1,133 @@
+<script type="text/javascript">
+    var file_url = "";
+    var fileName = "";
+    var extra_content_count = 0;
+
+    $(document).ready(function(){
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                var data_eval = eval(data_pre);
+                var optionStr = "";
+                for (var i = 0; i < data_eval.length; i++) {
+                    optionStr += "<option value=" + data_eval[i].CSGRPID + ">" + data_eval[i].CSGRPTITLE + "</option>";
+                }
+                document.getElementById("consent_group_list").innerHTML = optionStr;
+
+                if( data_eval[0]){
+                    //CONSENTID = data_eval[0].CSGRPID;
+
+                    change_consent_group();
+                    // $.ajax({
+                    //     type: 'post',
+                    //     url : "appl_table.html",
+                    //     dataType: 'html',
+                    //     success: function(data){
+                    //         $(".content").html(data);
+                    //     }
+                    // })
+                }
+                else $(".appl_table_view").html("게시된 동의서가 없습니다. 동의서를 게시하여 주십시오.");
+
+            }
+        }
+        xhttp.open("POST", "./applicant.jsp?action=LOAD_CONSENT_GROUP&SID=" + SID, true);
+        xhttp.send();
+    })
+
+    function change_consent_version(){
+        CONSENTID = $('#consent_version_list option:selected').val();
+        var xhttps = new XMLHttpRequest();
+        xhttps.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttps.responseText.trim();
+                var data_eval = JSON.parse(data_pre);
+                console.log(data_pre);
+                contact_coption=data_eval.CONTACT_COPTION;
+                inv_sign_coption=data_eval.INV_SIGN_COPTION;
+
+                console.log(" dashboard: CONSENTID= "+CONSENTID+" \tcontact_coption= "+ contact_coption + " \t inv_sign_coption="+inv_sign_coption);
+                if(data_eval.COUNT==0) alert("에러: 동의서가 존재하지 않습니다. 관리자에게 문의하세요.");
+            }
+        }
+        xhttps.open("GET", "./applicant.jsp?action=GET_CONSENT_OPTION&CONSENTID=" + CONSENTID , true);
+        xhttps.send();
+
+        $.ajax({
+            type: 'post',
+            url : "appl_table_view.html",
+            dataType: 'html',
+            success: function(data){
+                $(".app_table").html(data);
+            }
+        })
+    }
+
+    function change_consent_group(){
+        CSGRPID = $('#consent_group_list option:selected').val()
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                var data_eval = eval(data_pre);
+                var optionStr = "";
+                for (var i = 0; i < data_eval.length; i++) {
+                    optionStr += "<option value=" + data_eval[i].CONSENTID + ">" + data_eval[i].CVERSION + "</option>";
+                }
+                document.getElementById("consent_version_list").innerHTML = optionStr;
+
+                if( data_eval[0]){
+                    CONSENTID = data_eval[0].CONSENTID;
+                    contact_coption=data_eval[0].CONTACT_COPTION;
+                     inv_sign_coption=data_eval[0].INV_SIGN_COPTION;
+                     console.log(" 그룹: dashboard: CONSENTID= "+CONSENTID+" \tcontact_coption= "+ contact_coption + " \t inv_sign_coption="+inv_sign_coption); 
+                    $.ajax({
+                        type: 'post',
+                        url : "appl_table_view.html",
+                        dataType: 'html',
+                        success: function(data){
+                            $(".app_table").html(data);
+                        }
+                    })
+                }
+                else $(".app_table").html("게시된 동의서가 없습니다. 동의서를 게시하여 주십시오.");
+
+            }
+        }
+        xhttp.open("POST", "./applicant.jsp?action=LOAD_CONSENT_VERSION&SID=" + SID + "&CSGRPID="+CSGRPID, true);
+        xhttp.send();
+
+    }
+
+
+    function CLICK_IDENTITY() {
+        window.open("identity.html?SID=" + SID, "본인확인", 'location=no, directories=no, resizable=no, status=no, toolbar=no, menubar=no, location=no, width=1000, height=670, left=0, top=0, scrollbars=no');
+    }
+
+
+</script>
+
+
+<div class="d-flex justify-content-between" style="min-width: 600px;">   
+    <div class="d-flex justify-content-start">
+        <span class="mr-1 mt-1" >동의서 그룹: </span>
+        <select class="form-control form-control-md mr-3" style="width: 200px; border-radius: 0rem;" id="consent_group_list" onchange="change_consent_group()"></select>  
+   
+        <span class="mr-1 mt-1 ml-auto " style="width: 100px;">동의서 버전: </span>
+        <select class="form-control form-control-md" style="width: 100px; border-radius: 0rem;" id="consent_version_list" onchange="change_consent_version()"></select>  
+    
+       
+    </div>
+        <div>        
+                    
+            <button class="btn-primary btn mr-3" style="width: 100px;" onclick="init_table()"><i class="fa fa-redo-alt mr-1"></i>새로고침</button>
+           
+        </div>
+    
+    </div>
+    <div class="app_table">
+    
+    </div>
+                      

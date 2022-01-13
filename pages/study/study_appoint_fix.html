@@ -1,0 +1,284 @@
+<script type="text/javascript">
+    var appoint_count = 0;
+    $(document).ready(function () {
+        //////////비활성화 코드///////////////
+        /*    document.getElementById("TAB_ICON_4").setAttribute("class", "ml-1 tab_icon fas fa-check");
+    document.getElementById("TAB_ICON_4").setAttribute("style", "color: #28a745; font-size:large;");
+            document.getElementById('appoint_fix').innerHTML="  <div style='height:300px; align-items: center' class=' d-flex justify-content-center'> <h4>현재 이 기능은 관리자에 의해 비활성화 되었습니다.</h4></div>";
+            return;
+    */
+        ////////////////////
+        var xhttps = new XMLHttpRequest();
+        xhttps.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttps.responseText.trim();
+                var data_eval = eval(data_pre);
+                //console.log("data_eval.length="+data_eval.length );
+                // console.log(data_pre);
+                if (data_eval.length > 0) {
+                    for (var i = 0; i < data_eval.length; i++) {
+                        //console.log(i+"data_eval[i].DATE="+data_eval[i].DATE);
+                        add_appoint();
+                        document.getElementById("appoint_date_" + appoint_count).value = data_eval[i].DATE;
+                        document.getElementById("appoint_time_" + appoint_count).value = data_eval[i].TIME;
+                        //document.getElementById("appoint_max_" + appoint_count).value =data_eval[i].MAX;
+                    }
+                    document.getElementById("TAB_ICON_4").setAttribute("class", "ml-1 tab_icon fas fa-check");
+
+                    document.getElementById("TAB_ICON_4").setAttribute("style", "color: #28a745; font-size:large;");
+                }
+                else {
+                    add_appoint(); //초기화로 한 줄은 빈 공간으로 보이게 둔다.\
+                    document.getElementById("TAB_ICON_4").setAttribute("class", "ml-1 tab_icon fas fa-ban ");
+                }
+                load_appoint_usage();
+            }
+        }
+        xhttps.open("POST", "./study.jsp?action=LOAD_APPOINT_FIX&SID=" + SID, true);
+        xhttps.send();
+
+
+    });
+    function set_All_Input_Disabled(disabled) {
+        //   document.getElementById('appoint_fix').
+        if (disabled == true) {
+            $("#appoint_fix input").prop("disabled", true);
+
+            $("#appoint_fix .btn").prop("disabled", true);
+            // var all_my_answer_elements = document.getElementsByClassName('answer');
+            // for (var i = 0; i < all_my_answer_elements.length; i++) {
+            //     all_my_answer_elements[i].disabled=true;
+            // }
+
+        }
+    }
+    function load_appoint_usage() {
+
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                console.log(typeof (data_pre));
+                if (data_pre == "1") { //일정 사용
+                    document.getElementById('USE_APPOINTMENT').checked = true;
+                }
+                else {
+                    document.getElementById('USE_APPOINTMENT').checked = false;
+                    document.getElementById("TAB_ICON_4").setAttribute("class", "ml-1 tab_icon fas fa-check");
+                    document.getElementById("TAB_ICON_4").setAttribute("style", "color: #28a745; font-size:large;");
+                }
+            }
+        }
+        xhttp.open("POST", "./study.jsp?action=LOAD_APPOINT_USAGE&SID=" + SID, true);
+        xhttp.send();
+
+    }
+
+
+    function save_appoint() {
+        if(study_active==0 ){
+                alert("종료된 연구는 수정할 수 없습니다.");
+                return;
+        }
+        var default_length = 3;
+        var start_index = 1;
+        //  console.log(document.getElementById("appoint_date_1").value + "   "+ document.getElementById("appoint_time_1").value);
+        //   console.log(document.getElementById("appoint_table_body").childNodes.length);
+
+        var use_appointment = (document.getElementById("USE_APPOINTMENT").checked == true) ? 1 : 0;
+        if (!use_appointment) {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    alert("저장되었습니다.");
+                    reload();
+                    console.log(use_appointment);
+                }
+            }
+            xhttp.open("POST", "./study.jsp", true);
+            xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhttp.send("action=UPDATE_APPOINT_USAGE&SID=" + SID + "&USE_APPOINTMENT=" + use_appointment);
+        }
+
+        if (document.getElementById("appoint_table_body").childNodes.length > default_length) {
+            var appoints = new Array();
+
+            for (var i = start_index; i < document.getElementById("appoint_table_body").childNodes.length - 2; i++) {
+                var appoint = new Object();
+                // console.log(i);
+                // console.log(i+"  "+document.getElementById("appoint_table_body").childNodes[i].childNodes[0].childNodes[0].value + "   "+ document.getElementById("appoint_table_body").childNodes[i].childNodes[1].childNodes[0].value);
+                appoint.date = document.getElementById("appoint_table_body").childNodes[i].childNodes[0].childNodes[0].value;
+                appoint.time = document.getElementById("appoint_table_body").childNodes[i].childNodes[1].childNodes[0].value;
+                // appoint.max = document.getElementById("appoint_table_body").childNodes[i].childNodes[2].childNodes[0].value;
+                if (appoint.date != "") appoints.push(appoint);
+                else {
+                    continue;
+                }
+            }
+
+            var appoints_decode = escape(encodeURIComponent(JSON.stringify(appoints)));
+            console.log(JSON.stringify(appoints));
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    if (appoints.length == 0 && use_appointment) {
+                        document.getElementById("TAB_ICON_4").setAttribute("class", "ml-1 tab_icon fas fa-ban");
+                        document.getElementById("TAB_ICON_4").setAttribute("style", "");
+                        alert("희망예약일정이 없습니다.");
+                    }
+                    else if (appoints.length > 0 && use_appointment) {
+                        document.getElementById("TAB_ICON_4").setAttribute("class", "ml-1 tab_icon fas fa-check");
+                        document.getElementById("TAB_ICON_4").setAttribute("style", "color: #28a745; font-size:large;");
+                        alert("저장되었습니다.");
+                        reload();
+                    }
+                   
+                }
+            }
+            xhttp.open("POST", "./study.jsp", true);
+            xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhttp.send("action=UPDATE_APPOINT_FIX&SID=" + SID + "&contents=" + appoints_decode + "&USE_APPOINTMENT=" + use_appointment);
+
+
+        }
+        else if (document.getElementById("appoint_table_body").childNodes.length == default_length) {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    if (use_appointment) 
+                    { 
+                        document.getElementById("TAB_ICON_4").setAttribute("class", "ml-1 tab_icon fas fa-ban");
+                        document.getElementById("TAB_ICON_4").setAttribute("style", "");
+                        alert("희망예약일정이 없습니다."); 
+                        reload();
+                    }
+
+                }
+            }
+            xhttp.open("POST", "./study.jsp", true);
+            xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhttp.send("action=DELETE_APPOINT_FIX&SID=" + SID + "&USE_APPOINTMENT=" + use_appointment);
+        }
+        console.log("----" + use_appointment)
+        
+    }
+    function reload(){
+        $.ajax({
+            type: 'post',
+            url: "study_appoint_fix.html",
+            dataType: 'html',
+            success: function (data) {
+                $(".appoint_fix").html(data);
+            }
+        })
+    }
+
+    function add_appoint() {
+        appoint_count = appoint_count + 1;
+
+        var createTR = document.createElement("tr");
+        //  createTR.setAttribute("id", "appoint_"+appoint_count);
+        console.log(".childNodes.length =" + document.getElementById("appoint_table_body").childNodes.length + "\t apoint_count" + appoint_count);
+        document.getElementById("appoint_table_body").insertBefore(createTR, document.getElementById("appoint_table_body").childNodes[document.getElementById("appoint_table_body").childNodes.length - 2]);
+        //document.getElementById("appoint_table_body").insertBefore(createTR, document.getElementById("appoint_table_body").childNodes[document.getElementById("appoint_table_body").childNodes.length -2]);
+        var dateTD = document.createElement("td");
+        // createtitleTD.setAttribute("style", "width:150px")
+        var dateInput = document.createElement("input");
+        dateInput.setAttribute("class", "form-control  short inputs");
+        dateInput.setAttribute("type", "date");
+        // dateInput.setAttribute("placeholder", "2020-01-01");
+        // dateInput.setAttribute("maxlength", "10");
+        dateInput.setAttribute("id", "appoint_date_" + appoint_count);
+        dateTD.appendChild(dateInput);
+        createTR.appendChild(dateTD);
+
+        var timeTD = document.createElement("td");
+        var timeInput = document.createElement("input");
+        timeInput.setAttribute("class", "form-control short inputs");
+        timeInput.setAttribute("type", "time");
+        //  timeInput.setAttribute("placeholder", "2020-01-01");
+        //  timeInput.setAttribute("maxlength", "10");
+        timeInput.setAttribute("id", "appoint_time_" + appoint_count);
+        timeTD.appendChild(timeInput);
+        createTR.appendChild(timeTD);
+
+        //     var maxTD = document.createElement("td");
+        //     var contentInput = document.createElement("input");
+
+        //     contentInput.setAttribute("class", "form-control form-control-lg inputs short mr-2 number_input");
+
+        //     contentInput.setAttribute("type", "number");
+
+        //     contentInput.setAttribute("placeholder", "숫자만 기입해주세요.");
+        //     contentInput.setAttribute("maxlength", "11");
+        //     // contentInput.setAttribute("onkeydown", "resize(this)");
+        //     // contentInput.setAttribute("onkeyup", "resize(this)");
+        //    // contentInput.setAttribute("style", "border-radius: 0px; width:calc(100% - 60px);");
+        //     contentInput.setAttribute("id", "appoint_max_" + appoint_count);
+        //     maxTD.appendChild(contentInput);
+        //     createTR.appendChild(maxTD);
+        //     $("'#appoint_max_" + appoint_count+"'").hide();
+
+        var deleteTD = document.createElement("td");
+        var deleteButton = document.createElement("button");
+        deleteButton.setAttribute("class", "btn btn-sm btn-outline-primary ml-1");
+        deleteButton.setAttribute("style", "width:50px; font-weight:bold");
+        deleteButton.setAttribute("href", "#");
+        deleteButton.setAttribute("onclick", "delete_appoint(this);");
+        deleteButton.appendChild(document.createTextNode("삭제"));
+        deleteTD.appendChild(deleteButton);
+
+        createTR.appendChild(deleteTD);
+    }
+    function delete_appoint(obj) {
+        var tr = $(obj).parent().parent();
+        tr.remove();
+    }
+</script>
+
+
+<div style="text-align: right;">
+    <button class="btn btn-outline-danger" onclick="save_appoint()">저장하기</button>
+</div>
+
+
+<div class="form-check mb-4" >
+    <hr>
+    <input type="checkbox" class="form-check-input" id="USE_APPOINTMENT" checked>
+    <label class="form-check-label" for="USE_APPOINTMENT" style="font-weight: bold;">예약 일정 사용</label>
+    <h5 class="myinfo" style="color:red;">※ 예약을 사용하지 않는 경우 체크를 해제해주세요. </h5>
+    <hr>
+</div>
+
+
+<h3 class="myinfo"> ※ 대상자가 방문할 날짜를 입력해주세요. </h3>
+<h3 class="myinfo">
+    ※ “희망예약일”을 필수로 선택해주세요.
+</h3>
+<table class="table table-hover mt-3" style="text-align:left; ">
+    <thead>
+
+        <th>
+            희망 예약일 <span style="color:red;">*</span>
+        </th>
+        <th>
+            예약시간
+        </th>
+        <!-- <th>
+            최대 인원수
+        </th> -->
+        <th style="width:120px;">
+
+        </th>
+    </thead>
+    <tbody id="appoint_table_body">
+
+        <tr>
+            <td colspan="4">
+                <button class="btn btn-outline-secondary w-100" style="border-radius: 0px;" onclick="add_appoint()"
+                    id="new_appoint_btn">희망 예약 일정 추가</button>
+            </td>
+        </tr>
+    </tbody>
+</table>

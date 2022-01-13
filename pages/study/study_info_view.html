@@ -1,0 +1,145 @@
+<style>
+    [data-toggle="collapse"][aria-expanded="true"]>.js-rotate-if-collapsed {
+        -webkit-transform: rotate(90deg);
+        -moz-transform: rotate(90deg);
+        -ms-transform: rotate(90deg);
+        -o-transform: rotate(90deg);
+        transform: rotate(90deg);
+    }
+</style>
+
+<script type="text/javascript">
+    var file_url = "";
+    var fileName = "";
+    var extra_content_count = 0;
+    var contextpath = getContextPath();
+    var BCSTAGE = 0;
+
+    //var nowConsentID=0;
+    $(document).ready(function () {
+        $('.title_head').css({
+            "width": "140px",
+            "text-align": "center",
+            "font-weight": "bold",
+            "background-color": "rgb(250, 250, 250)"
+        })
+
+      //  $('.collapse_btn').button('toggle').addClass('fat');
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                var data_eval = eval(data_pre);
+
+                document.getElementById("PRTNO_TITLE").appendChild(document.createTextNode(data_eval[0].PRTNO));
+                if (document.body.contains(document.getElementById("prtno_bread"))) document.getElementById("prtno_bread").innerText=data_eval[0].PRTNO;
+                document.getElementById("SPONSOR_TITLE").appendChild(document.createTextNode(data_eval[0].SPONSORNAME));
+
+                if (data_eval[0].USE_APPOINTMENT) USE_APPOINTMENT = data_eval[0].USE_APPOINTMENT;
+                // console.log(USE_APPOINTMENT + typeof(USE_APPOINTMENT));
+                if (data_eval[0].SPUBLISHED == 1) document.getElementById("ADSTATUS_TITLE").innerText = "게시함";
+                else document.getElementById("ADSTATUS_TITLE").innerText = "게시 안함";
+
+
+                if (data_eval[0].SACTIVE == 1) {
+                    document.getElementById("STUDYSTATUS_TITLE").innerText = "진행중";
+                    document.getElementById("STUDYSTATUS_TITLE").setAttribute("class", "text-primary");
+                }
+                else{
+                    document.getElementById("STUDYSTATUS_TITLE").innerText = "연구종료";
+                    document.getElementById("STUDYSTATUS_TITLE").setAttribute("class", "text-danger");
+                }
+
+
+                document.getElementById("PI_TITLE").appendChild(document.createTextNode(data_eval[0].PINAME));
+
+                var span = document.createElement("span");
+                span.innerText = " 그룹: " + data_eval[0].CSGRPTITLE + "";
+                span.setAttribute("class", "badge badge-success ml-2");
+
+                document.getElementById("STITLE_TITLE").appendChild(document.createTextNode(data_eval[0].TITLE));
+                BCSTAGE = data_eval[0].BCSTAGE;
+                if (data_eval[0].CVERSION) {
+                    document.getElementById("CVERSION_TITLE").appendChild(document.createTextNode(data_eval[0].CVERSION));
+                    
+                    document.getElementById("CVERSION_TITLE").appendChild(span);
+
+                    if (document.getElementById("TAB_ICON_3")) {
+                        document.getElementById("TAB_ICON_3").setAttribute("class", "ml-1 tab_icon fas fa-check");
+
+                        document.getElementById("TAB_ICON_3").setAttribute("style", "color: #28a745; font-size:large;");
+                    }
+                }
+                else {
+                    var span = document.createElement("span");
+                    span.setAttribute("style", "color:red;");
+
+                    span.innerHTML = "동의서 없음";
+                    document.getElementById("CVERSION_TITLE").appendChild(span);
+
+                    if (document.getElementById("TAB_ICON_3")) document.getElementById("TAB_ICON_3").setAttribute("class", "ml-1 tab_icon fas fa-ban ");
+
+                }
+                // switch(data_eval[0].SSEX){
+                //     case 1:
+                //         document.getElementById("SSEX_TITLE").appendChild(document.createTextNode("남성"))
+                //     break;
+                //     case 2:
+                //         document.getElementById("SSEX_TITLE").appendChild(document.createTextNode("여성"))
+                //     break;
+                //     case 3:
+                //         document.getElementById("SSEX_TITLE").appendChild(document.createTextNode("남녀모두"))
+                //     break;
+                // }
+                //  nowConsentID=data_eval[0].CONSENTID;
+
+            }
+        }
+        xhttp.open("POST", contextpath + "/pages/study/study.jsp?action=LOAD_STUDY_INFO&SID=" + SID, true);
+        xhttp.send();
+    })
+    function getContextPath() {
+        var hostIndex = location.href.indexOf(location.host) + location.host.length;
+        // return location.href.substring(hostIndex, location.href.indexOf('/', hostIndex + 1));
+        return location.origin;;
+    }
+</script>
+<div>
+    <div class="d-flex justify-content-between">
+        <div class="align-self-center">
+            <h4 id="STITLE_TITLE"></h4>
+        </div>
+        <div style="text-align:right" class="collapse-btn">
+            <button class="btn" data-toggle="collapse" data-target="#study_info_table" style="font-size:large;">
+                <i class="far fa-arrow-alt-circle-right js-rotate-if-collapsed" id="my_icon"></i> 상세정보
+            </button>
+        </div>
+    </div>
+
+    <div id="study_info_table" class="table-responsive collapse show pt-2">
+        <table class="table  table-bordered w-100 bg-white  mb-0"
+            style="vertical-align:middle; table-layout:fixed; min-width: 800px">
+            <tbody>
+                <tr>
+                    <td class="title_head" width="100px">연구계획서 번호</td>
+                    <td id="PRTNO_TITLE" width="150px"></td>
+                    <td class="title_head" width="120px">의뢰자</td>
+                    <td id="SPONSOR_TITLE" width="150px"></td>
+
+                    <td class="title_head" width="100px">시험책임자</td>
+                    <td id="PI_TITLE" width="100px"></td>
+                </tr>
+                <tr>
+                    <td class="title_head">모집공고</td>
+                    <td id="ADSTATUS_TITLE"></td>
+
+                    <td class="title_head">현재 동의서 버전</td>
+                    <td id="CVERSION_TITLE"></td>
+                    <td class="title_head">연구진행여부</td>
+                    <td id="STUDYSTATUS_TITLE"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

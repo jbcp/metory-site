@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+    <link rel="stylesheet" href="../../assets/lib/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../assets/css/app.css">
+    <link rel="stylesheet" href="../../assets/css/modern.css">
+    <link rel="stylesheet" type="text/css" href="../../assets/lib/DataTables/datatables.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../assets/lib/font-awesome/css/all.css">
+    <script src="../../assets/lib/jquery/jquery.min.js" type="text/javascript"></script>
+
+    <title>METORY (연구자용)</title>
+    <script type="text/javascript">
+
+
+        var SID;
+        var ROLE_BC;
+        var SITENAME;
+        //  var DAPPIP;
+
+        $(document).ready(function () {
+            SID = localStorage.getItem("study_SID");
+
+            //  DAAPPIP = localStorage.getItem("DAAPPIP");
+
+            $.ajax({
+                type: 'post',
+                url: getContextPath() + "/pages/navbar.html",
+                dataType: 'html',
+                success: function (data) {
+                    $(".navbar").html(data);
+                }
+            })
+            $.ajax({
+                type: 'post',
+                url: "../study/study_info_view.html",
+                dataType: 'html',
+                success: function (data) {
+                    $(".info_view").html(data);
+                }
+            })
+            init_table();
+
+
+        });
+
+
+        function init_table() {
+    
+
+            var xhttps = new XMLHttpRequest();
+            xhttps.onreadystatechange = function () {
+                if (this.readyState == this.DONE && this.status == 200) {
+                    var result = xhttps.responseText.trim();
+                  //  console.log(result);
+                    var data = JSON.parse(result);
+                    //init_table(data_pre);
+                    var table_source = [];
+                    var SITECODE = data.SITECODE;
+                    var PRTNO = data.PRTNO;
+                    var INVBCID = data.INVBCID;
+                    var ip = data.DAPPIP;
+
+                    console.log("data.SITECODE ="+data.SITECODE);
+                    console.log("data.PRTNO ="+data.PRTNO);
+                    console.log("data.INVBCID ="+ data.INVBCID);
+                    console.log("data.DAPPIP ="+ data.DAPPIP);
+
+                    var block_params = {
+                        "site_id":SITECODE,//"병원4",//
+                        "protocol_no": PRTNO,
+                        "user_id": INVBCID,
+                        "channel_name": "ch1-jbcp-snuh"
+                    };
+                    ////////////////////////////////////////
+                    var xhttp = new XMLHttpRequest();
+                    xhttp.onreadystatechange = function () {
+                        if (this.readyState == this.DONE && this.status == 200) {
+                            var data_pre = xhttp.responseText.trim();                     
+                            var  data_parse=JSON.parse(data_pre);
+                            var data_eval = data_parse.message;
+                            console.log(data_eval); 
+                            
+                                for (var i = 0; i < data_eval.length; i++) {
+
+                                    var createTR = document.createElement("tr");
+                                    //idx
+                                    var idTD = document.createElement("td");
+                                    idTD.innerText = data_eval[i].id;
+                                    createTR.appendChild(idTD);
+
+                                    //연구계획서번호
+                                    var prtnoTD = document.createElement("td");
+                                    prtnoTD.innerText = data_eval[i].protocolno;
+                                    createTR.appendChild(prtnoTD);
+                                    /*
+                                    //실시기관 코드
+                                    var siteTD = document.createElement("td");
+                                    siteTD.innerText = data_eval[i].siteid;
+                                    createTR.appendChild(siteTD);
+
+                                    //의뢰자 코드
+                                     var sponsorTD = document.createElement("td");
+                                    sponsorTD.innerText = data_eval[i].sponsorid;
+                                    createTR.appendChild(sponsorTD);*/
+
+                                    //동의서버전
+                                    var cversionTD = document.createElement("td");
+                                    cversionTD.innerText = data_eval[i].consentversion;
+                                    createTR.appendChild(cversionTD);
+                                    //동의서해시값
+                                    // var chashTD = document.createElement("td");
+                                    // chashTD.innerText = data_eval[i].consenthash;
+                                    // createTR.appendChild(chashTD);
+
+                                    //자원자 코드
+                                    var subjTD = document.createElement("td");
+                                    subjTD.innerText = data_eval[i].subjectid;
+                                    createTR.appendChild(subjTD);
+
+                                    //자원자 동의서 서명시간
+                                    var subj_sign_timeTD = document.createElement("td");
+                                    subj_sign_timeTD.innerText = data_eval[i].subjectconsentsigntime;
+                                    createTR.appendChild(subj_sign_timeTD);
+                                    
+                                    //자원자 동의서 서명해시값
+                                    var subj_sign_hashTD = document.createElement("td");
+                                    subj_sign_hashTD.innerText = data_eval[i].subjectsignhash;
+                                    createTR.appendChild(subj_sign_hashTD);
+
+                                    //연구자코드
+                                    var invTD = document.createElement("td");
+                                    invTD.innerText = data_eval[i].investigatorid;
+                                    createTR.appendChild(invTD);
+                                    //연구자코드 동의서설명 시작시간
+                                    var explain_start_timeTD = document.createElement("td");
+                                    explain_start_timeTD.innerText = data_eval[i].consentexplanationstarttime;
+                                    createTR.appendChild(explain_start_timeTD);
+                                    //연구자코드 동의서 서명시간
+                                    var inv_sign_timeTD = document.createElement("td");
+                                    inv_sign_timeTD.innerText = data_eval[i].investigatorconsentsigntime;
+                                    createTR.appendChild(inv_sign_timeTD);
+
+                                    document.getElementById("APPLS_TABLE").appendChild(createTR);
+
+                                }
+                            
+                        }
+                    };
+
+                    xhttp.open("POST", ip + "/api/consent/site", false);
+                    xhttp.setRequestHeader("Content-Type", "application/json");
+                    xhttp.send(JSON.stringify(block_params));
+
+                }
+            };
+
+            xhttps.open("GET", "./blockchain.jsp?action=load_consents&SID=" + SID, false);
+            xhttps.send();
+
+        }
+        function getContextPath() {
+            var hostIndex = location.href.indexOf(location.host) + location.host.length;
+            // return location.href.substring(hostIndex, location.href.indexOf('/', hostIndex + 1));
+            return location.origin;
+        }   
+    </script>
+</head>
+
+
+
+<body>
+    <div class="navbar"></div>
+    <div class="container main" style="padding-top: 174px;">
+        <div class="card card-body">
+
+            <div class="info_view mt-3 mb-4"></div>
+            <hr>
+            <div class=" mt-3">
+                <h3>블록체인 동의서</h3>
+
+                <div id="action" style="text-align: right;"></div>
+
+                <table class="table" id="APPLS_TABLE" style="text-align: center; ">
+
+                    <thead>
+                        <tr>
+
+                            <th>키</th>
+                            <th>연구계획서</th>
+                            <!-- <th>실시기관코드</th>
+                        <th>의뢰자코드</th> -->
+                            <th>동의서버전</th>
+                            <!-- <th>동의서해시값</th> -->
+                            <th>자원자</th>
+                            <th>자원자 서명</th>
+                            <th>자원자 서명해시</th>
+
+                            <th>연구자</th>
+                            <th>연구자 설명시작</th>
+                            <th>연구자 서명</th>
+                            <th>자원자 동의 철회시간</th>
+                        </tr>
+                    </thead>
+                    <tbody id="Concent_PID_Table"></tbody>
+                </table>
+
+
+                <div class="content p-0 pt-3"></div>
+            </div>
+        </div>
+        <script src="../../assets/js/app.js"></script>
+        <script type="text/javascript" src="../../assets/lib/DataTables/datatables.min.js"></script>
+        <script type="text/javascript" src="../../assets/js/sha256.js"></script>
+        <script src="../../assets/lib/moment/moment-with-locales.js" type="text/javascript"></script>
+        <script src="../../assets/lib/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"
+            type="text/javascript"></script>
+
+</body>
+
+</html>

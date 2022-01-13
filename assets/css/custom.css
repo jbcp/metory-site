@@ -1,0 +1,220 @@
+.navbar-default {
+    box-shadow: none;
+    border-bottom:0;
+  
+  }
+  .navbar-group{
+    border-bottom: 1px solid #e4ebf6;
+  }
+  /* .mytable{
+    max-width: 1000px; min-width: 700px; width: auto; height: auto;
+  }
+  body{
+    min-width: 700px; width: auto; height: auto;
+  } */
+/* .container{
+   // max-width: 1000px; min-width: 700px; width: auto; height: auto; 
+} */
+.ad_header{
+  width: 150px; 
+  text-align:   center;
+   background-color: rgb(245, 245, 245); 
+  font-weight: bold;
+}
+.previsit:hover, .previsit.hover {
+  background:yellow;
+}
+
+
+.myinfo{
+  font-size: smaller; 
+  font-weight:bold;
+}
+
+.mywarning{
+ color: red;
+}
+
+.not-allowed {
+  cursor: not-allowed !important;
+}
+
+/* Tooltip container */
+.mytooltip {
+
+  border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+}
+.btn-default{
+  border-color:#dadce0;
+  color: #1a73e8;
+}
+
+.my-row-highlight{
+  background:#cdd8e7;
+}
+/* .mycheckbox {
+  border-color: black;
+}
+.mycheckbox:checked+label:before {
+  background-color: transparent;
+}
+.mycheckbox:checked+label:before {
+  border-color: black;
+} */
+
+.question{
+font-weight:bold;
+margin-top: 10px;
+} 
+.answer{
+  padding-top:3px;
+  margin-bottom:10px;
+}
+.survey_title{
+  font-size:1.5rem;
+  font-weight:bold;
+  margin-bottom:0;
+  text-align:  center;
+}
+.survey_site {
+  font-size:1rem;
+  font-weight:bold;
+  padding-top:5px;
+  margin-bottom:0;
+  text-align:  right;
+}
+.survey{
+  font-size:1rem;
+  font-weight:bold;
+  padding-top:5px;
+  margin-bottom:0;
+  text-align:  left;
+}
+.question_group{
+ margin-left: 10px;
+}
+
+@font-face{ 
+  font-family: 'InkLipquid';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/InkLipquid.woff') format('woff');
+ /* // font-weight: normal;
+ // font-style: normal; */
+}
+.mysign_input{
+font-family: 'InkLipquid';
+font-size:2rem;
+text-align:left;
+
+border-width: 1px;
+border-style: dashed;
+}
+.mysign{
+font-family: 'InkLipquid';
+font-size:2rem;
+text-align:left;
+
+}
+/* .out_of_study{
+  background: RGB(208,206,206);
+}
+/* Start by setting display:none to make this hidden.
+   Then we position it in relation to the viewport window
+   with position:fixed. Width, height, top and left speak
+   for themselves. Background we set to 80% white with
+   our animation centered, and no-repeating */
+/*.my_wait_modal{
+  display:    none;
+  position:   fixed;
+  z-index:    1000;
+  top:        0;
+  left:       0;
+  height:     100%;
+  width:      100%;
+  background: rgba( 255, 255, 255, .8 ) 
+              url('http://i.stack.imgur.com/FhHRx.gif') 
+              50% 50% 
+              no-repeat;
+} */
+
+/* body {
+  background: #ececec;
+} */
+/*Hidden class for adding and removing*/
+.lds-dual-ring.hidden {
+  display: none;
+}
+
+/*Add an overlay to the entire page blocking any further presses to buttons or other elements.*/
+.overlay {
+  /* position: fixed;
+  top: 0;
+  left: 0; */
+  margin: auto;
+  /* margin-left: auto;
+  margin-right: auto; */
+  text-align:  center;
+  width: 100%;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 999;
+  opacity: 1;
+  transition: all 0.5s;
+}
+
+/*Spinner Styles*/
+.lds-dual-ring {
+  display: inline-block;
+  width: 80px;
+  height: 80px;
+}
+.lds-dual-ring:after {
+  content: " ";
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 5% auto;
+  border-radius: 50%;
+  border: 6px solid rgb(177, 18, 18);
+  border-color: rgb(12, 12, 12) transparent rgb(12, 12, 12) transparent;
+  animation: lds-dual-ring 1.2s linear infinite;
+}
+@keyframes lds-dual-ring {
+  0% {
+      transform: rotate(0deg);
+  }
+  100% {
+      transform: rotate(360deg);
+  }
+}
+
+#modifyBTNDIV th {
+  vertical-align: middle;
+}
+/* table.dataTable thead{
+  vertical-align: middle;
+}
+
+#modifyBTNDIV after {
+  vertical-align: middle !important;
+} */
+
+.navbar{
+  background-color: #1e1e1e;
+}
+
+.breadcrumb-item{
+  /* font-size:1.5rem !important;
+  font-weight:bold !important; */
+  font-size: 1rem !important; 
+  font-weight:bold;
+}
+.bmi{
+  font-size: 1rem !important; 
+  font-weight:bold;
+}
+
+dl,dt,dd {
+  margin:0;
+  padding:0;
+  list-style:none;
+}

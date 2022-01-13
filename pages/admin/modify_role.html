@@ -1,0 +1,235 @@
+<script type="text/javascript">
+    var ROLEID;
+
+
+    $(document).ready(function(){
+        ROLEID = localStorage.getItem("MODIFY_ROLEID");
+      
+        console.log(ROLEID)
+        if(ROLEID == null){
+            alert("권한이 선택되지 않았습니다.")
+        }
+        else{
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function(){
+                if(this.readyState == this.DONE && this.status == 200){
+                    var data_pre = xhttp.responseText.trim();
+                    var data_eval = eval(data_pre);
+                    var ROLENAME_ELEMENT=document.getElementById("ROLENAME");
+                    ROLENAME_ELEMENT.value = data_eval[0].ROLETITLE;
+ 
+                  //  var READ = data_eval[0].READ;
+                    var CREATE = data_eval[0].CREATE;
+                    var MODIFY = data_eval[0].MODIFY;
+                    var RESERVE = data_eval[0].RESERVE;
+                    var IDENTITY = data_eval[0].IDENTITY;
+                    var CONSENT = data_eval[0].CONSENT;
+                    var SIGN = data_eval[0].SIGN;
+                    var ADMIN = data_eval[0].ADMIN;
+                    var STUDYADMIN = data_eval[0].STUDYADMIN;
+                    var BCADMIN = data_eval[0].BCADMIN;
+
+                   // if(READ == 1) $('#READ').prop('checked', true);
+                    if(CREATE == 1) $('#CREATE').prop('checked', true);
+                    if(MODIFY == 1) $('#MODIFY').prop('checked', true);
+                    if(RESERVE == 1) $('#RESERVE').prop('checked', true);
+                    if(IDENTITY == 1) $('#IDENTITY').prop('checked', true);
+                    if(CONSENT == 1) $('#CONSENT').prop('checked', true);
+                    if(SIGN == 1) $('#SIGN').prop('checked', true);
+                    if(ADMIN == 1) $('#ADMIN').prop('checked', true);
+                    if(STUDYADMIN == 1) $('#STUDYADMIN').prop('checked', true);
+                    if(BCADMIN == 1) $('#BCADMIN').prop('checked', true);
+
+                    if(data_eval[0].ROLECODE==1){
+                        //ROLENAME_ELEMENT.disabled=true;
+                        document.getElementById("ADMIN").disabled=true;
+                        //document.getElementById("READ").disabled=true;
+                    }
+    
+                }
+            }
+            xhttp.open("GET", "./member.jsp?action=load_detail_role&ROLEID="+ROLEID, true);
+            xhttp.send();
+        }
+    })
+
+    function prev(){
+        localStorage.removeItem("MODIFY_ROLEID");
+        window.history.back();
+    }
+
+    function save(){
+
+        if(validate()){
+            var READ =1;// $('#READ:checked').val();
+            var CREATE = $('#CREATE:checked').val();
+            var MODIFY = $('#MODIFY:checked').val();
+            var RESERVE = $('#RESERVE:checked').val();
+            var IDENTITY = $('#IDENTITY:checked').val();
+            var CONSENT = $('#CONSENT:checked').val();
+            var SIGN = $('#SIGN:checked').val();
+            var ADMIN = $('#ADMIN:checked').val();
+            var STUDYADMIN = $('#STUDYADMIN:checked').val();
+            var BCADMIN = $('#BCADMIN:checked').val();
+
+           // if(READ == undefined) READ = 0;
+            if(CREATE == undefined) CREATE = 0;
+            if(MODIFY == undefined) MODIFY = 0;
+            if(RESERVE == undefined) RESERVE = 0;
+            if(IDENTITY == undefined) IDENTITY = 0;
+            if(CONSENT == undefined) CONSENT = 0;
+            if(SIGN == undefined) SIGN = 0;
+            if(ADMIN == undefined) ADMIN = 0;
+            if(STUDYADMIN == undefined) STUDYADMIN = 0;
+            if(BCADMIN == undefined) BCADMIN = 0;
+            var params = "?action=modify_role"
+                        +"&ROLEID="+ROLEID
+                        +"&ROLETITLE="+document.getElementById("ROLENAME").value.trim()
+                        +"&READ="+READ
+                        +"&CREATE="+CREATE
+                        +"&MODIFY="+MODIFY
+                        +"&RESERVE="+RESERVE
+                        +"&IDENTITY="+IDENTITY
+                        +"&CONSENT="+CONSENT
+                        +"&SIGN="+SIGN
+                        +"&ADMIN="+ADMIN
+                        +"&STUDYADMIN="+STUDYADMIN
+                       +"&BCADMIN="+BCADMIN;
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function(){
+                if(this.readyState == this.DONE && this.status == 200){
+                  
+                  load_role();
+                }
+            }
+            xhttp.open("POST", "./member.jsp"+params, true);
+            xhttp.send();
+        }  
+        else alert("모든 정보를 입력해주세요.");
+
+    }
+
+    function validate(){
+        var result = true;
+        if(document.getElementById("ROLENAME").value.trim() == "") result = false;
+        return result;
+    }
+
+</script>
+
+
+<div class="mb-4" style="text-align: right;">
+    <h5 class="myinfo " style="text-align: left;"> ※ 역할 별 그룹을 생성하고(예: CRC, PI등), 각 그룹에 따라 플랫폼에 개발된 기능권한을 관리하는
+        페이지입니다. </h5>
+</div>
+
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb p-0 m-0" style="background-color:transparent;">
+                <li class="breadcrumb-item primary-color "><a href="javascript:load_role();"> 그룹별 사용권한</a></li>
+                <li class="breadcrumb-item  active" aria-current="page">그룹 권한 수정</li>
+            
+            </ol>
+        </nav>
+    </div>
+
+<div class="mt-5 ">
+  
+        <div style="text-align: center;">
+            <h1 class="h3 mb-3 mt-3 font-weight-bold">권한 수정하기</h1>
+            <p>수정된 권한은 재 로그인시 반영됩니다.</p>
+        </div>
+        <h5 class="h5 mb-3 mt-4 font-weight-bold">권한 이름</h5>
+        <input class="form-control" type="text" style="border-radius: 0px;" id="ROLENAME" maxlength="100"  placeholder="권한명을 입력해주세요." required>
+        <h5 class="h5 mb-3 mt-4 font-weight-bold">권한 설정</h5>
+        <div class="table-responsive">
+        <table class="table table-bordered mb-3" style="text-align: center;table-layout:fixed;  min-width: 800px;">
+            <thead>
+                <tr>
+                    <!-- <th>기본보기<i class="far fa-question-circle ml-2" data-toggle="tooltip" data-placement="bottom" title="자원자 정보를 제외한 정보들을 보는 권한"></i></th> -->
+                    <th  width="85x" ><span class="mytooltip" data-toggle="tooltip" data-placement="top"  title="연구를 생성할 수 있는 권한" >연구<br>생성</span></th>
+                    <th  width="85x" ><span class="mytooltip" data-toggle="tooltip"data-placement="top"   title="연구 모집공고를 게시하고 연구정보를 수정할 수 있는 권한" >연구<br>수정</span></th>
+                    <th width="90px"><span class="mytooltip" data-toggle="tooltip" data-placement="top"  title="자원자의 예약을 관리할 수 있는 권한" >자원자<br>예약</span></th>
+                    <th width="100px"><span class="mytooltip" data-toggle="tooltip"data-placement="top"   title="자원자 방문 시 본인확인을 할 수 있는 권한" >자원자<br>본인확인</span></th>
+                    <th  width="100px"><span class="mytooltip" data-toggle="tooltip" data-placement="top"  title="자원자의 동의설명을 시작하고 종료할 수 있는 권한" >자원자<br>동의설명</span></th>
+                    <th width="100px"><span class="mytooltip" data-toggle="tooltip"data-placement="top"   title="동의서에 서명할 수 있는 권한" >자원자<br>동의서명</span></th>
+                    <th  width="100px"><span class="mytooltip" data-toggle="tooltip"data-placement="top"   title="직원을 관리하고 직원이 데이터에 접근할 수 있는 제어하는 권한" >사용자관리</span></th>
+                    <th width="95px"><span class="mytooltip" data-toggle="tooltip" data-placement="top"  title="기관의 모든 연구를 보고 수정할 수 있는 권한" >연구관리</span></th>
+                    <th width="95px"><span class="mytooltip" data-toggle="tooltip"data-placement="top"   title="블록체인에 접속하여 연구 데이터를 관리할 수 있는 권한" >블록체인</span></th>
+          
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <!-- <td>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="READ" value="1">
+                            <label class="custom-control-label" for="READ"></label>
+                        </div>
+                    </td> -->
+                    <td>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="CREATE" value="1">
+                            <label class="custom-control-label" for="CREATE"></label>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="MODIFY" value="1">
+                            <label class="custom-control-label" for="MODIFY"></label>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="RESERVE" value="1">
+                            <label class="custom-control-label" for="RESERVE"></label>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="IDENTITY" value="1">
+                            <label class="custom-control-label" for="IDENTITY"></label>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="CONSENT" value="1">
+                            <label class="custom-control-label" for="CONSENT"></label>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="SIGN" value="1">
+                            <label class="custom-control-label" for="SIGN"></label>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="ADMIN" value="1">
+                            <label class="custom-control-label" for="ADMIN"></label>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="STUDYADMIN" value="1">
+                            <label class="custom-control-label" for="STUDYADMIN"></label>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="BCADMIN" value="1">
+                            <label class="custom-control-label" for="BCADMIN"></label>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+        <div style="text-align: center;">
+         
+            <button class="btn btn-primary mt-3" href="#" onclick="save()" style="width:100px; "> 저장</button>
+            <button class="btn btn-default mr-2 mt-3" href="#" onclick="load_role()" style=" width:100px; ">취소</button>
+        </div>
+ 
+</div>

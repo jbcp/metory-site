@@ -1,0 +1,5 @@
+{
+    "username": "계정정보",
+    "password": "계정암호",
+    "host": "jdbc:mysql://{ip_address}:3306/{database}?useUnicode=true&characterEncoding=UTF-8"
+}

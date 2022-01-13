@@ -1,0 +1,671 @@
+<script type="text/javascript">
+
+    var last_pi_id = 0;   // 바로 전에 선택했던 pi, 바뀌기 전에 처음에 저장되는 pi는 db에 저장되어 있는 INVID
+    var piid = 0; // db에 저장되어 있는 본 연구의 PI INVID;
+    var study_invs; // db에 저장되어 있는 해당 연구 참여자들
+    var study_invs_all_ids_on_table = []; //테이블에서 보여지는 선택된 연구자들 INVID 
+
+    $(document).on("keyup", ".phoneNumber", function () { $(this).val($(this).val().replace(/[^0-9]/g, "").replace(/(^02|^0[0-9]{2}|[0-9]{4})([0-9]+)?([0-9]{4})$/, "$1-$2-$3").replace("--", "-")); });
+
+    $(document).ready(function () {
+        var site_doctors; // 해당 실시기관에서 의사로 등록된 연구자
+        var site_members = []; //해당 실시기관의 멤버
+
+        $('.inputs').css('border-radius', '0rem');
+        $('.short').css("width", "250px");
+
+        $('#pi').select2({
+            placeholder: "시험책임자 선택",
+            //disabled: true
+            //allowClear: true
+        });
+
+        $('#subi').select2({
+            placeholder: "선택하세요",
+            //  allowClear: true
+        });
+        $('#invs').select2({
+            placeholder: "선택하세요",
+            //  allowClear: true
+        });
+        //해당 실시기관에서 PI/subI 가능한 명단 가져오기
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttp.responseText.trim();
+                var data_eval = eval(data_pre);
+                site_doctors = data_eval;
+                for (var j = 0; j < data_eval.length; j++) {
+                    if (site_doctors[j].INVMAIL.substring(0, 6) == "admin@") {
+                        continue;
+                    }
+                    var option = document.createElement("option");
+                    option.setAttribute("value", data_eval[j].INVID);
+                    option.appendChild(document.createTextNode(data_eval[j].INVNAME));
+                    document.getElementById("pi").appendChild(option);
+                }
+                reset_subi_select(site_doctors);
+            }
+        }
+        xhttp.open("GET", "./study.jsp?action=LOAD_SITE_DOCTOR_LIST", false);
+        xhttp.send();
+        //실시기관에 등록된 모든 멤버 리스트 가져오기
+        var xhttps = new XMLHttpRequest();
+        xhttps.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttps.responseText.trim();
+                console.log(data_pre);
+                data_eval = eval(data_pre);
+                for (var i = 0; i < data_eval.length; i++) {
+
+                    if (data_eval[i].INVMAIL.substring(0, 6) == "admin@") {
+                        continue;
+                    }
+                    site_members.push(data_eval[i]);
+                }
+                // site_members = eval(data_pre);
+                //  reset_inv_select(site_members);          
+            }
+        }
+        xhttps.open("GET", "./study.jsp?action=LOAD_SITE_MEMBERS", false);
+        xhttps.send();
+
+        //해당 연구의 참여 연구자 리스트 가져오기
+        var xhttpss = new XMLHttpRequest();
+        xhttpss.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttpss.responseText.trim();
+                var data_eval = eval(data_pre);
+                study_invs = data_eval;
+                //  var subi_vals = [];
+                //if(data_eval.length > 0){
+                for (var i = 0; i < data_eval.length; i++) {
+                    addtr(data_eval[i]);
+
+                    if (data_eval[i].SIROLECODE == 1) {
+                        piid = last_pi_id = data_eval[0].INVID; // init last_pi_id
+                        $('#pi').val(data_eval[i].INVID).trigger('change');
+
+                    }
+                }
+            }
+        }
+        xhttpss.open("GET", "./study.jsp?action=LOAD_STUDY_INVS_ALL&SID=" + SID, true);
+        xhttpss.send();
+
+        var xhttpsss = new XMLHttpRequest();
+        xhttpsss.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttpsss.responseText.trim();
+                var data_eval = eval(data_pre);
+
+
+                if (data_eval[0].SMS_RECEIVER) {
+
+                    document.getElementById("sms_receiver_phone").value = data_eval[0].SMS_RECEIVER;
+                }
+
+
+
+            }
+        }
+        xhttpsss.open("GET", "./study.jsp?action=LOAD_STUDY_INFO&SID=" + SID, true);
+        xhttpsss.send();
+        $('#pi').change(function (e) {
+            var pivalue = $("#pi option:selected").val();
+            
+            if (pivalue!= last_pi_id)  {
+                alert("PI를 변경하시려면 관리자에게 문의하세요.");
+                console.log(pivalue);
+                $('#pi').val(last_pi_id).trigger('change');
+            }
+        });
+        // $('#pi').change(function (e) {
+        //     var pivalue = $("#pi option:selected").val();
+        //     var subiarr = $('#subi').val();
+
+        //     if (jQuery.inArray(pivalue, subiarr) !== -1) {
+        //         // the element is  in the sub-i array
+        //         alert("시험 담당자에서 제외하여 주십시오.");
+        //         $('#pi').val(last_pi_id).trigger('change');
+
+        //     }
+        //     else {
+        //         //  alert("시험 책임자를 변경하시겠습니까?");
+
+        //         if (last_pi_id != pivalue) {
+        //             removeFromArr(last_pi_id, study_invs_all_ids_on_table);
+
+        //             var aInv = {
+        //                 'INVID': pivalue,
+        //                 'SIROLETITLE': "시험책임자",
+        //                 'SIROLECODE': 1,
+        //                 'MODIFY': 1,
+        //                 'RESERVE': 1,
+        //                 'IDENTITY': 1,
+        //                 'CONSENT': 1,
+        //                 'SIGN': 1,
+        //                 'INVNAME': $("#pi option:selected").text(),
+        //             }
+        //             last_pi_id = pivalue;
+        //             addtr(aInv);
+        //         }
+        //     }
+
+        //     if (pivalue == "" || pivalue == null)
+        //         document.getElementById("TAB_ICON_2").setAttribute("class", "ml-1 tab_icon fas fa-ban ");
+        //     else {
+        //         document.getElementById("TAB_ICON_2").setAttribute("class", "ml-1 tab_icon fas fa-check");
+
+        //         document.getElementById("TAB_ICON_2").setAttribute("style", "color: #28a745; font-size:large;");
+        //     }
+
+        // });
+        
+                document.getElementById("TAB_ICON_2").setAttribute("class", "ml-1 tab_icon fas fa-check");
+                document.getElementById("TAB_ICON_2").setAttribute("style", "color: #28a745; font-size:large;");
+       
+        $('#invs').on('select2:open', function (e) {
+            console.log(" in invs decla " + site_members);
+            reset_invs_select(site_members);
+        });
+        $('#subi').on('select2:open', function (e) {
+            reset_subi_select(site_doctors);
+        });
+
+
+
+    });//end of document.ready
+    function removeFromArr(val, arr) {
+        var removeVal = 0;
+        if (typeof (val) === 'string') removeVal = val;
+        else if (typeof (val) === 'number') removeVal = val.toString();
+        // console.log("  arr=" + study_invs_all_ids_on_table);
+        // study_invs_all_ids_on_table.remove("'"+last_pi_id+"'");
+        const index = arr.indexOf(removeVal);
+        if (index > -1) {
+            arr.splice(index, 1);
+        }
+
+        //  console.log(index + " removed lastpi =" + last_pi_id + "  result=" + arr);
+        $("#DEL_" + last_pi_id).closest("tr").remove();
+    }
+    function addToArr(val, arr) {
+        if (typeof (val) === 'string') arr.push(val);
+        else if (typeof (val) === 'number') arr.push(val.toString());
+        // console.log(typeof (val) + val + " added arr=" + arr);
+    }
+    function reset_subi_select(site_doctors) {
+        var lastSubiVals = $("#subi").val();
+
+        $("#subi").empty().trigger('change');
+
+        //  console.log("at subi study_invs_all_ids_on_table=" + study_invs_all_ids_on_table);
+        //    console.log("at subi site_doctors=" + site_doctors);
+
+        for (var j = 0; j < site_doctors.length; j++) {
+            // console.log(" site doc " + typeof(site_doctors[j].INVID));
+            if (jQuery.inArray(site_doctors[j].INVID.toString(), study_invs_all_ids_on_table) !== -1) continue;
+            if (site_doctors[j].INVMAIL.substring(0, 6) == "admin@") {
+                continue;
+            }
+            var option = document.createElement("option");
+            option.setAttribute("value", site_doctors[j].INVID);
+            option.appendChild(document.createTextNode(site_doctors[j].INVNAME));
+            document.getElementById("subi").appendChild(option);
+        }
+
+        // console.log("at subi lastSubiVals=" + lastSubiVals);
+        if (lastSubiVals.length > 0) $("#subi").val([lastSubiVals]);
+
+    };
+
+    function reset_invs_select(site_members) {
+        var lastInvsVals = $("#invs").val();
+
+        $("#invs").empty().trigger('change');
+
+        for (var j = 0; j < site_members.length; j++) {
+            if (jQuery.inArray(site_members[j].INVID.toString(), study_invs_all_ids_on_table) !== -1) continue;
+            var option = document.createElement("option");
+            option.setAttribute("value", site_members[j].INVID);
+            option.appendChild(document.createTextNode(site_members[j].INVNAME));
+            document.getElementById("invs").appendChild(option);
+        }
+        if (lastInvsVals.length > 0) $("#invs").val([lastInvsVals]);
+    };
+
+
+    function save_table_data() {
+        if (study_active == 0) {
+            alert("종료된 연구는 수정할 수 없습니다.");
+            return;
+        }
+
+        var sms_receiver = document.getElementById('sms_receiver_phone').value.trim();
+        // var sms_receiver=sms_receiver_tmp.replace(/^\D+/g, ''); 
+        // var sms_receiver= (sms_receiver_tmp=="")? "":sms_receiver_tmp.match(/\d/g).join('');
+        if (sms_receiver.slice(0, 2) != "01") {
+
+            if (confirm("문자알림 수신을 위한 핸드폰 번호를 없이 진행하시겠습니까?") == true) {
+                //변경
+            } else {
+                return;
+            }
+        }
+
+        var table = document.getElementById('invs_table');
+        var row_arr = new Array();
+        if (piid != $('#pi').val()) {
+            if (confirm("시험 책임자를 변경하시겠습니까?") == true) {
+                //변경
+            } else {
+                return;
+            }
+        }
+
+
+        for (var i = 2; i < table.rows.length; i++) {
+            var aRowObj = new Object();
+
+            aRowObj.SIROLECODE = table.rows[i].cells[0].innerHTML.trim();
+
+            aRowObj.INVID = table.rows[i].cells[1].innerHTML.trim();
+            aRowObj.INVNAME = table.rows[i].cells[2].innerHTML.trim();
+            aRowObj.SIROLETITLE = table.rows[i].cells[3].children[0].value.trim();
+            //  aRowObj.READ =1; //(table.rows[i].cells[4].getElementsByTagName("input")[0].checked)? 1:0;
+            //  aRowObj.CREATE =0;// (table.rows[i].cells[4].getElementsByTagName("input")[0].checked)? 1:0;
+            aRowObj.MODIFY = (table.rows[i].cells[4].getElementsByTagName("input")[0].checked) ? 1 : 0;
+            aRowObj.RESERVE = (table.rows[i].cells[5].getElementsByTagName("input")[0].checked) ? 1 : 0;
+            aRowObj.IDENTITY = (table.rows[i].cells[6].getElementsByTagName("input")[0].checked) ? 1 : 0;
+            aRowObj.CONSENT = (table.rows[i].cells[7].getElementsByTagName("input")[0].checked) ? 1 : 0;
+            aRowObj.SIGN = (table.rows[i].cells[8].getElementsByTagName("input")[0].checked) ? 1 : 0;
+
+            row_arr.push(aRowObj);
+        }
+
+        //  console.log(row_arr);
+
+        var row_arr_decode = escape(encodeURIComponent(JSON.stringify(row_arr)));
+
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+
+                if (xhttp.responseText.trim() == 'success') {
+                    alert("저장되었습니다.");
+                    $.ajax({
+                        type: 'post',
+                        url: "study_inv.html",
+                        dataType: 'html',
+                        success: function (data) {
+                            $(".researchers").html(data);
+                        }
+                    })
+                }
+
+
+
+
+            }
+        }
+        xhttp.open("POST", "./study.jsp", true);
+        xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhttp.send("action=MODIFY_STUDY_INVS&SID=" + SID + "&contents=" + row_arr_decode + "&SMS_RECEIVER=" + sms_receiver);
+
+    }
+    function selectSubI() {
+        var ids = $("#subi").val();
+        for (var j = 0; j < ids.length; j++) {
+
+            // var aInv=[];
+            var aInv = {
+                'INVID': ids[j],
+                'SIROLETITLE': "시험담당자",
+                'SIROLECODE': 2,
+                // 'READ': 1,
+                // 'CREATE': 0,
+                'MODIFY': 1,
+                'RESERVE': 1,
+                'IDENTITY': 1,
+                'CONSENT': 1,
+                'SIGN': 1,
+                'INVNAME': $("#subi option[value='" + ids[j] + "']").text(),
+            }
+            addtr(aInv);
+        }
+        $("#subi").val(null).trigger('change');
+    }
+
+
+    function selectInvs() {
+        var ids = $("#invs").val();
+        for (var j = 0; j < ids.length; j++) {
+            addInvsToTable(ids[j]);
+        }
+        $("#invs").val(null).trigger('change');
+    }
+
+    function addInvsToTable(id) {
+
+        var xhttpss = new XMLHttpRequest();
+        xhttpss.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var data_pre = xhttpss.responseText.trim();
+
+                var data_eval = eval(data_pre);
+                if (data_eval.length > 0) {
+                    data_eval[0].SIROLECODE = 3;
+                    addtr(data_eval[0]);
+                }
+            }
+        }
+        xhttpss.open("GET", "./study.jsp?action=SAVE_INV_TO_STUDY&SID=" + SID + "&ID=" + id, true);
+        xhttpss.send();
+
+
+    }
+
+    function addtr(aInv) {
+        if (jQuery.inArray(aInv.INVID, study_invs_all_ids_on_table) !== -1) return; // 이미 존재.
+
+        addToArr(aInv.INVID, study_invs_all_ids_on_table); //addToArr(val, arr[]), add a val to arr[]   
+
+        var createTR = document.createElement("tr");
+        // var make_disabled = false;
+        // if (aInv.SIROLECODE == 1 || aInv.SIROLECODE == 2) {//pi or sub-I인 경우 모든 권한이 check 되어 있고 수정 불가.
+        //     make_disabled = true;
+        // }
+        var siRoleCodeTd = document.createElement("td");
+        siRoleCodeTd.innerHTML = aInv.SIROLECODE;
+        siRoleCodeTd.hidden = true;
+        siRoleCodeTd.setAttribute("class", "rolecode");
+        createTR.appendChild(siRoleCodeTd);
+
+        var invidTd = document.createElement("td");
+        invidTd.innerHTML = aInv.INVID;
+        invidTd.hidden = true;
+        invidTd.setAttribute("class", "invid");
+        createTR.appendChild(invidTd);
+
+        var nameTd = document.createElement("td");
+        nameTd.appendChild(document.createTextNode(aInv.INVNAME));
+        if (aInv.ACTIVE == 0) {
+            var badge = document.createElement("span");
+            badge.setAttribute("class", "ml-2 badge badge-secondary  ");
+            badge.appendChild(document.createTextNode("퇴사"));
+            nameTd.appendChild(badge);
+
+            badge.setAttribute("data-toggle", "tooltip");
+            badge.setAttribute("title", "사용종료일 : " + aInv.INACTIVEDATE + "");
+
+        }
+
+        console.log(aInv.INVNAME + "  Inv.ACTIVE=" + aInv.ACTIVE);
+        createTR.appendChild(nameTd);
+
+        var roleTd = document.createElement("td");
+        var roleInput = document.createElement("input");
+        roleInput.value = aInv.SIROLETITLE;
+        roleInput.setAttribute("maxlength", "20");
+        roleInput.setAttribute("class", "form-control");
+        roleTd.appendChild(roleInput);
+        createTR.appendChild(roleTd);
+
+
+
+        var MOIDFYTD = document.createElement("td");
+        var MODIFYCHECKDIV = document.createElement("div");
+        MODIFYCHECKDIV.setAttribute("class", "custom-control custom-checkbox");
+        var MOIDFYCHECKINPUT = document.createElement("input");
+        MOIDFYCHECKINPUT.setAttribute("type", "checkbox");
+        MOIDFYCHECKINPUT.setAttribute("class", "custom-control-input");
+        //if (make_disabled) MOIDFYCHECKINPUT.setAttribute("disabled", "");
+        MOIDFYCHECKINPUT.setAttribute("id", "MOIDFYCHECKINPUT_" + aInv.INVID);
+        var MODIFYCHECKLABEL = document.createElement("label");
+        MODIFYCHECKLABEL.setAttribute("class", "custom-control-label");
+        MODIFYCHECKLABEL.setAttribute("for", "MOIDFYCHECKINPUT_" + aInv.INVID);
+        MODIFYCHECKDIV.appendChild(MOIDFYCHECKINPUT);
+        MODIFYCHECKDIV.appendChild(MODIFYCHECKLABEL);
+        MOIDFYTD.appendChild(MODIFYCHECKDIV);
+        createTR.appendChild(MOIDFYTD);
+        if (aInv.MODIFY == 1) MOIDFYCHECKINPUT.checked = true;
+        else MOIDFYCHECKINPUT.checked = false;
+
+        var RESERVETD = document.createElement("td");
+        var RESERVECHECKDIV = document.createElement("div");
+        RESERVECHECKDIV.setAttribute("class", "custom-control custom-checkbox");
+        var RESERVECHECKINPUT = document.createElement("input");
+        RESERVECHECKINPUT.setAttribute("type", "checkbox");
+        RESERVECHECKINPUT.setAttribute("class", "custom-control-input");
+        // if (make_disabled) RESERVECHECKINPUT.setAttribute("disabled", "");
+        RESERVECHECKINPUT.setAttribute("id", "RESERVECHECKINPUT_" + aInv.INVID);
+        var RESERVECHECKLABEL = document.createElement("label");
+        RESERVECHECKLABEL.setAttribute("class", "custom-control-label");
+        RESERVECHECKLABEL.setAttribute("for", "RESERVECHECKINPUT_" + aInv.INVID);
+        RESERVECHECKDIV.appendChild(RESERVECHECKINPUT);
+        RESERVECHECKDIV.appendChild(RESERVECHECKLABEL);
+        RESERVETD.appendChild(RESERVECHECKDIV);
+        createTR.appendChild(RESERVETD);
+        if (aInv.RESERVE == 1) RESERVECHECKINPUT.checked = true;
+        else RESERVECHECKINPUT.checked = false;
+
+        var IDENTITYTD = document.createElement("td");
+        var IDENTITYCHECKDIV = document.createElement("div");
+        IDENTITYCHECKDIV.setAttribute("class", "custom-control custom-checkbox");
+        var IDENTITYCHECKINPUT = document.createElement("input");
+        IDENTITYCHECKINPUT.setAttribute("type", "checkbox");
+        IDENTITYCHECKINPUT.setAttribute("class", "custom-control-input");
+        //  if (make_disabled) IDENTITYCHECKINPUT.setAttribute("disabled", "");
+        IDENTITYCHECKINPUT.setAttribute("id", "IDENTITYCHECKINPUT_" + aInv.INVID);
+        var IDENTITYCHECKLABEL = document.createElement("label");
+        IDENTITYCHECKLABEL.setAttribute("class", "custom-control-label");
+        IDENTITYCHECKLABEL.setAttribute("for", "IDENTITYCHECKINPUT_" + aInv.INVID);
+        IDENTITYCHECKDIV.appendChild(IDENTITYCHECKINPUT);
+        IDENTITYCHECKDIV.appendChild(IDENTITYCHECKLABEL);
+        IDENTITYTD.appendChild(IDENTITYCHECKDIV);
+        createTR.appendChild(IDENTITYTD);
+        if (aInv.IDENTITY == 1) IDENTITYCHECKINPUT.checked = true;
+        else IDENTITYCHECKINPUT.checked = false;;
+
+        var CONSENTTD = document.createElement("td");
+        var CONSENTCHECKDIV = document.createElement("div");
+        CONSENTCHECKDIV.setAttribute("class", "custom-control custom-checkbox");
+        var CONSENTCHECKINPUT = document.createElement("input");
+        CONSENTCHECKINPUT.setAttribute("type", "checkbox");
+        CONSENTCHECKINPUT.setAttribute("class", "custom-control-input");
+        //  if (make_disabled) CONSENTCHECKINPUT.setAttribute("disabled", "");
+        CONSENTCHECKINPUT.setAttribute("id", "CONSENTCHECKINPUT_" + aInv.INVID);
+        var CONSENTCHECKLABEL = document.createElement("label");
+        CONSENTCHECKLABEL.setAttribute("class", "custom-control-label");
+        CONSENTCHECKLABEL.setAttribute("for", "CONSENTCHECKINPUT_" + aInv.INVID);
+        CONSENTCHECKDIV.appendChild(CONSENTCHECKINPUT);
+        CONSENTCHECKDIV.appendChild(CONSENTCHECKLABEL);
+        CONSENTTD.appendChild(CONSENTCHECKDIV);
+        createTR.appendChild(CONSENTTD);
+        if (aInv.CONSENT == 1) CONSENTCHECKINPUT.checked = true;
+        else CONSENTCHECKINPUT.checked = false;
+
+        var SIGNTD = document.createElement("td");
+        var SIGNCHECKDIV = document.createElement("div");
+        SIGNCHECKDIV.setAttribute("class", "custom-control custom-checkbox");
+        var SIGNCHECKINPUT = document.createElement("input");
+        SIGNCHECKINPUT.setAttribute("type", "checkbox");
+        SIGNCHECKINPUT.setAttribute("class", "custom-control-input");
+        // if (make_disabled) SIGNCHECKINPUT.setAttribute("disabled", "");
+        SIGNCHECKINPUT.setAttribute("id", "SIGNCHECKINPUT_" + aInv.INVID);
+        var SIGNCHECKLABEL = document.createElement("label");
+        SIGNCHECKLABEL.setAttribute("class", "custom-control-label");
+        SIGNCHECKLABEL.setAttribute("for", "SIGNCHECKINPUT_" + aInv.INVID);
+        SIGNCHECKDIV.appendChild(SIGNCHECKINPUT);
+        SIGNCHECKDIV.appendChild(SIGNCHECKLABEL);
+        SIGNTD.appendChild(SIGNCHECKDIV);
+        createTR.appendChild(SIGNTD);
+        if (aInv.SIGN == 1) SIGNCHECKINPUT.checked = true;
+        else SIGNCHECKINPUT.checked = false;
+
+
+        var delTd = document.createElement("td");
+        var span = document.createElement("span");
+        span.setAttribute("class", "table-remove");
+        var delBTN = document.createElement("button");
+        delBTN.setAttribute("class", "btn removeBTN btn-secondary btn-rounded btn-sm my-0");
+        delBTN.setAttribute("id", "DEL_" + aInv.INVID);
+        delBTN.appendChild(document.createTextNode("삭제"));
+        span.appendChild(delBTN);
+        delTd.appendChild(span);
+        if (aInv.SIROLECODE == 1) {
+            delBTN.disabled = true;
+            delBTN.setAttribute("class", "cursor:default btn-rounded btn-sm my-0");
+        }
+        createTR.appendChild(delTd);
+        var invs_tbody_element = document.getElementById("invs_tbody");
+
+        if (aInv.SIROLECODE == 1) { //add at the first row
+            var target = invs_tbody_element.getElementsByTagName("tr")[0];
+            invs_tbody_element.insertBefore(createTR, target);
+        }
+        else if (aInv.SIROLECODE == 2) {
+
+            var target = invs_tbody_element.getElementsByTagName("tr")[1];
+            invs_tbody_element.insertBefore(createTR, target);
+        }
+        else invs_tbody_element.append(createTR);
+
+
+        $("#invs_table").on("click", "#DEL_" + aInv.INVID, function () {
+            $(this).closest("tr").remove();
+            var id = (event.srcElement.id).split("_")[1];
+            //console.log("  study_invs_all_ids_on_table=" + study_invs_all_ids_on_table);
+            // study_invs_all_ids_on_table.remove("'"+last_pi_id+"'");
+            const index = study_invs_all_ids_on_table.indexOf(id);
+            if (index > -1) {
+                study_invs_all_ids_on_table.splice(index, 1);
+            }
+            // console.log(" removed lastpi =" + id + "  index=" + index);
+            //  console.log(" removed lastpi =" + id + "  result=" + study_invs_all_ids_on_table);
+
+        });
+    }//end of function addtr
+
+</script>
+
+<div style="text-align: right;">
+    <button class="btn btn-outline-danger" onclick="save_table_data()">저장하기</button>
+</div>
+
+
+<!-- <div class="mb-4 ">
+    <h3 class="myinfo">※ 자원자가 서명을 완료하면 서명정보를 수신할  핸드폰 번호를 입력하여 주세요.</h3> 
+    <h3 class="myinfo">미입력시 자원자 서명 알림 문자를 받지 못합니다.</h3> 
+    <div class="d-flex">
+    <label style="font-weight: bold;" >자원자 서명시 문자 수신 번호 :</label>
+<input class="form-control form-control-sm ml-2 " style="max-width:200px" type="text" maxlength="15" id="sms_receiver_phone"
+        placeholder="핸드폰 번호를 입력해주세요.">
+</div></div> -->
+
+<!-- <table class="table table-borderless" style="vertical-align:middle; min-width: 800px;"> -->
+
+<table class="table table-borderless  " style="vertical-align:middle; min-width: 800px;table-layout:fixed; ">
+
+    <tbody>
+
+
+        <tr>
+            <td style="width: 150px;"><label style="font-weight: bold;">시험 책임자 <span
+                        style="color: red;">*</span></label></td>
+            <td>
+                <select class="js-example-basic-single form-control form-control-lg short " id="pi" name="pi">
+                    <option></option>
+                </select>
+            </td>
+        </tr>
+
+        <tr>
+            <td><label style="font-weight: bold;">시험 담당자</label></td>
+            <td class="d-flex flex-row">
+                <div class=" bd-highlight">
+                    <select class="js-example-basic-multiple  form-control short " id="subi" name="subi[]"
+                        multiple="multiple">
+                        <option></option>
+                    </select>
+                </div>
+                <button class="btn btn-primary btn-sm  bd-highlight" onclick="selectSubI()">추가</button>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label style="font-weight: bold;"> 참여연구자</label>
+            </td>
+            <td class="d-flex flex-row">
+                <div class=" bd-highlight">
+                    <select class="js-example-basic-multiple  form-control short" id="invs" name="invs[]"
+                        multiple="multiple">
+                        <option></option>
+                    </select>
+                </div>
+                <button class="btn btn-primary btn-sm  bd-highlight" onclick="selectInvs()">추가</button>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<hr>
+
+<div class="d-flex justify-row">
+    <div style="width: 150px;">
+        <label style="font-weight: bold;">문자알림 수신번호 :</label>
+    </div>
+    <div>
+
+        <input class="form-control  form- short phoneNumber" type="text" maxlength="15" id="sms_receiver_phone"
+            placeholder="핸드폰 번호만 입력하세요.">
+        <h3 class="myinfo mt-1" style="color: red;">※ 자원자가 서명을 완료하면 서명정보를 수신할 핸드폰 번호를 입력하여 주세요.
+            미입력시 자원자 서명 알림 문자를 받지 못합니다.</h3>
+
+    </div>
+</div>
+<hr>
+
+<h5> 참여연구자 명단</h5>
+<div class="table-responsive table-editable ">
+
+
+    <table id="invs_table" class="table table-bordered  text-center  w-100"
+        style="vertical-align:middle; min-width: 800px;table-layout:fixed; ">
+
+        <thead>
+            <tr>
+
+                <th rowspan=2 width="90px">연구자명
+                </th>
+                <th rowspan=2 width="120px"> 역할
+                </th>
+                <th colspan=5 width="520px"><span class="mytooltip" data-toggle="tooltip" data-placement="top"
+                        title="본 미투리 플랫폼에서 해당 연구에서 사용가능한 기능권한을 각 연구참여자별로 부여합니다">플랫폼 기능권한</span></th>
+                <th rowspan=2 width="70px">삭제</th>
+            </tr>
+            <tr>
+                <!-- <th>기본보기<i class="far fa-question-circle ml-2" data-toggle="tooltip" data-placement="bottom"
+                            title="자원자 정보를 제외한 정보들을 보는 권한(체크해제시 본 연구 접근 불가)"></i></th> -->
+                <!-- <th>연구생성<i class="far fa-question-circle ml-2" data-toggle="tooltip" data-placement="bottom"
+                            title="본 연구를 생성할 수 있는 권한"></i></th> -->
+                <th><span class="mytooltip" data-toggle="tooltip" data-placement="top"
+                        title="연구 모집공고를 게시하고 연구정보를 수정할 수 있는 권한">연구수정</span></th>
+                <th><span class="mytooltip" data-toggle="tooltip" data-placement="top"
+                        title="자원자의 예약을 관리할 수 있는 권한">자원자<br>예약</span></th>
+                <th><span class="mytooltip" data-toggle="tooltip" data-placement="top"
+                        title="자원자 방문 시 본인확인을 할 수 있는 권한">자원자<br>본인확인</span></th>
+                <th><span class="mytooltip" data-toggle="tooltip" data-placement="top"
+                        title="자원자의 동의설명을 시작하고 종료할 수 있는 권한">자원자<br>동의설명</span></th>
+                <th><span class="mytooltip" data-toggle="tooltip" data-placement="top"
+                        title="동의서에 서명할 수 있는 권한">자원자<br>동의서명</span></th>
+
+
+
+            </tr>
+        </thead>
+        <tbody id="invs_tbody">
+
+        </tbody>
+    </table>

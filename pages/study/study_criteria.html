@@ -1,0 +1,522 @@
+<!--
+    addCriteria() => If click Add criteria button, Create card in CreteriaBody
+    selectAnswerType() => If select answer type, Add AddedArea in CreteriaBody andthen Create answer form in AddedArea according to each type of answer.
+-->
+<script type="text/javascript">
+    var criterias = []; // 체크리스트 Array
+    
+    /* Document Ready Start */
+    $(document).ready(function () {
+        // DB LOAD
+        loadData(SID);
+    });
+    /* Document Ready END */
+
+    // 체크리스트 추가
+    function addCriteria(){
+        var number = countCriteria() + 1; //1부터시작..
+        $('#CriteriaBody').append(
+            '<div class="card"> <h3 class="card-header d-flex bd-highlight align-items-center" style="background-color:#9ac1e275;"> 체크리스트 항목'+number+'<span class="ml-2" style="font-size:15px; color:red;">(</span><input type="checkbox" class="p-2" id="isCritical" name="isCritical" style="zoom:1.5;" onchange="setCriticalQuestion(this)" /><span class="ml-2" style="font-size:15px; color:red;">필수여부*)</span><button type="button" class="btn btn-danger btn-circle btn-xl ml-auto" onclick="deleteCriteria(this)"><i class="far fa-trash-alt"></i></button></h3> <div class="card-body" id="CardBody"> <h5 class="">제목</h5> <input class="form-control form-control-lg" type="text" maxlength="1000" id="CriteriaTitle" placeholder="체크리스트 항목의 제목을 입력해주세요." onchange="saveTitle(this)"> <hr/> <h5 class="">응답 유형</h5> <select class="js-example-basic-single form-control form-control-lg mb-3 col-2" id="answertype" name="answertype" onchange="selectAnswerType(this)"> <option value="default" selected disabled hidden>Choose here</option> <option value="Text">Text</option> <option value="TextArea">TextArea</option> <option value="Date">Date</option> <option value="Selection">Selection</option> </select> <hr /> </div> </div>'
+        );
+        
+
+        // Criteria json을 criterias 배열에 추가
+        criterias.push(
+            {
+                critical: false,
+                title: "",
+                subtitle: "기본",
+                answer:{
+                    answerType: "",
+                    answerExample: "",
+                    YorN: ["예","아니오"],
+                    selection: ["선택지1", "선택지2", "선택지3"],
+                    date: "",
+                },
+                correctAnswer: ""
+            }
+        );
+        
+        console.log('--------------------');
+        for(var idx=0; idx<criterias.length-1; idx++){
+            console.log(criterias[idx]);
+        }
+    }
+    // 체크리스트 가져와 그리기
+    function loadCriteria(criteria){
+        if(criteria['answer']['answerType']==="Text") loadTextCriteria(criteria);
+        else if(criteria['answer']['answerType']==="TextArea") loadTextAreaCriteria(criteria);
+        else if(criteria['answer']['answerType']==="YorN") loadYorNCriteria(criteria);
+        else if(criteria['answer']['answerType']==="Selection") loadSelectionCriteria(criteria);
+        else if(criteria['answer']['answerType']==="Date");
+        else{
+            loadBasicCriteria(criteria);
+        }
+    }
+
+    function loadBasicCriteria(criteria){
+        var number = countCriteria() + 1; //1부터시작..
+        $('#CriteriaBody').append(
+            '<div class="card"> <h3 class="card-header d-flex bd-highlight align-items-center" style="background-color:#9ac1e275;"> 체크리스트 항목'+number+'<span class="ml-2" style="font-size:15px; color:red;">(</span><input type="checkbox" class="p-2" id="isCritical" name="isCritical" style="zoom:1.5;" onchange="setCriticalQuestion(this)" /><span class="ml-2" style="font-size:15px; color:red;">필수여부*)</span><button type="button" class="btn btn-danger btn-circle btn-xl ml-auto" onclick="deleteCriteria(this)"><i class="far fa-trash-alt"></i></button></h3> <div class="card-body" id="CardBody"> <h5 class="">제목</h5> <input class="form-control form-control-lg" type="text" maxlength="1000" id="CriteriaTitle" placeholder="체크리스트 항목의 제목을 입력해주세요." onchange="saveTitle(this)"> <hr/> <h5 class="">응답 유형</h5> <select class="js-example-basic-single form-control form-control-lg mb-3 col-2" id="answertype" name="answertype" onchange="selectAnswerType(this)"> <option value="default" selected disabled hidden>Choose here</option> <option value="Text">Text</option> <option value="TextArea">TextArea</option> <option value="Date">Date</option> <option value="Selection">Selection</option> </select> <hr /> </div> </div>'
+        );
+    }
+
+    // 체크리스트 가져와 그리기 [Text인 경우]
+    function loadTextCriteria(criteria){
+        var number = countCriteria() + 1; //1부터시작..
+        var beginCode = '<div class="card"> <h3 class="card-header d-flex bd-highlight align-items-center" style="background-color:#9ac1e275;"> 체크리스트 항목'+number+'<span class="ml-2" style="font-size:15px; color:red;">(</span><input type="checkbox" class="p-2" id="isCritical" name="isCritical" style="zoom:1.5;" onchange="setCriticalQuestion(this)" /><span class="ml-2" style="font-size:15px; color:red;">필수여부*)</span><button type="button" class="btn btn-danger btn-circle btn-xl ml-auto" onclick="deleteCriteria(this)"><i class="far fa-trash-alt"></i></button></h3> <div class="card-body" id="CardBody"><h5 class="">제목</h5><input class="form-control form-control-lg" type="text" maxlength="1000" id="CriteriaTitle" onchange="saveTitle(this)" value="'+criteria['title']+'"><hr/><h5 class="">응답 유형</h5><select class="js-example-basic-single form-control form-control-lg mb-3 col-2" id="answertype" name="answertype" onchange="selectAnswerType(this)"><option value="default" disabled hidden>Choose here</option><option value="Text" selected>Text</option><option value="TextArea">TextArea</option><option value="Date">Date</option><option value="Selection">Selection</option></select><hr />';
+        var addedAreaCode = '<div class="AddedArea"><h5 class="">응답 예시</h5><input class="form-control form-control-lg" type="text" maxlength="1000" id="CriteriaTitle" placeholder="작성에 필요한 정보를 입력해주세요." onchange="saveText(this)"><hr /></div>';
+        var endCode = '</div></div>';
+
+        // critical 일 경우 beginCode 변경
+        if(criteria['critical']) '<div class="card"> <h3 class="card-header d-flex bd-highlight align-items-center" style="background-color:#ffe6ea;"> 체크리스트 항목'+number+'<input type="checkbox" class="p-2 ml-1" id="isCritical" name="isCritical" style="zoom:1.5;" onchange="setCriticalQuestion(this)" checked /><button type="button" class="btn btn-danger btn-circle btn-xl ml-auto" onclick="deleteCriteria(this)"><i class="far fa-trash-alt"></i></button></h3> <div class="card-body" id="CardBody"><h5 class="">제목</h5><input class="form-control form-control-lg" type="text" maxlength="1000" id="CriteriaTitle" onchange="saveTitle(this)" value="'+criteria['title']+'"><hr/><h5 class="">응답 유형</h5><select class="js-example-basic-single form-control form-control-lg mb-3 col-2" id="answertype" name="answertype" onchange="selectAnswerType(this)"><option value="default" disabled hidden>Choose here</option><option value="Text" selected>Text</option><option value="TextArea">TextArea</option><option value="Date">Date</option><option value="Selection">Selection</option></select><hr />';
+
+        beginCode = beginCode + addedAreaCode + endCode;
+        $('#CriteriaBody').append(beginCode);
+    }
+
+    // 체크리스트 가져와 그리기 [TextArea인 경우]
+    function loadTextAreaCriteria(criteria){
+        var number = countCriteria() + 1; //1부터시작..
+        var beginCode = '<div class="card"> <h3 class="card-header d-flex bd-highlight align-items-center" style="background-color:#9ac1e275;"> 체크리스트 항목'+number+'<span class="ml-2" style="font-size:15px; color:red;">(</span><input type="checkbox" class="p-2" id="isCritical" name="isCritical" style="zoom:1.5;" onchange="setCriticalQuestion(this)" /><span class="ml-2" style="font-size:15px; color:red;">필수여부*)</span><button type="button" class="btn btn-danger btn-circle btn-xl ml-auto" onclick="deleteCriteria(this)"><i class="far fa-trash-alt"></i></button></h3> <div class="card-body" id="CardBody"><h5 class="">제목</h5><input class="form-control form-control-lg" type="text" maxlength="1000" id="CriteriaTitle" onchange="saveTitle(this)" value="'+criteria['title']+'"><hr/><h5 class="">응답 유형</h5><select class="js-example-basic-single form-control form-control-lg mb-3 col-2" id="answertype" name="answertype" onchange="selectAnswerType(this)"><option value="default" disabled hidden>Choose here</option><option value="Text">Text</option><option value="TextArea" selected>TextArea</option><option value="Date">Date</option><option value="Selection">Selection</option></select><hr />';
+        var addedAreaCode = '<div class="AddedArea"><h5 class="">응답 예시</h5><textarea class="form-control" type="text" rows="5" placeholder="작성에 필요한 정보를 입력해주세요." onchange=saveTextArea(this)></textarea><hr /></div>';
+        var endCode = '</div></div>';
+        
+        if(criteria['critical']) '<div class="card"> <h3 class="card-header d-flex bd-highlight align-items-center" style="background-color:#ffe6ea;"> 체크리스트 항목'+number+'<input type="checkbox" class="p-2 ml-1" id="isCritical" name="isCritical" style="zoom:1.5;" onchange="setCriticalQuestion(this)" checked /><button type="button" class="btn btn-danger btn-circle btn-xl ml-auto" onclick="deleteCriteria(this)"><i class="far fa-trash-alt"></i></button></h3> <div class="card-body" id="CardBody"><h5 class="">제목</h5><input class="form-control form-control-lg" type="text" maxlength="1000" id="CriteriaTitle" onchange="saveTitle(this)" value="'+criteria['title']+'"><hr/><h5 class="">응답 유형</h5><select class="js-example-basic-single form-control form-control-lg mb-3 col-2" id="answertype" name="answertype" onchange="selectAnswerType(this)"><option value="default" disabled hidden>Choose here</option><option value="Text" selected>Text</option><option value="TextArea">TextArea</option><option value="Date">Date</option><option value="Selection">Selection</option></select><hr />';
+
+        beginCode = beginCode + addedAreaCode + endCode;
+        $('#CriteriaBody').append(beginCode);
+    }
+
+
+    // 체크리스트 가져와 그리기 [Selection인 경우]
+    function loadSelectionCriteria(criteria){
+        var number = countCriteria() + 1; //1부터시작..
+        var selectionLength = criteria['answer']['selection'].length;
+        var beginCode = '<div class="card"> <h3 class="card-header d-flex bd-highlight align-items-center" style="background-color:#9ac1e275;"> 체크리스트 항목'+number+'<span class="ml-2" style="font-size:15px; color:red;">(</span><input type="checkbox" class="p-2" id="isCritical" name="isCritical" style="zoom:1.5;" onchange="setCriticalQuestion(this)" /><span class="ml-2" style="font-size:15px; color:red;">필수여부*)</span><button type="button" class="btn btn-danger btn-circle btn-xl ml-auto" onclick="deleteCriteria(this)"><i class="far fa-trash-alt"></i></button></h3> <div class="card-body" id="CardBody"><h5 class="">제목</h5><input class="form-control form-control-lg" type="text" maxlength="1000" id="CriteriaTitle" onchange="saveTitle(this)" value="'+criteria['title']+'"><hr/><h5 class="">응답 유형</h5><select class="js-example-basic-single form-control form-control-lg mb-3 col-2" id="answertype" name="answertype" onchange="selectAnswerType(this)"><option value="default" disabled hidden>Choose here</option><option value="Text">Text</option><option value="TextArea">TextArea</option><option value="Date">Date</option><option value="Selection" selected>Selection</option></select><div class="AddedArea"><h5>응답 유형 세부설정</h5><div class="d-flex flex-row"><div class="p-1"><span>선택지 개수 :</span></div><div class="p-1"><input class="form-control form-control-sm" type="number" maxlength="2" id="select" placeholder="기본값: 3" onchange="changeSelectItemCount(this)" value="'+selectionLength+'"></div></div><div class="SelectItemArea"><div class="d-flex flex-row">';
+        
+        // critical 문항일 경우 beginCode 변경
+        if(criteria['critical']) beginCode = '<div class="card"> <h3 class="card-header d-flex bd-highlight align-items-center" style="background-color:#ffe6ea;"> 체크리스트 항목'+number+'<span class="ml-2" style="font-size:15px; color:red;">(</span><input type="checkbox" class="p-2" id="isCritical" name="isCritical" style="zoom:1.5;" onchange="setCriticalQuestion(this)" checked /><span class="ml-2" style="font-size:15px; color:red;">필수여부*)</span><button type="button" class="btn btn-danger btn-circle btn-xl ml-auto" onclick="deleteCriteria(this)"><i class="far fa-trash-alt"></i></button></h3> <div class="card-body" id="CardBody"><h5 class="">제목</h5><input class="form-control form-control-lg" type="text" maxlength="1000" id="CriteriaTitle" onchange="saveTitle(this)" value="'+criteria['title']+'"><hr/><h5 class="">응답 유형</h5><select class="js-example-basic-single form-control form-control-lg mb-3 col-2" id="answertype" name="answertype" onchange="selectAnswerType(this)"><option value="default" disabled hidden>Choose here</option><option value="Text">Text</option><option value="TextArea">TextArea</option><option value="Date">Date</option><option value="Selection" selected>Selection</option></select><div class="AddedArea"><h5>응답 유형 세부설정</h5><div class="d-flex flex-row"><div class="p-1"><span>선택지 개수 :</span></div><div class="p-1"><input class="form-control form-control-sm" type="number" maxlength="2" id="select" placeholder="기본값: 3" onchange="changeSelectItemCount(this)" value="'+selectionLength+'"></div></div><div class="SelectItemArea"><div class="d-flex flex-row">';
+
+        // selection 개수만큼 돌며 input(text) 생성
+        for(var idx=1; idx<=selectionLength; idx++){
+            beginCode += '<div class="p-1"><input class="form-control form-control-sm" type="text" maxlength="1000" id="selectItem'+idx+'" placeholder="선택지'+idx+'" onchange="createSelection(this,'+number+')" value="'+criteria['answer']['selection'][idx-1]+'"></div>';
+        }
+        beginCode += '</div><hr /><h5 class="mt-3">정답 선택</h5><select class="form-control form-control-lg col-2" id="PresentSelect" name="PresentSelect" onchange="setCorrectAnswerInSelection(this)"><option value="" selected disabled hidden>Choose here</option>';
+
+        // selection 개수만큼 돌며 select option 생성
+        for(var idx=1; idx<=selectionLength; idx++){
+            if (criteria['correctAnswer'] == criteria['answer']['selection'][idx-1]){
+                beginCode += '<option value="'+idx+'" selected>'+criteria['answer']['selection'][idx-1]+'</option>';
+            }
+            else {
+                beginCode += '<option value="'+idx+'">'+criteria['answer']['selection'][idx-1]+'</option>';
+            }
+            
+        }
+        beginCode += '</select><hr /></div></div></div></div>';
+        $('#CriteriaBody').append(beginCode);
+    }
+
+    // 체크리스트 가져와 그리기 [YorN인 경우]
+    function loadYorNCriteria(criteria){
+        var number = countCriteria() + 1; //1부터시작..
+        var selectionLength = criteria['answer']['selection'].length;
+        var beginCode = '<div class="card"> <h3 class="card-header d-flex bd-highlight align-items-center" style="background-color:#9ac1e275;"> 체크리스트 항목'+number+'<input type="checkbox" class="p-2 ml-1" id="isCritical" name="isCritical" style="zoom:1.5;" onchange="setCriticalQuestion(this)" /><button type="button" class="btn btn-danger btn-circle btn-xl ml-auto" onclick="deleteCriteria(this)"><i class="far fa-trash-alt"></i></button></h3> <div class="card-body" id="CardBody"><h5 class="">제목</h5><input class="form-control form-control-lg" type="text" maxlength="1000" id="CriteriaTitle" onchange="saveTitle(this)" value="'+criteria['title']+'"><hr/><h5 class="">응답 유형</h5><select class="js-example-basic-single form-control form-control-lg mb-3 col-2" id="answertype" name="answertype" onchange="selectAnswerType(this)"><option value="default" disabled hidden>Choose here</option><option value="Text" >Text</option><option value="TextArea">TextArea</option><option value="Date">Date</option><option value="Selection">Selection</option></select><hr /><div class="AddedArea"><h5 class="">라디오버튼 이름 작성</h5><div class="row">';
+        
+        // critical 문항일 경우 beginCode 변경
+        if(1);
+
+        //라디오버튼 개수만큼 돌며 input(text) 생성
+        for(var idx=1; idx<=selectionLength; idx++){
+            beginCode += '<input class="form-control form-control-lg col" type="text" maxlength="1000" id="Radio'+idx+'Name" placeholder="" style="margin-left:1%; margin-right:1%;" onchange="changeRadioName(this,'+number+')" value="'+criteria['answer']['YorN'][idx-1]+'">';
+        }
+        beginCode += '</div><hr />';
+
+        //라디오버튼 개수만큼 돌며 버튼&레이블 생성
+        for(var idx=1; idx<=selectionLength; idx++){
+            beginCode += '<div class="ml-2 form-check form-check-inline"><input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio'+idx+'" value="option'+idx+'" onclick="setCorrectAnswerInRadioButton(this)"><label class="form-check-label" for="inlineRadio'+idx+'" id="radiolabel'+idx+'">'+criteria['answer']['YorN'][idx-1]+'</label></div>';
+        }
+        beginCode += '</div>';
+        $('#CriteriaBody').append(beginCode);
+    }
+
+    // 체크리스트 가져와 그리기 [Date인 경우]
+    function loadDateCriteria(criteria){
+        var number = countCriteria() + 1; //1부터시작..
+        var beginCode = '<div class="card"> <h3 class="card-header d-flex bd-highlight align-items-center" style="background-color:#9ac1e275;"> 체크리스트 항목'+number+'<span class="ml-2" style="font-size:15px; color:red;">(</span><input type="checkbox" class="p-2" id="isCritical" name="isCritical" style="zoom:1.5;" onchange="setCriticalQuestion(this)" /><span class="ml-2" style="font-size:15px; color:red;">필수여부*)</span><button type="button" class="btn btn-danger btn-circle btn-xl ml-auto" onclick="deleteCriteria(this)"><i class="far fa-trash-alt"></i></button></h3> <div class="card-body" id="CardBody"><h5 class="">제목</h5><input class="form-control form-control-lg" type="text" maxlength="1000" id="CriteriaTitle" onchange="saveTitle(this)" value="'+criteria['title']+'"><hr/><h5 class="">응답 유형</h5><select class="js-example-basic-single form-control form-control-lg mb-3 col-2" id="answertype" name="answertype" onchange="selectAnswerType(this)"><option value="default" disabled hidden>Choose here</option><option value="Text" >Text</option><option value="TextArea">TextArea</option><option value="Date" selected>Date</option><option value="Selection">Selection</option></select><hr />';
+        var addedAreaCode = '<div class="AddedArea"><h5 class="">응답 예시</h5><input type="date" value="2021-04-15" min="2018-01-01" max="2024-12-31" style="min-width:200px;"></div>';
+        var endCode = '</div></div>';
+
+        beginCode = beginCode + addedAreaCode + endCode;
+        $('#CriteriaBody').append(beginCode);
+    }
+
+    // 체크리스트 삭제
+    function deleteCriteria(_element){
+        var deleteButtonidx = $(_element).closest('.card').prevAll().length;
+        criterias.splice(deleteButtonidx, 1);
+        $(_element).parent().parent().remove();
+
+        var criteriaBody = document.getElementById('CriteriaBody');
+        while(criteriaBody.hasChildNodes()){
+            criteriaBody.removeChild(criteriaBody.firstChild)
+        }
+
+        console.log('--------------------');
+        for(var idx=0; idx<criterias.length; idx++){
+            console.log(criterias[idx]);
+            loadCriteria(criterias[idx]);
+        }
+
+        
+
+    }
+
+    // 체크리스트 개수 확인
+    function countCriteria(){
+        var parent = document.getElementById("CriteriaBody"); //parent => html div element임.
+        var count = parent.getElementsByClassName("card"); //element에서는 element를 가져올 수 있음.
+        return count.length;
+    }
+
+    // 응답 유형 선택
+    function selectAnswerType(_element){
+        var CardBodyObject = $(_element).parent(); // object;;
+        var CardBodyElement = _element.closest('#CardBody');
+        var selectTypeName = $(_element).val();
+        var AddedAreaObject = CardBodyElement.getElementsByClassName("AddedArea")[0];
+        var number = countCriteria(); // 응답유형을 선택할 때는, 이미 체크리스트 항목이 늘어나있어, +1 하지 않음.
+        var criteriaIdx = $(_element).closest('.card').prevAll().length;
+        var criteriaObj = criterias[criteriaIdx]; // criterias 인덱스 선택
+
+        // if critical, it is possible Selection only
+        if (criteriaObj['critical']) {
+            alert("필수 문항 지정을 해제하여 주세요.");
+            _element.value = criteriaObj['answer']['answerType'];
+            return ;
+        }
+
+        // criteriaObj에 type명 저장
+        criteriaObj['answer']['answerType'] = selectTypeName;
+
+        // if addedArea exist, remove.
+        if (AddedAreaObject !== undefined) AddedAreaObject.remove(); 
+
+         
+        
+        if (selectTypeName === "Text") $(CardBodyObject).append('<div class="AddedArea"><h5 class="">응답 예시</h5><input class="form-control form-control-lg" type="text" maxlength="1000" id="CriteriaTitle" placeholder="작성에 필요한 정보를 입력해주세요." onchange="saveText(this)"><hr /></div>');
+        else if(selectTypeName === "TextArea") $(CardBodyObject).append('<div class="AddedArea"><h5 class="">응답 예시</h5><textarea class="form-control" type="text" rows="5" placeholder="작성에 필요한 정보를 입력해주세요." onchange=saveTextArea(this)></textarea><hr />');
+        else if(selectTypeName === "YorN") $(CardBodyObject).append('<div class="AddedArea"><h5 class="">라디오버튼 이름 작성</h5><div class="row"><input class="form-control form-control-lg col" type="text" maxlength="1000" id="Radio1Name" placeholder="기본값: 예" style="margin-left:1%; margin-right:1%;" onchange="changeRadioName(this,'+number+')"><input class="form-control form-control-lg col" type="text" maxlength="1000" id="Radio2Name" placeholder="기본값: 아니오" style="margin-left:1%; margin-right:1%;" onchange="changeRadioName(this,'+number+')"></div><hr /><div class="ml-2 form-check form-check-inline"><input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="option1" onclick="setCorrectAnswerInRadioButton(this)"><label class="form-check-label" for="inlineRadio1" id="radiolabel1">예</label></div><div class="ml-2 form-check form-check-inline"><input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="option2" onclick="setCorrectAnswerInRadioButton(this)"><label class="form-check-label" for="inlineRadio2" id="radiolabel2">아니오</label></div></div>');
+        else if(selectTypeName === "Date") $(CardBodyObject).append('<div class="AddedArea"><h5 class="">응답 예시</h5><input type="date" value="2021-04-15" min="2018-01-01" max="2024-12-31" style="min-width:200px;"></div>');
+        else if(selectTypeName === "Selection") $(CardBodyObject).append('<div class="AddedArea"><h5>응답 유형 세부설정</h5><div class="d-flex flex-row"><div class="p-1"><span>선택지 개수 :</span></div><div class="p-1"><input class="form-control form-control-sm" type="number" maxlength="2" id="select" placeholder="기본값: 3" onchange="changeSelectItemCount(this)"></div></div><div class="SelectItemArea"><div class="d-flex flex-row"><div class="p-1"><input class="form-control form-control-sm" type="text" maxlength="1000" id="selectItem1" placeholder="선택지1" onchange="createSelection(this,'+number+')"></div><div class="p-1"><input class="form-control form-control-sm" type="text" maxlength="1000" id="selectItem2" placeholder="선택지2" onchange="createSelection(this,'+number+')"></div><div class="p-1"><input class="form-control form-control-sm" type="text" maxlength="1000" id="selectItem3" placeholder="선택지3" onchange="createSelection(this,'+number+')"></div></div><hr /><h5 class="mt-3">정답 선택</h5><select class="form-control form-control-lg col-2" id="PresentSelect" name="PresentSelect" onchange="setCorrectAnswerInSelection(this)"><option value="" selected disabled hidden>Choose here</option><option value="1" >선택지1</option><option value="2" >선택지2</option><option value="3" >선택지3</option></select><hr /></div></div>');
+    }
+
+    // Y/N 값 onchange호출 메서드
+    function changeRadioName(_element, number){
+        var CardBodyElement = _element.closest('#CardBody');
+        var inputValue = _element.value;
+        var radioNumber = _element.id.split('Radio')[1].split('Name')[0]; // Parse radio number
+        var RadioLabelObject = CardBodyElement.getElementsByClassName('form-check-label');
+
+        // 공백일 경우, default 값 설정 (1번 -> 예, 2번 -> 아니오)
+        if(radioNumber==="1" && inputValue==="") inputValue="예";
+        if(radioNumber==="2" && inputValue==="") inputValue="아니오";
+
+        // RadioLabelObject의 배열에서 해당 넘버를 가지는 ID find, set value
+        for(var idx=0; idx<RadioLabelObject.length; idx++) {
+            if(RadioLabelObject[idx].id.split("radiolabel")[1] === radioNumber) {
+                RadioLabelObject[idx].innerHTML=inputValue;
+                saveRadioButton(inputValue,_element,idx);
+            }
+
+        }
+    }
+
+    // Selection 개수 입력 onchange호출 메서드
+    function changeSelectItemCount(_element){
+        var CardBodyElement = _element.closest('#CardBody');
+        var CardBodyObject = $(_element).parent().parent().parent();
+        var inputValue = _element.value;
+        //if 숫자가 아니면, 함수 종료
+        if(isNaN(inputValue)){
+            alert("숫자를 입력해주세요.");
+            return; 
+        }
+        if(inputValue < 2){
+            alert("2이상 입력해주세요.");
+            return; 
+        }
+
+        inputValue = parseInt(inputValue); //숫자로 변환
+
+        deleteSelectItem(_element); // 기존 SelectItemArea 삭제
+
+        // SelectItemArea 시작부분 코드 + 닫는태그
+        var beginSelectItemAreaCode = '<div class="SelectItemArea"><div class="d-flex flex-row">';
+        var endSelectItemAreaCode = '</div><hr /><h5 class="mt-3">정답 선택</h5>';
+        var EntireAppendCode = '';
+        //이 사이에 for 문을 통해 Item element 생성하면 됨
+        for(var idx=1; idx<=inputValue; idx++) beginSelectItemAreaCode += ('<div class="p-1"><input class="form-control form-control-sm" type="text" maxlength="1000" id="selectItem' + idx.toString() + '" placeholder="선택지'+idx.toString()+'" onchange="createSelection(this)"></div>');
+
+        // 취합
+        EntireAppendCode = beginSelectItemAreaCode + endSelectItemAreaCode;
+        
+        // Select 태그 부분 코드
+        var beginSelectTagCode = '<select class="form-control form-control-lg col-2" id="PresentSelect" name="PresentSelect" onchange="setCorrectAnswerInSelection(this)">';
+        var endSelectTagCode = '</select><hr /></div>';
+        var chooseHereCode= '<option value="" selected disabled hidden>Choose here</option>';
+        var optionCode = '';
+
+        // 선택지 개수만큼 돌며 만들기
+        for(var idx=1; idx<=inputValue; idx++){
+            optionCode += '<option value="'+idx.toString()+'">선택지'+idx.toString()+'</option>';
+        }
+
+        // 취합
+        EntireAppendCode += beginSelectTagCode;
+        EntireAppendCode += chooseHereCode;
+        EntireAppendCode += optionCode;
+        EntireAppendCode += endSelectTagCode;
+        
+        // Code Append
+        $(CardBodyObject).append(EntireAppendCode);
+
+        // criterias의 해당 부분 json 변경
+        changeSelectionInCriteriaObj(_element, inputValue);
+    }
+
+    function deleteSelectItem(_element){
+        var CardBodyElement = _element.closest('#CardBody');
+        CardBodyElement.getElementsByClassName('SelectItemArea')[0].remove();
+    }
+
+    // 각 Selection설정을 위한 input(text) onchange 호출 메서드
+    function createSelection(_element, number){
+        var AddedAreaElement = _element.closest('.AddedArea');
+        var PresentSelectObject = AddedAreaElement.getElementsByTagName('select')[0];
+        var inputValue = _element.value;
+        var idx = _element.id.split('selectItem')[1];
+        //var itemCount = PresentSelectObject.length; // [Choose here option] + 입력개수
+        
+        //change to inputvalue
+        PresentSelectObject.children[idx].innerText = inputValue;
+
+        // save value in criteria
+        saveSelection(inputValue, _element, idx-1);
+    }
+
+    // Connect DB
+    function saveOnDatabase(_SID){
+
+        if(study_active==0) {
+            alert("종료된 연구는 수정할 수 없습니다.");
+                return;
+        }
+        
+        if(!isTypeSelected()){
+            alert("응답 유형을 선택해주세요");
+            return ;
+        }
+        if(isTitleEmpty()[0]){
+            alert("체크리스트 항목" + (isTitleEmpty()[1]+1) + "의 제목이 입력되지 않았습니다.");
+            return ;
+        }
+        if(isCorrectAnswerEmpty()[0]){
+            alert("필수문항의 정답이 선택되지 않았습니다." + "(체크리스트 항목" + (isCorrectAnswerEmpty()[1]+1) + ")");
+            return ;
+        }
+        
+
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var responseString = xhttp.responseText.trim();
+               console.log({criterias_length_308:criterias.length});
+                if(criterias.length>0){
+                    document.getElementById("TAB_ICON_5").setAttribute("class", "ml-1 tab_icon fas fa-check");
+                    document.getElementById("TAB_ICON_5").setAttribute("style", "color: #28a745; font-size:large;");
+                    
+                }else{
+                    document.getElementById("TAB_ICON_5").setAttribute("class", "ml-1 tab_icon fas fa-ban");
+                    document.getElementById("TAB_ICON_5").setAttribute("style", "");
+                    
+
+                }
+                alert("저장이 완료되었습니다.");
+                //alert(responseString);
+            }
+        }
+        xhttp.open("POST", "./study_criteria.jsp", true);
+        xhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        xhttp.send("action=SAVE_QUESTION&&sid="+_SID+"&&criterias="+JSON.stringify(criterias));
+    }
+
+    // Save title of the criteria
+    function saveTitle(_element){
+        var criteriaIdx = $(_element).closest('.card').prevAll().length;
+        var criteriaObj = criterias[criteriaIdx]; // criterias 인덱스 선택
+        var inputValue = _element.value;
+        criteriaObj['title'] = inputValue;
+    }
+
+    // Save when typing is end on Text type
+    function saveText(_element){
+        var criteriaIdx = $(_element).closest('.card').prevAll().length;
+        var criteriaObj = criterias[criteriaIdx]; // criterias 인덱스 선택
+        var inputValue = _element.value;
+        criteriaObj['answer']['answerType'] = "Text";
+        criteriaObj['answer']['answerExample'] = inputValue;
+    }
+
+    // Save when typing is end on TextArea type
+    function saveTextArea(_element){
+        var criteriaIdx = $(_element).closest('.card').prevAll().length;
+        var criteriaObj = criterias[criteriaIdx]; // criterias 인덱스 선택
+        var inputValue = _element.value;
+        criteriaObj['answer']['answerType'] = "TextArea";
+        criteriaObj['answer']['answerExample'] = inputValue;
+    }
+
+    // Save when typing is end on YorN
+    function saveRadioButton(value, _element, idx){
+        var criteriaIdx = $(_element).closest('.card').prevAll().length;
+        var criteriaObj = criterias[criteriaIdx]; // criterias 인덱스 선택
+        criteriaObj['answer']['answerType'] = "YorN";
+        criteriaObj['answer']['YorN'][idx] = value;
+    }
+
+    // Selection 개수 변경 시, criteriaObj에 반영
+    function changeSelectionInCriteriaObj(_element, value){
+        var criteriaIdx = $(_element).closest('.card').prevAll().length;
+        var criteriaObj = criterias[criteriaIdx]; // criterias 인덱스 선택
+        var currentLength = criteriaObj['answer']['selection'].length;
+
+        if (currentLength < value) criteriaObj['answer']['selection'].splice(currentLength,0,"선택지"+(parseInt(currentLength)+1));
+        else if (currentLength > value) criteriaObj['answer']['selection'].splice(value, currentLength-value);
+        else if (currentLength == value) ;
+    }
+
+    // Save when typing is end on Selection
+    function saveSelection(value, _element, idx){
+        var criteriaIdx = $(_element).closest('.card').prevAll().length;
+        var criteriaObj = criterias[criteriaIdx]; // criterias 인덱스 선택
+        criteriaObj['answer']['answerType'] = "Selection";
+        criteriaObj['answer']['selection'][idx] = value;
+        criteriaObj['correctAnswer'] = value;
+    }
+
+    // 추가 수정 필요 (Date 저장 방안)
+    function saveDate(value){
+        var criteriaIdx = $(_element).closest('.card').prevAll().length;
+        var criteriaObj = criterias[criteriaIdx]; // criterias 인덱스 선택
+        criteriaObj['answer']['answerType'] = "Date";
+    }
+
+    function loadData(_SID){
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE && this.status == 200) {
+                var responseString = xhttp.responseText.trim();
+                criterias = eval(responseString); //criterias 배열로 받아오기
+                //alert(responseString);
+                //alert("불러왔습니다..");
+            }
+        }
+        xhttp.open("GET", "./study_criteria.jsp?action=LOAD_QUESTION&&sid="+_SID, false);
+        xhttp.send();
+
+        if(criterias.length===0){
+            document.getElementById("TAB_ICON_5").setAttribute("class", "ml-1 tab_icon fas fa-ban");
+        }else{
+            document.getElementById("TAB_ICON_5").setAttribute("class", "ml-1 tab_icon fas fa-check");
+            document.getElementById("TAB_ICON_5").setAttribute("style", "color: #28a745; font-size:large;");      
+        }
+
+        for(var idx=0; idx<criterias.length; idx++){
+            criterias[idx]['answer']['YorN'] = [];
+            console.log(criterias[idx])
+            loadCriteria(criterias[idx]);
+        }
+    }
+
+    // 타입이 선택되었는지 확인하는 메서드
+    function isTypeSelected(){
+        var answerTypeArray = document.getElementsByName('answertype');
+        for(var idx=0; idx<answerTypeArray.length; idx++){
+            // 하나라도 default 선택되어있으면 안돼
+            if (answerTypeArray[idx].value === "default") return false;
+        }
+        return true;
+    }
+
+    // 전체 criterias의 제목이 공백인지 확인하는 메서드
+    function isTitleEmpty(){
+        for(var idx=0; idx<criterias.length; idx++){
+            // 하나라도 공백이면 안돼
+            if (criterias[idx]['title'].trim() === "") return [true,idx];
+        }
+        return [false,false];
+    }
+
+    // 전체 criterias중, type이 selection일 때, correctAnswer이 공백인지 확인하는 메서드
+    function isCorrectAnswerEmpty(){
+        for(var idx=0; idx<criterias.length; idx++){
+            // 하나라도 공백이면 안돼
+            if (criterias[idx]['correctAnswer'].trim() === "" && criterias[idx]['critical']) return [true, idx];
+        }
+        return [false,false];
+    }
+
+
+    // critical question 설정/해제
+    function setCriticalQuestion(_element){
+        var criteriaIdx = $(_element).closest('.card').prevAll().length;
+        var criteriaObj = criterias[criteriaIdx]; // criterias 인덱스 선택
+
+        if (criteriaObj['answer']['answerType'] !=="Selection"){
+            alert("응답유형이 Selection이 아닌 경우 필수 문항으로 지정할 수 없습니다.");
+            $(_element).closest('#isCritical').prop("checked",false);
+            return true;
+        }
+        criteriaObj['critical'] = !criteriaObj['critical'];
+        var CardHeadElement = $(_element).closest('.card-header');
+
+        // critical 일 경우 Header색 바꾸기 && 정답 선택 옆에 표시해주기...
+        if (CardHeadElement[0].style.backgroundColor == "rgb(255, 230, 234)") CardHeadElement[0].style.backgroundColor = "#9ac1e275";
+        else CardHeadElement[0].style.backgroundColor = "#ffe6ea";
+    }
+
+    // YorN에서의 정답 설정을 위한 함수
+    function setCorrectAnswerInRadioButton(_element){
+        var CardBodyElement = _element.closest('#CardBody');
+        var criteriaIdx = $(_element).closest('.card').prevAll().length;
+        var criteriaObj = criterias[criteriaIdx]; // criterias 인덱스 선택
+        var idx = _element.value[_element.value.length-1];
+
+        criteriaObj['correctAnswer'] = _element.getElementsByTagName('label')[--idx].innerText;
+    }
+
+    // Selection에서의 정답 설정을 위한 함수
+    function setCorrectAnswerInSelection(_element){
+        var criteriaIdx = $(_element).closest('.card').prevAll().length;
+        var criteriaObj = criterias[criteriaIdx]; // criterias 인덱스 선택
+        
+        var correctAnswerIdx = _element.value;
+        var correctAnswer = _element.getElementsByTagName('option')[correctAnswerIdx].innerText;
+        criteriaObj['correctAnswer'] = correctAnswer;
+    }
+
+</script>
+
+<div class="d-flex justify-content-end " >
+    <span id="msg" class="mr-3 text-danger my-auto"></span> 
+    <button class="btn btn-outline-danger mb-3" onclick="saveOnDatabase(SID)" >저장하기</button>
+</div>
+
+<div id="CriteriaTopArea">
+    <div id="CriteriaBody"></div>
+</div>
+<button class="btn btn-outline-secondary w-100" style="border-radius: 0px;" id="ExtraCriteriaButton" onclick="addCriteria()">체크리스트 항목 추가</button>
+

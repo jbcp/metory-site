@@ -1,0 +1,78 @@
+<div class="m-sm-4">
+    <div id="identitybox" class="p-4" style="background-color: rgb(220, 235, 241);">
+        <h4 class="text-center" >가입여부 확인</h4>
+      
+        <div class="form-group" id="NAME_FORM">
+            <label>이름</label>
+            <input class="form-control form-control-lg" type="text" id="applicant_name"
+                placeholder="이름을 입력하세요." required>
+            <div class="invalid-feedback" id="NAME_FEEDBACK"></div>
+        </div>
+        <div class="form-group" id="BIRTH_FORM">
+            <label>생년월일</label>
+            <input class="form-control form-control-lg" type="date" id="applicant_birth"
+                min="1900-01-01" required>
+            <div class="invalid-feedback" id="BIRTH_FEEDBACK"></div>
+        </div>
+        <div class="form-group" id="GENDER_FORM">
+            <label>성별</label>
+            <div>
+                <label class="form-check form-check-inline ml-4">
+                    <input type="radio" class="form-check-input" id="gender_male" name="genderRadio"
+                        value="1" required>
+                    <span class="form-check-label">남</span>
+                </label>
+                <label class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="gender_female" name="genderRadio"
+                        value="2" required>
+                    <span class="form-check-label">여</span>
+                    <div class="invalid-feedback ml-4" id="GENDER_FEEDBACK"></div>
+                </label>
+            </div>
+            <!-- <div class="invalid-feedback" id="GENDER_FEEDBACK"></div> -->
+        </div>
+
+
+        <div  class=" d-flex  custom-control align-items-center ">
+        <div class="form-group" id="PASS_DIV">
+           
+            <input type="checkbox" class="form-check-input mb-0 mt-0 pb-0 pt-0  " id="passcheck">
+
+            <label class="form-check-label " for="passcheck">본인 인증
+                <span class=" pl-2 myinfo ml-2  text-danger ">※ 신분증을 확인하여 주십시오</span></label>
+        </div>
+    </div>
+        <div class="justify-content-right">
+            <input class="btn btn-primary " style="width:100px" onclick="name_birth_sex_duplicate_check()" value="가입 체크"
+                id="name_birth_sex_duplicate_check_btn" >
+            <span class="ml-4" id="name_birth_sex_duplicate_check_msg"></span>
+
+        </div>
+    </div>
+
+
+    <div class="form-group mt-4" id="MAIL_FORM">
+        <label>이메일 <span class="ml-1 myinfo">※ ID로 사용됩니다.</span> </label>
+        <input class="form-control form-control-lg" type="email" id="applicant_mail" onchange="email_duplicate_check()"
+            placeholder="exmaple@email.com" required>
+        <div class="invalid-feedback" id="MAIL_FEEDBACK"></div>
+    </div>
+
+    <div class="form-group" id="PASSWD_FORM">
+        <label>비밀번호</label>
+        <input class="form-control form-control-lg" type="text" id="APPLPASSWORD" maxlength="100"
+            required>
+        <div class="invalid-feedback" id="PASSWD_FEEDBACK"></div>
+    </div>
+
+
+    <div class="form-group mt-4" id="PHONE_FORM">
+        <label>휴대폰 번호</label>
+        <input class="form-control form-control-lg cellNumber" type="text" id="applicant_phone"
+            placeholder="번호만 입력하세요." required>
+        <div class="invalid-feedback" id="PHONE_FEEDBACK"></div>
+    </div>
+</div>
+<script>
+    $(document).on("keyup", ".cellNumber", function() { $(this).val( $(this).val().replace(/[^0-9]/g,"").replace(/(^01[0-9]{1}|[0-9]{4}|[0-9]{3})([0-9]+)?([0-9]{4})$/,"$1-$2-$3").replace("--", "-") ); });
+</script>

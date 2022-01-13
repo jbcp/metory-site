@@ -1,0 +1,74 @@
+<script type="text/javascript">
+  var contextpath = getContextPath();
+
+  $(document).ready(function () {
+    document.getElementById('footerimg').src = location.origin + "/assets/img/영문.png";
+  })
+
+  function goto(addr) {
+    console.log(addr);
+    location.href = location.origin + addr;
+  }
+
+  function getContextPath() {
+    var hostIndex = location.href.indexOf(location.host) + location.host.length;
+    return location.origin;
+  }
+</script>
+<!-- Footer -->
+<footer class="border-top">
+  <div class="row d-none d-md-none d-lg-block">
+    <div class="d-flex w-100 justify-content-between flex-wrap">
+      <div class="mr-3" style="max-width: 300px;">
+        <a class="navbar-brand" onclick="goto('');">
+          <img class="navbar-brand-img img-fluid" alt="METORY" id="footerimg" style="max-width: 160px; max-height:45px">
+        </a>
+      </div>
+      <div class="mt-3 mr-3 ml-3" style="max-width: 600px;">
+        <dl class="row">
+          <dt class="mr-3">임상약리센터</dt>
+
+          <dt class="mr-2">대표이사</dt>
+          <dd class="mr-3">김민걸</dd>
+
+          <dt class="mr-2">주소</dt>
+          <dd class="mr-3">전주시 덕진구 건지로 20 임상연구지원센터 5층</dd>
+        </dl>
+        <dl class="row">
+          <dt class="mr-2">전화</dt>
+          <dd class="mr-3">063-259-3548, 3549</dd>
+
+          <dt class="mr-2">팩스</dt>
+          <dd class="mr-3">063-259-3483</dd>
+        </dl>
+      </div>
+      <div class="mt-3" style="max-width: 400px;">
+        <a class="mr-1" onclick="goto('/pages/privacy_policy.html');">
+          <strong>개인정보처리방침</strong>
+        </a>
+        <a onclick="goto('/pages/terms_of_service.html');">
+          <strong>서비스이용약관</strong>
+        </a>
+      </div>
+    </div>
+      
+    <div class="row mt-1">
+      <div class="d-flex flex-column bd-highlight mt-1">
+        <p class="text-md-left">Copyright &copy; <strong>Korean Society for Clinical Pharmacology and Therapeutics.</strong> All rights reserved.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center d-block d-md-block d-lg-none mt-2">
+      <p class="mb-0"><strong>임상약리센터</strong> | <strong>대표이사</strong> 김민걸</p>
+      <p class="mb-0"><strong>주소</strong> 전주시 덕진구 건지로 20 임상연구지원센터 5층</p>
+      <p class="mb-0"><strong>전화</strong> 063-259-3548, 3549</p>
+      <p class="mb-0"><strong>팩스</strong> 063-259-3483</p>
+      <div class="mt-3 mb-1">
+        <a class="mr-1" onclick="goto('/pages/privacy_policy.html');"><strong>개인정보처리방침</strong></a>
+        <a onclick="goto('/pages/terms_of_service.html');"><strong>서비스이용약관</strong></a>
+      </div>
+      <p class="text-center">Copyright &copy; <strong>Korean Society for Clinical Pharmacology and Therapeutics.</strong> All rights reserved.</p>
+  </div>
+</footer>
+  <!-- Footer -->

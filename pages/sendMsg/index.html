@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <script>
+            // function fnChkByte(str){
+            //     var str_len = str.length;
+
+            //     var rbyte = 0;
+            //     var rlen = 0;
+            //     var one_char = "";
+            //     var str2 = "";
+
+            //     for(var i=0; i<str_len; i++){
+            //         one_char = str.charAt(i);
+            //         if(escape(one_char).length > 4){
+            //             rbyte += 2;                                         //한글2Byte
+            //         }else{
+            //             rbyte++;                                            //영문 등 나머지 1Byte
+            //         }
+            //     }
+
+            //     return rbyte;
+            // }
+
+            function confirmSubmit(form){
+                var phnum = document.getElementById("phonenum").value;
+                console.log(phnum.indexOf(","));
+                
+                if (confirm("메세지를 보내시겠습니까?")){
+                    if (phnum.indexOf(",") == -1) form.setAttribute("action", "./sendXMS.jsp");
+                    else form.setAttribute("action", "./sendXMS_Multi.jsp");
+                }
+                // if(fnChkByte(msg) < 90){
+                //     if (confirm("단문 메세지를 보내시겠습니까?")){
+                //         form.setAttribute("action", "./MessageService/sendSMS.jsp");
+                //     }
+                // } else { 
+                //     if (confirm("장문 메세지를 보내시겠습니까?")){
+                //         form.setAttribute("action", "./MessageService/sendLMS.jsp");
+                //     }
+                // }
+                return false;
+            }
+        </script>
+    </head>
+    <body>
+        <form method="POST">
+            번호 : <input type="text" id="phonenum" name="phonenum"></input>
+            <br>
+            메세지 : <textarea type="text" id="message" name="message" rows="4" cols="50"></textarea>
+            <input type="submit" onClick="confirmSubmit(this.form)" value="전송"></input>
+        </form>
+    </body>
+</html>   

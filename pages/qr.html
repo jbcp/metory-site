@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+    <link rel="stylesheet" href="../assets/lib/bootstrap/css/bootstrap.min.css">
+
+    <link rel="stylesheet" href="../assets/css/modern.css">
+  
+
+    <script src="../assets/lib/jquery/jquery.min.js" type="text/javascript"></script>
+
+    <title>METORY (연구자용)</title>
+    <script type="text/javascript">
+
+       // var applid;
+        var qrcode;
+        $(document).ready(function () {
+            // applid = getParameterByName('applid');
+            qrcode = getParameterByName('qrcode');
+                     $('#qrdiv').qrcode({
+                        width: 120,
+                        height: 120,
+                        text: qrcode
+            });
+
+            if (qrcode.length >= 5) qrcode = [qrcode.slice(0, 5), " ", qrcode.slice(5)].join('');
+
+            document.getElementById("qr_value").appendChild(document.createTextNode(qrcode));
+            // var xhttp = new XMLHttpRequest();
+            // xhttp.onreadystatechange = function () {
+            //     if (this.readyState == this.DONE && this.status == 200) {
+            //         var data_pre = xhttp.responseText.trim();
+            //        // var data_eval = eval(data_pre);
+            //         var qrcode=data_pre;
+
+            //         $('#qrdiv').qrcode({
+            //             width: 120,
+            //             height: 120,
+            //             text: qrcode
+            //         });
+            //         if (qrcode.length >= 5) qrcode = [qrcode.slice(0, 5), " ", qrcode.slice(5)].join('');
+            //         document.getElementById("qr_value").appendChild(document.createTextNode(qrcode));
+            //     }
+            // }
+            // xhttp.open("GET", "./applicants/qrcode.jsp?action=get_QR&QR="+qr, false);
+            // xhttp.send();
+        })
+
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search);
+            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+
+    </script>
+</head>
+
+<body>
+
+
+    <div class="container mt-3">
+
+        <div class="col-md-12 w-100 p-0 m-0">
+            <div class="card ">
+                <div class="mt-5 mb-1" style="text-align:center; ">
+                    <div style="text-align:left">
+                        <h3>본인확인 QR 코드</h3>
+                        [안내사항]해당 QR코드는 임상연구기관에서 자원자 신분을 확인위한 QR코드입니다.<br>
+                        병원에 방문시 해당 QR코드를 보여주거나 QR코드 아래 숫자를 불러주세요.
+                    </div>
+                    <div class="mt-1" id="qrdiv" style="text-align:center; "></div>
+                    <p id="qr_value" style="text-align:center; "> </p>
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+    <script src="../assets/js/app.js"></script>
+    <script type="text/javascript" src="../assets/qrcode/qrcode.js"></script>
+    <script type="text/javascript" src="../assets/qrcode/jquery.qrcode.min.js"></script>
+</body>
+
+</html>
