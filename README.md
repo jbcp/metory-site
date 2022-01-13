@@ -19,54 +19,37 @@ OpenJDK8
 
 
 ### 라이브러리
-
-- Server-side
-
-  - catalina-ssi
-
-- Java API 기능 확장
-
-  - commons-lang-2.6
-  - commons-logging-1.2
-
-- 파일업로드
-
-  - cos
-
-- 일괄처리 컴파일러
-
-  - ecj-4.18
-
-- JSON
-
-  - gson-2.3
-  - json-simple-1.1.1
-
-- 블록체인 연결
-
-  - JbcpBCRequest-0.0.1
-
-- DB 연결
-
-  - mysql-connector-java-5.1.35-bin
-
-- PDF 관련
-
-  - pdfbox-2.0.23
-  - pdfbox-tools-2.0.23
-  - fontbox-2.0.23
-
-- 기타 및 의존적인 라이브러리
-
-  - jaspic-api
-  - tomcat-i18n-cs
-  - tomcat-i18n-de
-  - tomcat-i18n-ko
-  - tomcat-i18n-pt-BR
-  - tomcat-i18n-ru
-  - tomcat-i18n-zh-CN
-  - font-asian-7.1.14
-
+```
+Server-side
+	catalina-ssi
+Java API 기능 확장
+	commons-lang-2.6
+	commons-logging-1.2
+파일업로드
+	cos
+일괄처리 컴파일러
+	ecj-4.18
+JSON
+	gson-2.3
+	json-simple-1.1.1
+블록체인
+	JbcpBCRequest-0.0.1
+DB
+	mysql-connector-java-5.1.35-bin
+PDF
+	pdfbox-2.0.23
+	pdfbox-tools-2.0.23
+	fontbox-2.0.23
+기타 
+	jaspic-api
+	tomcat-i18n-cs
+	tomcat-i18n-de
+	tomcat-i18n-ko
+	tomcat-i18n-pt-BR
+	tomcat-i18n-ru
+	tomcat-i18n-zh-CN
+	font-asian-7.1.14
+```
   
 
 ### 설정파일 (config)
