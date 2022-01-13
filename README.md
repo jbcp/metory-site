@@ -2,9 +2,12 @@
 
 METORY - The real-world feasibility of a blockchain-based dynamic consent platform 
 
+| ![1.jpb](https://github.com/jbcp/metory-site/blob/main/imgs/1.png?raw=true) | ![3](https://github.com/jbcp/metory-site/blob/main/imgs/3.png?raw=true) | ![4](https://github.com/jbcp/metory-site/blob/main/imgs/4.png?raw=true) |
+| ---- | ---- | ---- |
 
 
-### Installation 
+
+## Installation 
 
 ### 버전
 
